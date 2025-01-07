@@ -21,8 +21,8 @@ export default function LandingCard({
                 <Icon className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 ${svgColor}`} />
             </div>
             <div className="space-y-2 w-3/5">
-                <h1 className="text-black font-bold text-3xl">{title}</h1>
-                <p className={`text-black ${inter.className} font-light w-5/6`}>{description}</p>
+                <h1 className="text-black font-bold text-[28px] leading-tight">{title}</h1>
+                <p className={`text-black ${inter.className} text-sm font-light w-5/6`}>{description}</p>
             </div>
         </div>
     )

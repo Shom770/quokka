@@ -16,11 +16,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`flex flex-col items-center bg-white ${figtree.className} antialiased bg-blue-100`}
+        className={`flex flex-col items-center bg-[#E2EDFF] ${figtree.className} antialiased bg-blue-100`}
       >
         <Navbar />
-        <div className="flex flex-col items-center justify-center w-screen h-[90vh]">
+        <div className="flex flex-col items-center justify-center w-screen h-[85vh]">
+          <div className="absolute w-1/2 h-full bg-[radial-gradient(closest-side,_rgba(248,148,255,0.65),_rgba(196,159,255,0.65))] blur-[300px] left-0 -translate-x-1/2 top-1/2 -translate-y-1/2 z-[-1]"></div>
           { children }
+          <div className="absolute w-1/2 h-full bg-[radial-gradient(closest-side,_rgba(248,148,255,0.65),_rgba(196,159,255,0.65))] blur-[300px] right-0 translate-x-1/2 top-1/2 -translate-y-1/2 z-[-1]"></div>
         </div>
       </body>
     </html>
