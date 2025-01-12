@@ -14,6 +14,7 @@ export default function Page() {
           icon={PencilIcon}
           title="Mental Health Reflection"
           description="Take a quick questionnaire to identify what activities could help you."
+          link="/mental-health-reflection"
           />
         <LandingCard 
           color="bg-purple-600/25 border-2 border-purple-600/75"
@@ -21,6 +22,7 @@ export default function Page() {
           icon={BookOpenIcon}
           title="Activities"
           description="Exercises built in the website to help you get into the right mindspace."
+          link="/activities"
           />
         <LandingCard 
           color="bg-[#4C67FF]/25 border-2 border-[#4C67FF]/75"
@@ -28,6 +30,7 @@ export default function Page() {
           icon={BookmarkIcon}
           title="Mental Health Resources"
           description="A list of resources that can help you when you’re in need or need someone to talk to."
+          link="/mental-health-resources"
           />
         <LandingCard 
           color="bg-[#DC22E9]/25 border-2 border-[#DC22E9]/50"
@@ -35,6 +38,7 @@ export default function Page() {
           icon={TrophyIcon}
           title="Daily Challenges"
           description="New challenges every day that push you to become a better person mentally."
+          link="/daily-challenges"
           />
           
       </div>
