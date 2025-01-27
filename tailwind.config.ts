@@ -14,12 +14,12 @@ export default {
       },
       keyframes: {
         sparkle: {
-            '0%, 100%': { transform: 'scale(1) translateY(0)' },
-            '50%': { transform: 'scale(1.25) translateY(-5px)' },
+          '0%, 100%': { transform: 'scale(1) translateY(0)' },
+          '50%': { transform: 'scale(1.25) translateY(-5px)' },
         },
         rainbow: {
-            '0%': { transform: 'translateX(0)', opacity: 1 },
-            '100%': { transform: 'translateX(50px)', opacity: 0 },
+          '0%': { transform: 'translateX(0)', opacity: "1" },
+          '100%': { transform: 'translateX(50px)', opacity: "0" },
         }
       },
       animation: {
