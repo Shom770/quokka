@@ -96,17 +96,15 @@ export default function Page() {
       </h1>
       {renderedQuestions}
 
-      <div className="mb-6">
-        <button
-          onClick={gradeQuiz}
-          hidden={!allAnswered}
-          className="bg-blue-500/25 hover:bg-blue-600/25 active:bg-blue-500/35 px-7 py-3 my-4 rounded-lg border border-blue-600 duration-50 mb-6 text-blue-500"
-        >
-          <p className="antialiased text-lg text-blue-600">
-            Get Your Activity Recommendation
-          </p>
-        </button>
-      </div>
+      <button
+        onClick={gradeQuiz}
+        hidden={!allAnswered}
+        className="bg-blue-500/25 hover:bg-blue-600/25 active:bg-blue-500/35 px-7 py-3 my-4 rounded-lg border border-blue-600 duration-50 text-blue-500"
+      >
+        <p className="antialiased text-lg text-blue-600">
+          Get Your Activity Recommendation
+        </p>
+      </button>
 
       {goal && (
         <div ref={resultRef} className="mb-6 text-lg text-gray-900">
