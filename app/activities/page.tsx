@@ -14,7 +14,7 @@ export default function Page() {
           title="Sleep Tracker"
           icon="💤"
           backgroundColor="bg-[#B3CDF6]/50 border-2 border-[#B3CDF6]"
-          link="/activity/uwu"
+          link="/activities/sleepTracker"
           description="A tool to track your sleep!"
         />
         <ActivityCard
@@ -51,7 +51,7 @@ export default function Page() {
           link="/activities/yogaVideos"
           description="Do some yoga with video instruction."
         />
-        <ActivityCard
+        {/* <ActivityCard
           title="No Phone Zone"
           icon="📵"
 
@@ -59,7 +59,7 @@ export default function Page() {
 
           link="/activities/noPhoneZone"
           description="Take a break from your phone."
-        />
+        /> */}
         <ActivityCard
           title="Book Reading"
           icon="📖"
