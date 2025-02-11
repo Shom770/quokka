@@ -18,6 +18,7 @@ export default function Resource({ title, description, pathToImage, link }: Reso
         className="rounded-lg"
         width={100}
         height={100}
+        placeholder="blur"
       />
       <div className="flex flex-col justify-center h-24 w-5/6">
         <a href={link} className="text-xl font-extrabold text-black hover:underline">{title}</a>

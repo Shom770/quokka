@@ -55,12 +55,14 @@ export default function SurveyModal({
 
   return (
     <div
-      className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 transition-all duration-500 z-50 ${
+      className={`backdrop-blur-lg fixed bottom-4 left-1/2 transform -translate-x-1/2 transition-all duration-500 z-50 ${
         visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-full"
       }`}
     >
-      <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-        <h2 className="text-2xl text-black font-bold mb-4">{question.question}</h2>
+      <div className="p-6 rounded-lg shadow-lg max-w-md w-full">
+        <h2 className="text-2xl text-black font-bold mb-4">
+          {question.question}
+        </h2>
         <div className="flex justify-center space-x-4">
           {question.scale.map((icon, index) => {
             const rating = index + 1;
@@ -68,7 +70,7 @@ export default function SurveyModal({
               <button
                 key={rating}
                 onClick={() => handleAnswer(rating)}
-                className="text-3xl"
+                className="text-3xl bg-blue-200 rounded-xl px-3 py-2"
               >
                 {icon}
               </button>
