@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { figtree } from "@/app/ui/fonts";
 import "./globals.css";
 import Navbar from "@/app/ui/navbar";
+import SurveyManager from "@/app/ui/survey-manager";
 
 export const metadata: Metadata = {
   title: "iTHRiVE",
@@ -24,6 +25,7 @@ export default function RootLayout({
           {children}
           <div className="absolute w-1/2 h-full bg-[radial-gradient(closest-side,_rgba(248,148,255,0.65),_rgba(196,159,255,0.65))] blur-[300px] right-0 translate-x-1/2 top-1/2 -translate-y-1/2 z-[-1]"></div>
         </div>
+        <SurveyManager />
       </body>
     </html>
   );
