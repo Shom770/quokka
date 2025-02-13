@@ -1,5 +1,4 @@
 import { BookOpenIcon, BookmarkIcon, PencilIcon, TrophyIcon } from "@heroicons/react/24/solid";
-import LandingCard from "../ui/landing/landing-card";
 import ActivityCard from "../ui/activites/activity-card";
 
 export default function Page() {
