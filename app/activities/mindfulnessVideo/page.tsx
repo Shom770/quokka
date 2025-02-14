@@ -10,18 +10,18 @@ export default function MindfulnessVideos() {
 
   return (
     <div className="flex flex-col w-1/3 space-y-6 p-8">
-      <h1 className="text-3xl font-bold text-blue-600 mb-4">
+      <h1 className="text-3xl font-bold text-orange-600 mb-4">
         Mindfulness Videos
       </h1>
 
       {/* Video With Commentary */}
-      <div className="p-4 border border-blue-300 rounded-lg shadow">
+      <div className="p-4 border border-orange-300 rounded-lg shadow">
         <div className="flex items-center justify-between">
-          <p className="text-md font-semibold text-blue-700">
+          <p className="text-md font-semibold text-orange-500">
             Video With Commentary
           </p>
           <button
-            className="text-blue-500 underline"
+            className="text-orange-500 underline"
             onClick={() => setShowMindfulnessVideo1((prev) => !prev)}
           >
             {showMindfulnessVideo1 ? "Hide" : "Show"}
@@ -41,13 +41,13 @@ export default function MindfulnessVideos() {
       </div>
 
       {/* Video Without Commentary */}
-      <div className="p-4 border border-blue-300 rounded-lg shadow">
+      <div className="p-4 border border-orange-300 rounded-lg shadow">
         <div className="flex items-center justify-between">
-          <p className="text-md font-semibold text-blue-700">
+          <p className="text-md font-semibold text-orange-500">
             Video Without Commentary
           </p>
           <button
-            className="text-blue-500 underline"
+            className="text-orange-500 underline"
             onClick={() => setShowMindfulnessVideo2((prev) => !prev)}
           >
             {showMindfulnessVideo2 ? "Hide" : "Show"}

@@ -1,10 +1,11 @@
 import { BookOpenIcon, BookmarkIcon, PencilIcon, TrophyIcon } from "@heroicons/react/24/solid";
 import ActivityCard from "../ui/activites/activity-card";
+import { rethinkSans } from "../ui/fonts";
 
 export default function Page() {
   return (
     <div className="relative flex flex-col justify-center gap-8 w-3/5 h-full">
-      <h1 className="text-blue-500 font-extrabold text-[46px] leading-[1]">
+      <h1 className={`${rethinkSans.className} antialiased text-orange-600 font-extrabold text-[46px] leading-[1]`}>
         Activities made for you.
       </h1>
 
@@ -12,32 +13,28 @@ export default function Page() {
         <ActivityCard
           title="Sleep Tracker"
           icon="💤"
-          backgroundColor="bg-[#B3CDF6]/50 border-2 border-[#B3CDF6]"
+          backgroundColor="bg-[#F66B6B]/50 hover:bg-[#F66B6B]/40 border-2 border-[#F66B6B]"
           link="/activities/sleepTracker"
           description="A tool to track your sleep!"
         />
         <ActivityCard
           title="Mood Journaling"
           icon="📒"
-          backgroundColor="bg-[#A5C8F6]/50 border-2 border-[#A5C8F6] "
+          backgroundColor="bg-rose-300/50 hover:bg-rose-300/40 border-2 border-rose-300"
           link="/activities/moodJournaling"
           description="Journal about your mood!"
         />
         <ActivityCard
           title="Gratitude Journaling"
           icon="💖"
-
-          backgroundColor="bg-[#B3BDF6]/50 border-2 border-[#B3BDF6] "
-
+          backgroundColor="bg-orange-600/30 hover:bg-orange-600/20 border-2 border-orange-600/60"
           link="/activities/gratitudeJournaling"
           description="Journal what you feel gratitude towards"
         />
         <ActivityCard
           title="Meditation"
           icon="🙏"
-
-          backgroundColor="bg-[#A5B8F6]/50 border-2 border-[#A5B8F6] "
-
+          backgroundColor="bg-orange-300/50 hover:bg-orange-300/40 border-2 border-orange-300 "
           link="/activities/meditation"
           description="Take it slow and meditate."
         />
@@ -45,7 +42,7 @@ export default function Page() {
           title="Yoga Videos"
           icon="🧘"
 
-          backgroundColor="bg-[#CDB3F6]/50 border-2 border-[#CDB3F6] "
+          backgroundColor="bg-[#FD906C]/50 hover:bg-[#FD906C]/40 border-2 border-[#FD906C]"
 
           link="/activities/yogaVideos"
           description="Do some yoga with video instruction."
@@ -63,7 +60,7 @@ export default function Page() {
           title="Book Reading"
           icon="📖"
 
-          backgroundColor="bg-[#F2B3F6]/50 border-2 border-[#F2B3F6] "
+          backgroundColor="bg-[#FFB599]/50 hover:bg-[#FFB599]/40 border-2 border-[#FFB599] "
 
           link="/activities/bookReading"
           description="Read a book"
@@ -72,7 +69,7 @@ export default function Page() {
           title="Mindfulness Videos"
           icon="🎥"
 
-          backgroundColor="bg-[#F6A5F6]/50 border-2 border-[#F6A5F6] "
+          backgroundColor="bg-yellow-400/25 hover:bg-yellow-400/15 border-2 border-yellow-400 "
 
           link="/activities/mindfulnessVideo"
           description="Learn mindfulness through a video"
@@ -81,7 +78,7 @@ export default function Page() {
           title="Square Breathing"
           icon="🟦"
 
-          backgroundColor="bg-[#F6A5F6]/50 border-2 border-[#F6A5F6] "
+          backgroundColor="bg-yellow-200/30 hover:bg-yellow-200/20 border-2 border-yellow-400"
 
           link="/activities/squareBreathing"
           description="Practice calm breathing techniques"

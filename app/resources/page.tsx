@@ -8,6 +8,7 @@ import namiImage from "@/public/resources/nami.jpg";
 import hotlineImage from "@/public/resources/hotline.png";
 import safeImage from "@/public/resources/safe.png";
 import lhicImage from "@/public/resources/HCLHIC.png";
+import { rethinkSans } from "../ui/fonts";
 
 const resources = [
   {
@@ -63,7 +64,7 @@ const resources = [
 export default function Page() {
   return (
     <div className="relative flex flex-col justify-center gap-8 w-3/5 h-[75vh]">
-      <h1 className="text-blue-500 font-extrabold text-[46px] leading-[1]">
+      <h1 className={`text-orange-600 font-extrabold text-[46px] leading-[1] ${rethinkSans.className}`}>
         Mental health resources,<br/>curated for you.
       </h1>
       <div className="h-[63vh] overflow-scroll space-y-4">

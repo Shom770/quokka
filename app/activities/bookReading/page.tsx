@@ -42,7 +42,7 @@ export default function BookReadingActivity() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6">
-      <div className="max-w-xl w-full p-6 text-blue-600">
+      <div className="max-w-xl w-full p-6 text-orange-600">
         <h1 className="text-3xl font-bold mb-4 flex items-center gap-2">
           <span role="img" aria-label="book">
             📖
@@ -63,8 +63,8 @@ export default function BookReadingActivity() {
                   onClick={() => startTimer(time)}
                   className={`px-4 py-2 rounded font-white ${
                     selectedTime === time
-                      ? "bg-blue-700"
-                      : "bg-blue-500"
+                      ? "bg-orange-700"
+                      : "bg-orange-500"
                   }`}
                 >
                   {time}

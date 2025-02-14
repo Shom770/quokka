@@ -59,6 +59,7 @@ export default function Page() {
     const [selectedPills, setSelectedPills] = useState<Record<string, boolean>>(DEFAULT_PILL_STATES);
     const [completedChallenges, setCompletedChallenges] = useState<Record<string, boolean>>({});
     const [isLoading, setIsLoading] = useState(true);
+    const isChallengesAccomplished = Object.values(completedChallenges).every(Boolean) && Object.keys(completedChallenges).length == challenges.length 
 
     useEffect(() => {
         const loadStoredData = async () => {
@@ -133,6 +134,7 @@ export default function Page() {
             ...selectedPills,
             [name]: isSelected
         };
+
         setSelectedPills(newSelectedPills);
 
         const newFocuses = Object.entries(newSelectedPills)
@@ -200,7 +202,7 @@ export default function Page() {
             </div>
             <div className="space-y-2">
                 <h1 className={`${inter.className} antialiased text-lg text-black font-medium`}>Here's your challenges.</h1>
-                <div className="flex flex-row items-center justify-center gap-4 w-full">
+                <div className="relative flex flex-row items-center justify-center gap-4 w-full">
                     {challenges.map(([category, description]) => 
                         <ChallengeBox 
                             category={category} 
@@ -208,9 +210,11 @@ export default function Page() {
                             key={`${category}-${description}`}
                             isCompleted={completedChallenges[`${category}-${description}`] || false}
                             onToggle={() => handleChallengeToggle(category, description)}
+                            allChallengesAccomplished={isChallengesAccomplished}
                         />
                     )}
                 </div>
+                <h1 className={`${rethinkSans.className} antialiased mt-4 text-xl ${isChallengesAccomplished ? 'text-orange-600' : 'text-[#FCF4F0]'} font-extrabold`}>You accomplished all your challenges today!</h1>
             </div>
         </div>
     );

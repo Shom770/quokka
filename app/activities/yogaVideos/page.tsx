@@ -11,14 +11,14 @@ export default function Page() {
 
   return (
     <div className="flex flex-col w-1/3 space-y-6 p-8">
-      <h1 className="text-3xl font-bold text-blue-600 mb-4">Yoga Videos</h1>
+      <h1 className="text-3xl font-bold text-orange-600 mb-4">Yoga Videos</h1>
 
       {/* 2-Minute */}
-      <div className="p-4 border border-blue-300 rounded-lg shadow">
+      <div className="p-4 border border-orange-300 rounded-lg shadow">
         <div className="flex items-center justify-between">
-          <p className="text-md font-semibold text-blue-700">2-Minute Yoga Session</p>
+          <p className="text-md font-semibold text-orange-500">2-Minute Yoga Session</p>
           <button
-            className="text-blue-500 underline"
+            className="text-orange-500 underline"
             onClick={() => setShowYogaVideo2((prev) => !prev)}
           >
             {showYogaVideo2 ? "Hide" : "Show"}
@@ -38,11 +38,11 @@ export default function Page() {
       </div>
 
       {/* 5-Minute */}
-      <div className="p-4 border border-blue-300 rounded-lg shadow">
+      <div className="p-4 border border-orange-300 rounded-lg shadow">
         <div className="flex items-center justify-between">
-          <p className="text-md font-semibold text-blue-700">5-Minute Yoga Session</p>
+          <p className="text-md font-semibold text-orange-500">5-Minute Yoga Session</p>
           <button
-            className="text-blue-500 underline"
+            className="text-orange-500 underline"
             onClick={() => setShowYogaVideo5((prev) => !prev)}
           >
             {showYogaVideo5 ? "Hide" : "Show"}
@@ -62,11 +62,11 @@ export default function Page() {
       </div>
 
       {/* 10-Minute */}
-      <div className="p-4 border border-blue-300 rounded-lg shadow">
+      <div className="p-4 border border-orange-300 rounded-lg shadow">
         <div className="flex items-center justify-between">
-          <p className="text-md font-semibold text-blue-700">10-Minute Yoga Session</p>
+          <p className="text-md font-semibold text-orange-500">10-Minute Yoga Session</p>
           <button
-            className="text-blue-500 underline"
+            className="text-orange-500 underline"
             onClick={() => setShowYogaVideo10((prev) => !prev)}
           >
             {showYogaVideo10 ? "Hide" : "Show"}

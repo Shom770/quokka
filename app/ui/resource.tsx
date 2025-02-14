@@ -11,7 +11,7 @@ interface ResourceProps {
 
 export default function Resource({ title, description, pathToImage, link }: ResourceProps) {
   return (
-    <div className="bg-[#4C67FF]/5 border-2 border-[#4C67FF]/75 flex flex-row items-center justify-center gap-8 w-full h-36 rounded-lg">
+    <div className="bg-orange-600/5 border-2 border-orange-600/75 flex flex-row items-center justify-center gap-8 w-full h-36 rounded-lg">
       <ExportedImage 
         src={pathToImage}
         alt={`Logo of ${title}`}

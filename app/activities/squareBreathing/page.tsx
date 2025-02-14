@@ -65,7 +65,7 @@ export default function SquareBreathing() {
 
   return (
     <div
-      className={`flex flex-col items-center text-blue-600 min-h-[90%] p-8 mb-6 ${
+      className={`flex flex-col items-center text-orange-600 min-h-[90%] p-8 mb-6 ${
         started ? "justify-between" : "justify-center"
       }`}
     >
@@ -79,7 +79,7 @@ export default function SquareBreathing() {
       {!started ? (
         <button
           onClick={startExercise}
-          className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-md"
+          className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-md"
         >
           Begin Exercise
         </button>
@@ -87,7 +87,7 @@ export default function SquareBreathing() {
         <div className="flex flex-col items-center flex-1 justify-center">
           <div className="relative">
             <div
-              className="rounded-full bg-blue-500 transition-transform duration-[4000ms]"
+              className="rounded-full bg-orange-500 transition-transform duration-[4000ms]"
               style={{
                 width: 300,
                 height: 300,
@@ -106,7 +106,7 @@ export default function SquareBreathing() {
       {started && (
         <button
           onClick={finishExercise}
-          className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-md mt-8 mb-8"
+          className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-md mt-8 mb-8"
         >
           Finish Exercise
         </button>

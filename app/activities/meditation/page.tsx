@@ -124,7 +124,7 @@ export default function Page() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center text-blue-600 justify-center min-h-screen gap-6 p-6">
+    <div className="flex flex-col items-center text-orange-600 justify-center min-h-screen gap-6 p-6">
       <h1 className="text-3xl font-bold">Mindful Meditation</h1>
       <p className="font-medium">Select a duration to begin your session.</p>
       {/* Select audio track */}
@@ -143,25 +143,25 @@ export default function Page() {
       <div className="flex gap-4">
         <button
           onClick={() => startMeditation(120)}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
+          className="bg-orange-500 text-white px-4 py-2 rounded"
         >
           2 minutes
         </button>
         <button
           onClick={() => startMeditation(300)}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
+          className="bg-orange-500 text-white px-4 py-2 rounded"
         >
           5 minutes
         </button>
         <button
           onClick={() => startMeditation(600)}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
+          className="bg-orange-500 text-white px-4 py-2 rounded"
         >
           10 minutes
         </button>
       </div>
       {/* Meditation Timer Display */}
-      <div className="flex items-center justify-center w-40 h-40 border-4 border-blue-400 rounded-full">
+      <div className="flex items-center justify-center w-40 h-40 border-4 border-orange-400 rounded-full">
         <span className="text-3xl">{formatTime(timer)}</span>
       </div>
       {/* Control Buttons */}

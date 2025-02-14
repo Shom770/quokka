@@ -1,5 +1,6 @@
 "use client";
 
+import { rethinkSans } from "@/app/ui/fonts";
 import React, { useState, useEffect } from "react";
 
 export default function Page() {
@@ -80,21 +81,21 @@ export default function Page() {
 
   return (
     <div className="flex flex-col items-center w-1/2 gap-8 overflow-y-scroll p-8">
-      <h1 className="font-extrabold text-[46px] leading-[1] text-blue-500">
+      <h1 className={`${rethinkSans.className} antialiased font-extrabold text-[46px] leading-[1] text-orange-600`}>
         Sleep Tracker
       </h1>
-      <p className="text-lg font-bold text-center text-blue-600">
+      <p className="text-lg font-bold text-center text-orange-600">
         Track your bedtime and how many hours of sleep you get each day.
       </p>
 
       {/* Bedtime Setting */}
       <div className="flex flex-col w-full md:w-3/4 p-6 space-y-4">
-        <h2 className="text-xl font-bold text-blue-600">Set Your Target Bedtime</h2>
+        <h2 className="text-xl font-bold text-orange-600">Set Your Target Bedtime</h2>
         <div className="flex items-center justify-between gap-4 w-full">
           <input
             type="time"
             onChange={handleBedtimeChange}
-            className="border w-[40%] border-blue-400 text-gray-700 px-2 py-1 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="border w-[40%] border-orange-400 text-gray-700 px-2 py-1 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400"
           />
           <p className="text-sm text-gray-700 text-right w-[55%]">
             Current bedtime:{" "}
@@ -107,7 +108,7 @@ export default function Page() {
 
       {/* Sleep Hours Recording */}
       <div className="flex flex-col w-full md:w-3/4 p-6 space-y-4">
-        <h2 className="text-xl font-bold text-blue-600">Hours Slept</h2>
+        <h2 className="text-xl font-bold text-orange-600">Hours Slept</h2>
         <div className="flex items-center justify-between gap-4 w-full">
           <input
             type="number"
@@ -116,7 +117,7 @@ export default function Page() {
             placeholder="Enter sleep hours"
             value={additionalSleepHours}
             onChange={(e) => setAdditionalSleepHours(e.target.value)}
-            className="w-1/2 border text-gray-700 border-blue-400 px-2 py-1 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-center"
+            className="w-1/2 border text-gray-700 border-orange-400 px-2 py-1 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400 text-center"
           />
           <p className="text-sm text-gray-700 text-right w-1/2">
             <span className="font-semibold">{sleepHours}</span> hour(s) recorded today.
@@ -124,7 +125,7 @@ export default function Page() {
         </div>
         <button
           onClick={setSleepHoursForToday}
-          className="bg-blue-500/25 hover:bg-blue-600/25 active:bg-blue-500/35 px-4 py-2 my-2 rounded-lg border border-blue-600 duration-50 text-blue-600"
+          className="bg-orange-500/25 hover:bg-orange-600/25 active:bg-orange-500/35 px-4 py-2 my-2 rounded-lg border border-orange-600 duration-50 text-orange-600"
         >
           Save Hours
         </button>
