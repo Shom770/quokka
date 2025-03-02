@@ -1,8 +1,9 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import SurveyModal from "./survey-modal";
+import { Context } from "../layout-client";
 
 interface SurveyQuestion {
   _id: number;
@@ -17,6 +18,9 @@ export default function SurveyManager() {
   const [surveyTypes, setSurveyTypes] = useState<string[]>([]);
   const [surveyQuestion, setSurveyQuestion] = useState<SurveyQuestion | null>(null);
   const [showSurvey, setShowSurvey] = useState(false);
+
+  const { canShow } = useContext(Context);
+
 
   // Pre-cache survey types on mount
   useEffect(() => {
@@ -35,7 +39,7 @@ export default function SurveyManager() {
   useEffect(() => {
     if (pathname === "/" && previousPathname.current !== "/") {
       // Roll a 10% chance
-      if (Math.random() < 0.1) {
+      if (Math.random() < 1 && canShow) {
         if (surveyTypes.length > 0) {
           // Determine candidate type from the previous pathname's last segment
           const segments = previousPathname.current.split("/");

@@ -23,7 +23,11 @@ export default function SurveyModal({
 
   useEffect(() => {
     // Animate in immediately.
-    setVisible(true);
+    // Doesn't animate without setTimeout above 100
+    setTimeout(() => {
+      setVisible(true);
+    }, 100);
+
     autoDismissTimer.current = setTimeout(() => {
       // Trigger exit animation.
       setVisible(false);
@@ -55,22 +59,22 @@ export default function SurveyModal({
 
   return (
     <div
-      className={`backdrop-blur-lg fixed bottom-4 left-1/2 transform -translate-x-1/2 transition-all duration-500 z-50 ${
+      className={`bg-gradient-to-br from-[#F66B6B]/60 to-[#F5C114]/60 backdrop-blur-xl rounded-lg fixed bottom-4 left-1/2 transform -translate-x-1/2 transition-all duration-500 z-50 w-[95%] max-w-xl ${
         visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-full"
       }`}
     >
-      <div className="p-6 rounded-lg shadow-lg max-w-md w-full">
-        <h2 className="text-2xl text-black font-bold mb-4">
+      <div className="p-4 sm:p-6 rounded-2xl shadow-lg w-full">
+        <h2 className="text-2xl text-white font-bold mb-4">
           {question.question}
         </h2>
-        <div className="flex justify-center space-x-4">
+        <div className="flex justify-between sm:px-4 md:px-6 w-full">
           {question.scale.map((icon, index) => {
             const rating = index + 1;
             return (
               <button
                 key={rating}
                 onClick={() => handleAnswer(rating)}
-                className="text-3xl bg-blue-200 rounded-xl px-3 py-2"
+                className="duration-150 text-2xl sm:text-3xl bg-white hover:brightness-90 rounded-xl px-1 sm:px-3 py-2"
               >
                 {icon}
               </button>

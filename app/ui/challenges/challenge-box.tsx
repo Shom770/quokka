@@ -7,7 +7,7 @@ export default function ChallengeBox({ category, description, isCompleted, allCh
             onClick={onToggle}>
             {
                 allChallengesAccomplished ? (
-                    <div className="absolute -inset-1 bg-gradient-to-r from-rose-400 to-purple-500 blur-lg rounded-lg -z-10 animate-gradient" />
+                    <div className="absolute -inset-1 bg-gradient-to-r from-red-400 to-yellow-500 blur-lg rounded-lg -z-10 animate-gradient" />
                 ) : <></>
             }
            <h1 className="text-xl font-extrabold">{category}</h1>

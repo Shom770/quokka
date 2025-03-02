@@ -203,11 +203,11 @@ export default function Page() {
             <div className="space-y-2">
                 <h1 className={`${inter.className} antialiased text-lg text-black font-medium`}>Here's your challenges.</h1>
                 <div className="relative flex flex-row items-center justify-center gap-4 w-full">
-                    {challenges.map(([category, description]) => 
+                    {challenges.map(([category, description], i) => 
                         <ChallengeBox 
                             category={category} 
                             description={description} 
-                            key={`${category}-${description}`}
+                            key={`${i}`}
                             isCompleted={completedChallenges[`${category}-${description}`] || false}
                             onToggle={() => handleChallengeToggle(category, description)}
                             allChallengesAccomplished={isChallengesAccomplished}
