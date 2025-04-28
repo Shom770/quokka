@@ -16,7 +16,7 @@ export default function LandingCard({
   description: string,
 }) {
   return (
-    <Link className={`flex flex-row items-center justify-around ${backgroundColor} rounded-[36px] w-full h-full py-6`} href={link}>
+    <Link className={`flex flex-row items-center justify-around ${backgroundColor} rounded-[36px] w-full h-full py-6 transition-colors duration-300`} href={link}>
       <div className="relative w-2/5 h-1/2 flex justify-center items-center px-3">
         <p className="text-6xl">{icon}</p>
       </div>

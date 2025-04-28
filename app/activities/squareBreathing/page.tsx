@@ -1,16 +1,27 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
 
 export default function SquareBreathing() {
+  const { data: session } = useSession();
+  
   // States for exercise control
   const [started, setStarted] = useState(false);
   const [phase, setPhase] = useState("");
   const [counter, setCounter] = useState(4);
   const [circleScale, setCircleScale] = useState(1);
-
+  
+  // States for activity logging
+  const [isLogging, setIsLogging] = useState(false);
+  const [logSuccess, setLogSuccess] = useState<boolean | null>(null);
+  const [exerciseDuration, setExerciseDuration] = useState(0);
+  
   // Duration in seconds for each phase
   const phaseDuration = 4;
+  
+  // Reference for tracking total exercise duration
+  const startTimeRef = useRef<number | null>(null);
 
   // Update counter and phase based on interval
   useEffect(() => {
@@ -52,16 +63,76 @@ export default function SquareBreathing() {
     setStarted(true);
     setPhase("Breathe In");
     setCounter(phaseDuration);
+    startTimeRef.current = Date.now();
+    setLogSuccess(null);
+  };
+
+  // Log breathing activity to the server
+  const logBreathingActivity = async (durationSeconds: number) => {
+    setIsLogging(true);
+    
+    if (session?.serverToken) {
+      try {
+        const minutes = Math.round(durationSeconds / 60);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/sync/activities`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.serverToken}`,
+            },
+            body: JSON.stringify({
+              activity_id: "square-breathing",
+              notes: `Completed ${minutes} minute${minutes !== 1 ? 's' : ''} of square breathing`
+            }),
+          }
+        );
+
+        if (response.ok) {
+          console.log("Breathing activity logged successfully");
+          setLogSuccess(true);
+        } else {
+          console.error("Failed to log breathing activity:", await response.text());
+          setLogSuccess(false);
+        }
+      } catch (error) {
+        console.error("Error logging breathing activity:", error);
+        setLogSuccess(false);
+      }
+    } else {
+      console.warn("Breathing exercise completed but not logged - no auth token available");
+      setLogSuccess(false);
+    }
+    
+    setIsLogging(false);
   };
 
   // Finish the exercise and reset states
   const finishExercise = () => {
+    if (startTimeRef.current) {
+      const durationSeconds = Math.round((Date.now() - startTimeRef.current) / 1000);
+      setExerciseDuration(durationSeconds);
+      logBreathingActivity(durationSeconds);
+    }
+    
     setStarted(false);
     setPhase("");
     setCounter(phaseDuration);
     setCircleScale(1);
-    // alert("Great job!");
+    startTimeRef.current = null;
   };
+
+  // Clear success message after 5 seconds
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    if (logSuccess !== null) {
+      timeoutId = setTimeout(() => {
+        setLogSuccess(null);
+      }, 5000);
+    }
+    return () => clearTimeout(timeoutId);
+  }, [logSuccess]);
 
   return (
     <div
@@ -77,12 +148,36 @@ export default function SquareBreathing() {
       </div>
 
       {!started ? (
-        <button
-          onClick={startExercise}
-          className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-md"
-        >
-          Begin Exercise
-        </button>
+        <div className="flex flex-col items-center">
+          <button
+            onClick={startExercise}
+            className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-md"
+          >
+            Begin Exercise
+          </button>
+          
+          {/* Activity logging feedback */}
+          {isLogging && (
+            <div className="mt-4 py-2 px-4 bg-yellow-100 text-yellow-800 rounded-md">
+              Logging your breathing exercise...
+            </div>
+          )}
+          
+          {logSuccess === true && (
+            <div className="mt-4 py-2 px-4 bg-green-100 text-green-800 rounded-md">
+              ✓ Breathing exercise logged successfully!
+              <div className="text-sm mt-1">
+                {Math.floor(exerciseDuration / 60)} minutes, {exerciseDuration % 60} seconds completed
+              </div>
+            </div>
+          )}
+          
+          {logSuccess === false && (
+            <div className="mt-4 py-2 px-4 bg-red-100 text-red-800 rounded-md">
+              Failed to log your breathing exercise. Please try again later.
+            </div>
+          )}
+        </div>
       ) : (
         <div className="flex flex-col items-center flex-1 justify-center">
           <div className="relative">

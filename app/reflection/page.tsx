@@ -71,7 +71,7 @@ export default function Page() {
             <label
               key={o_idx}
               htmlFor={id}
-              className="flex items-center mb-2 cursor-pointer text-gray-900 hover:text-gray-500"
+              className="flex items-center mb-2 cursor-pointer text-gray-900 hover:text-gray-500 transition-colors duration-200"
             >
               <input
                 id={id}
@@ -100,7 +100,7 @@ export default function Page() {
       <button
         onClick={gradeQuiz}
         hidden={!allAnswered}
-        className="bg-orange-600/15 hover:bg-orange-600/15 active:bg-orange-600/25 px-7 py-3 my-4 rounded-lg border border-orange-600 duration-50 text-orange-600"
+        className="bg-orange-600/15 hover:bg-orange-600/30 transition-colors duration-300 active:bg-orange-600/25 px-7 py-3 my-4 rounded-lg border border-orange-600 duration-50 text-orange-600"
       >
         <p className={`${rethinkSans.className} antialiased text-lg text-orange-600 font-extrabold`}>
           Get Your Activity Recommendation

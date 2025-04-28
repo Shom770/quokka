@@ -1,4 +1,3 @@
-import { BookOpenIcon, BookmarkIcon, PencilIcon, TrophyIcon } from "@heroicons/react/24/solid";
 import ActivityCard from "../ui/activites/activity-card";
 import { rethinkSans } from "../ui/fonts";
 

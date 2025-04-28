@@ -18,13 +18,12 @@ export default function SurveyManager() {
   const [surveyTypes, setSurveyTypes] = useState<string[]>([]);
   const [surveyQuestion, setSurveyQuestion] = useState<SurveyQuestion | null>(null);
   const [showSurvey, setShowSurvey] = useState(false);
-
   const { canShow } = useContext(Context);
 
 
   // Pre-cache survey types on mount
   useEffect(() => {
-    fetch("https://api.quokka.school/survey/questions/types")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/survey/questions/types`)
       .then((res) => res.json())
       .then((data) => {
         // Assume data is an array of type strings
@@ -39,7 +38,7 @@ export default function SurveyManager() {
   useEffect(() => {
     if (pathname === "/" && previousPathname.current !== "/") {
       // Roll a 10% chance
-      if (Math.random() < 1 && canShow) {
+      if (Math.random() < 0.1 && canShow) {
         if (surveyTypes.length > 0) {
           // Determine candidate type from the previous pathname's last segment
           const segments = previousPathname.current.split("/");
@@ -47,7 +46,7 @@ export default function SurveyManager() {
           const type = surveyTypes.includes(possibleType) ? possibleType : "general";
 
           // Fetch the random survey question for the determined type
-          fetch(`https://api.quokka.school/survey/random/${type}`)
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/survey/random/${type}`)
             .then((res) => res.json())
             .then((data: SurveyQuestion) => {
               setSurveyQuestion(data);
@@ -64,7 +63,7 @@ export default function SurveyManager() {
   // Handle survey response submission
   const handleSurveySubmit = (rating: number) => {
     if (!surveyQuestion) return;
-    fetch("https://api.quokka.school/response", {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/response`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

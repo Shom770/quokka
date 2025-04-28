@@ -5,6 +5,7 @@ import Navbar from "@/app/ui/navbar";
 import SurveyManager from "./ui/survey-manager";
 import { useEffect, useState } from "react";
 import React from "react";
+import { SessionProvider } from "next-auth/react";
 
 interface Context {
   canShow: boolean,
@@ -30,12 +31,14 @@ export default function RootLayout({
  }, [canShow])
 
  return (
-   <Context.Provider value={{ canShow, setCanShow }}>
-     <Navbar />
-     <div className="flex flex-col items-center justify-center w-screen h-[90vh] overflow-x-hidden">
-       {children}
-     </div>
-     <SurveyManager />
-   </Context.Provider>
+   <SessionProvider>
+     <Context.Provider value={{ canShow, setCanShow }}>
+       <Navbar />
+       <div className="flex flex-col items-center justify-center w-screen h-[90vh] overflow-x-hidden">
+         {children}
+       </div>
+       <SurveyManager />
+     </Context.Provider>
+   </SessionProvider>
  );
 }

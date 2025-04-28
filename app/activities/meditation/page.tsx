@@ -1,16 +1,23 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
 
 /**
  * Example Meditation page in Next.js.
  * Place any MP3 files into your public/ folder or fetch them dynamically.
  */
 export default function Page() {
+  const { data: session } = useSession();
   // Timer states
   const [timer, setTimer] = useState<number>(0);
   const [isMeditating, setIsMeditating] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  
+  // Session tracking
+  const [sessionDuration, setSessionDuration] = useState<number>(0);
+  const [isLogging, setIsLogging] = useState(false);
+  const [logSuccess, setLogSuccess] = useState<boolean | null>(null);
 
   // Audio states
   const [selectedSong, setSelectedSong] = useState<string | null>(null);
@@ -25,8 +32,10 @@ export default function Page() {
     stopMeditation();
 
     setTimer(duration);
+    setSessionDuration(duration); // Store original duration for logging
     setIsMeditating(true);
     setIsPaused(false);
+    setLogSuccess(null);
 
     // Start countdown
     intervalRef.current = setInterval(() => {
@@ -34,6 +43,7 @@ export default function Page() {
         if (prev <= 1) {
           stopMeditation();
           playAlarm(); // you can define a separate alarm if desired
+          logMeditationActivity(duration); // Log when meditation completes
           return 0;
         }
         return prev - 1;
@@ -49,6 +59,47 @@ export default function Page() {
         );
       }
     }
+  };
+
+  // Log meditation activity to the server
+  const logMeditationActivity = async (duration: number) => {
+    setIsLogging(true);
+    
+    if (session?.serverToken) {
+      try {
+        const minutes = Math.floor(duration / 60);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/sync/activities`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.serverToken}`,
+            },
+            body: JSON.stringify({
+              activity_id: "meditation",
+              notes: `Completed ${minutes} minute meditation`
+            }),
+          }
+        );
+
+        if (response.ok) {
+          console.log("Meditation activity logged successfully");
+          setLogSuccess(true);
+        } else {
+          console.error("Failed to log meditation activity:", await response.text());
+          setLogSuccess(false);
+        }
+      } catch (error) {
+        console.error("Error logging meditation activity:", error);
+        setLogSuccess(false);
+      }
+    } else {
+      console.warn("Meditation completed but not logged - no auth token available");
+      setLogSuccess(false);
+    }
+    
+    setIsLogging(false);
   };
 
   // Stop timer and any playing audio
@@ -85,6 +136,7 @@ export default function Page() {
         if (prev <= 1) {
           stopMeditation();
           playAlarm();
+          logMeditationActivity(sessionDuration);
           return 0;
         }
         return prev - 1;
@@ -122,6 +174,16 @@ export default function Page() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Clear success message after 3 seconds
+  useEffect(() => {
+    if (logSuccess !== null) {
+      const timeout = setTimeout(() => {
+        setLogSuccess(null);
+      }, 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [logSuccess]);
 
   return (
     <div className="flex flex-col items-center text-orange-600 justify-center min-h-screen gap-6 p-6">
@@ -185,6 +247,25 @@ export default function Page() {
           >
             Stop
           </button>
+        </div>
+      )}
+      
+      {/* Activity Logging Feedback */}
+      {isLogging && (
+        <div className="mt-4 py-2 px-4 bg-yellow-100 text-yellow-800 rounded-md">
+          Logging your meditation...
+        </div>
+      )}
+      
+      {logSuccess === true && (
+        <div className="mt-4 py-2 px-4 bg-green-100 text-green-800 rounded-md">
+          ✓ Meditation logged successfully!
+        </div>
+      )}
+      
+      {logSuccess === false && (
+        <div className="mt-4 py-2 px-4 bg-red-100 text-red-800 rounded-md">
+          Failed to log meditation. Please check your connection.
         </div>
       )}
     </div>

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { figtree } from "@/app/ui/fonts";
 import "./globals.css";
-import Navbar from "./ui/navbar";
 import LayoutClient from "./layout-client";
 
 export const metadata: Metadata = {

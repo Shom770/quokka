@@ -1,12 +1,16 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 
 export default function BookReadingActivity() {
+  const { data: session } = useSession();
   const [selectedTime, setSelectedTime] = useState<number | null>(null);
   const [timer, setTimer] = useState<number>(0);
   const [isTimerActive, setIsTimerActive] = useState<boolean>(false);
   const [isSessionComplete, setIsSessionComplete] = useState<boolean>(false);
+  const [isLogging, setIsLogging] = useState<boolean>(false);
+  const [logSuccess, setLogSuccess] = useState<boolean | null>(null);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -31,13 +35,52 @@ export default function BookReadingActivity() {
     setIsTimerActive(true);
   };
 
-  const handleCompletion = () => {
-    alert(`Session complete! You read for ${selectedTime} minutes.`);
+  const handleCompletion = async () => {
+    setIsLogging(true);
+    
+    if (session?.serverToken) {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/sync/activities`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.serverToken}`,
+            },
+            body: JSON.stringify({
+              activity_id: "book-reading",
+              notes: `Reading session for ${selectedTime} minutes`
+            }),
+          }
+        );
+
+        if (response.ok) {
+          console.log("Reading activity logged successfully");
+          setLogSuccess(true);
+        } else {
+          console.error("Failed to log reading activity:", await response.text());
+          setLogSuccess(false);
+        }
+      } catch (error) {
+        console.error("Error logging reading activity:", error);
+        setLogSuccess(false);
+      }
+    } else {
+      console.warn("Reading activity completed but not logged - no auth token available");
+      setLogSuccess(false);
+    }
+
+    setIsLogging(false);
+    
     // Reset session after completion
-    setIsSessionComplete(false);
-    setSelectedTime(null);
-    setTimer(0);
-    setIsTimerActive(false);
+    setTimeout(() => {
+      setIsSessionComplete(false);
+      setSelectedTime(null);
+      setTimer(0);
+      setIsTimerActive(false);
+      setLogSuccess(null);
+    }, 2000);
   };
 
   return (
@@ -83,9 +126,24 @@ export default function BookReadingActivity() {
         {isSessionComplete && (
           <button
             onClick={handleCompletion}
-            className="w-full py-3 rounded bg-green-500 text-lg font-semibold"
+            disabled={isLogging}
+            className={`w-full py-3 rounded text-white text-lg font-semibold ${
+              isLogging 
+                ? "bg-gray-400" 
+                : logSuccess === true 
+                  ? "bg-green-600"
+                  : logSuccess === false 
+                    ? "bg-red-600" 
+                    : "bg-green-500"
+            }`}
           >
-            Session Complete - Continue
+            {isLogging 
+              ? "Logging activity..." 
+              : logSuccess === true 
+                ? "✓ Activity logged!" 
+                : logSuccess === false 
+                  ? "Failed to log activity" 
+                  : "Session Complete - Continue"}
           </button>
         )}
       </div>

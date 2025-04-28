@@ -1,5 +1,4 @@
-import ExportedImage from "next-image-export-optimizer";
-import { StaticImageData } from 'next/image';
+import Image, { StaticImageData } from 'next/image';
 import { inter } from './fonts'
 
 interface ResourceProps {
@@ -12,7 +11,7 @@ interface ResourceProps {
 export default function Resource({ title, description, pathToImage, link }: ResourceProps) {
   return (
     <div className="bg-orange-600/5 border-2 border-orange-600/75 flex flex-row items-center justify-center gap-8 w-full h-36 rounded-lg">
-      <ExportedImage 
+      <Image 
         src={pathToImage}
         alt={`Logo of ${title}`}
         className="rounded-lg"
@@ -21,7 +20,7 @@ export default function Resource({ title, description, pathToImage, link }: Reso
         placeholder="blur"
       />
       <div className="flex flex-col justify-center h-24 w-5/6">
-        <a href={link} className="text-xl font-extrabold text-black hover:underline">{title}</a>
+        <a href={link} className="text-xl font-extrabold text-black hover:text-blue-500 transition-all duration-200">{title}</a>
         <p className={`${inter.className} antialiased text-black`}>{description}</p>
       </div>
     </div>

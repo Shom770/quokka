@@ -1,12 +1,11 @@
 "use client"
 
-import { useContext, useEffect, useState } from "react";
+import { useContext } from "react";
 import { rethinkSans } from "../ui/fonts";
 import Switch from "../ui/settings/switch";
 import { Context } from "../layout-client";
 
 export default function Page() {
-
   const { canShow, setCanShow } = useContext(Context); 
 
   return (
