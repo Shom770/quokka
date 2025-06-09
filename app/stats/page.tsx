@@ -231,7 +231,7 @@ export default function StatsPage() {
                   Challenges: <span className="font-bold text-lg">{counts?.challenge_count || 0}</span>
                 </p>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+              <div className="w-full bg-yellow-400 rounded-full h-2.5 mt-2">
                 <div 
                   className="bg-orange-400 h-2.5 rounded-full" 
                   style={{ 
