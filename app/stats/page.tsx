@@ -1,7 +1,7 @@
 "use client";
 
 import { rethinkSans } from "@/app/ui/fonts";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { CalendarIcon, FireIcon, TrophyIcon } from "@heroicons/react/24/solid";
 
@@ -41,24 +41,7 @@ export default function StatsPage() {
   );
   const [error, setError] = useState("");
 
-  // Scroll to top when component mounts
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
-  useEffect(() => {
-    if (session?.serverToken) {
-      fetchStats();
-    }
-  }, [session]);
-
-  useEffect(() => {
-    if (session?.serverToken) {
-      fetchCalendarItems();
-    }
-  }, [selectedDate, session]);
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     setIsLoading(true);
     setError("");
 
@@ -105,9 +88,9 @@ export default function StatsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [session?.serverToken]);
 
-  const fetchCalendarItems = async () => {
+  const fetchCalendarItems = useCallback(async () => {
     if (!selectedDate) return;
 
     try {
@@ -129,7 +112,24 @@ export default function StatsPage() {
     } catch (err) {
       console.error("Error fetching calendar items:", err);
     }
-  };
+  }, [selectedDate, session?.serverToken]);
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
+    if (session?.serverToken) {
+      fetchStats();
+    }
+  }, [session?.serverToken, fetchStats]);
+
+  useEffect(() => {
+    if (session?.serverToken) {
+      fetchCalendarItems();
+    }
+  }, [selectedDate, session?.serverToken, fetchCalendarItems]);
 
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = {

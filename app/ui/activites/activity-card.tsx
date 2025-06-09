@@ -1,4 +1,3 @@
-import { FC, SVGProps } from "react"
 import { inter, rethinkSans } from "@/app/ui/fonts"
 import Link from "next/link"
 

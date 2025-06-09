@@ -210,7 +210,7 @@ export default function MindfulnessVideos() {
       
       {logSuccess === true && videoWatched && (
         <div className="mt-4 py-2 px-4 bg-green-100 text-green-800 rounded-md">
-          ✓ "{videoWatched}" completed and logged successfully!
+          ✓ &quot;{videoWatched}&quot; completed and logged successfully!
         </div>
       )}
       

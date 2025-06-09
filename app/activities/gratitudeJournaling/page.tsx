@@ -86,7 +86,7 @@ export default function Page() {
         Gratitude Journaling
       </h1>
       <span className="font-bold text-lg text-orange-600 text-center">
-        Take a moment to reflect on and write down three things you're grateful for today. Once you've completed each, check the box to mark it as done.
+        Take a moment to reflect on and write down three things you&apos;re grateful for today. Once you&apos;ve completed each, check the box to mark it as done.
       </span>
 
       <div className="space-y-8 flex justify-start flex-col">

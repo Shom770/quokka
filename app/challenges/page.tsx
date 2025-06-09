@@ -42,7 +42,7 @@ function generateChallenges(focuses: string[]) {
 
   const challengesLeft = 4 - challenges.length;
 
-  for (var i = 0; i < challengesLeft; i++) {
+  for (let i = 0; i < challengesLeft; i++) {
     challenges.push(
       generatedChallenges["general_challenges"][
         Math.floor(
@@ -166,7 +166,7 @@ export default function Page() {
     setSelectedPills(newSelectedPills);
 
     const newFocuses = Object.entries(newSelectedPills)
-      .filter(([_, selected]) => selected)
+      .filter(([, selected]) => selected)
       .map(([name]) => name);
     setFocuses(newFocuses);
 
@@ -299,7 +299,7 @@ export default function Page() {
         <h1
           className={`${inter.className} antialiased text-lg text-black font-medium`}
         >
-          Here's your challenges.
+          Here&apos;s your challenges.
         </h1>
         <div className="relative flex flex-row items-center justify-center gap-4 w-full">
           {challenges.map(([category, description], i) => (

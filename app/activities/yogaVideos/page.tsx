@@ -1,15 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
-
-// Define TypeScript types for YouTube API
-declare global {
-  interface Window {
-    YT: any;
-    onYouTubeIframeAPIReady: () => void;
-  }
-}
+import type { YTPlayer, YTPlayerEvent } from "@/types/youtube";
 
 export default function Page() {
   const { data: session } = useSession();
@@ -22,86 +15,15 @@ export default function Page() {
   const [videoWatched, setVideoWatched] = useState<string | null>(null);
 
   // References to player instances
-  const player2Ref = useRef<any>(null);
-  const player5Ref = useRef<any>(null);
-  const player10Ref = useRef<any>(null);
+  const player2Ref = useRef<YTPlayer | null>(null);
+  const player5Ref = useRef<YTPlayer | null>(null);
+  const player10Ref = useRef<YTPlayer | null>(null);
   const apiReadyRef = useRef(false);
   
   const videoHeight = 300;
 
-  // Load YouTube API
-  useEffect(() => {
-    // Only load the API once
-    if (window.YT || document.querySelector('script[src*="youtube.com/iframe_api"]')) {
-      apiReadyRef.current = true;
-      return;
-    }
-    
-    // This function will be called once the API is ready
-    window.onYouTubeIframeAPIReady = () => {
-      apiReadyRef.current = true;
-      initializePlayers();
-    };
-    
-    // Load the YouTube IFrame API
-    const tag = document.createElement('script');
-    tag.src = "https://www.youtube.com/iframe_api";
-    const firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
-    
-    return () => {
-      window.onYouTubeIframeAPIReady = () => {};
-    };
-  }, []);
-  
-  // Initialize players when API is ready and videos are shown
-  useEffect(() => {
-    if (apiReadyRef.current) {
-      initializePlayers();
-    }
-  }, [showYogaVideo2, showYogaVideo5, showYogaVideo10]);
-  
-  // Create YouTube players
-  const initializePlayers = () => {
-    if (showYogaVideo2 && !player2Ref.current && document.getElementById('yoga-video-2')) {
-      player2Ref.current = new window.YT.Player('yoga-video-2', {
-        videoId: 'EVKi3oXAYvk',
-        events: {
-          onStateChange: (event: any) => handleVideoStateChange(event, 'yoga-2', '2-Minute Yoga Session')
-        }
-      });
-    }
-    
-    if (showYogaVideo5 && !player5Ref.current && document.getElementById('yoga-video-5')) {
-      player5Ref.current = new window.YT.Player('yoga-video-5', {
-        videoId: 'nvFm30ZAZRY',
-        events: {
-          onStateChange: (event: any) => handleVideoStateChange(event, 'yoga-5', '5-Minute Yoga Session')
-        }
-      });
-    }
-    
-    if (showYogaVideo10 && !player10Ref.current && document.getElementById('yoga-video-10')) {
-      player10Ref.current = new window.YT.Player('yoga-video-10', {
-        videoId: '4pKly2JojMw',
-        events: {
-          onStateChange: (event: any) => handleVideoStateChange(event, 'yoga-10', '10-Minute Yoga Session')
-        }
-      });
-    }
-  };
-  
-  // Handle video state changes, log when a video ends
-  const handleVideoStateChange = (event: any, videoId: string, videoTitle: string) => {
-    // YT.PlayerState.ENDED = 0
-    if (event.data === 0) {
-      setVideoWatched(videoTitle);
-      logYogaActivity(videoId, videoTitle);
-    }
-  };
-  
   // Log video completion to server
-  const logYogaActivity = async (videoId: string, videoTitle: string) => {
+  const logYogaActivity = useCallback(async (videoTitle: string) => {
     setIsLogging(true);
     
     if (session?.serverToken) {
@@ -144,7 +66,77 @@ export default function Page() {
       setLogSuccess(null);
       setVideoWatched(null);
     }, 5000);
-  };
+  }, [session?.serverToken]);
+
+  // Handle video state changes, log when a video ends
+  const handleVideoStateChange = useCallback((event: YTPlayerEvent, videoTitle: string) => {
+    // YT.PlayerState.ENDED = 0
+    if (event.data === 0) {
+      setVideoWatched(videoTitle);
+      logYogaActivity(videoTitle);
+    }
+  }, [logYogaActivity]);
+
+  const initializePlayers = useCallback(() => {
+    if (showYogaVideo2 && !player2Ref.current && document.getElementById('yoga-video-2')) {
+      player2Ref.current = new window.YT.Player('yoga-video-2', {
+        videoId: 'EVKi3oXAYvk',
+        events: {
+          onStateChange: (event: YTPlayerEvent) => handleVideoStateChange(event, '2-Minute Yoga Session')
+        }
+      });
+    }
+    
+    if (showYogaVideo5 && !player5Ref.current && document.getElementById('yoga-video-5')) {
+      player5Ref.current = new window.YT.Player('yoga-video-5', {
+        videoId: 'nvFm30ZAZRY',
+        events: {
+          onStateChange: (event: YTPlayerEvent) => handleVideoStateChange(event, '5-Minute Yoga Session')
+        }
+      });
+    }
+    
+    if (showYogaVideo10 && !player10Ref.current && document.getElementById('yoga-video-10')) {
+      player10Ref.current = new window.YT.Player('yoga-video-10', {
+        videoId: '4pKly2JojMw',
+        events: {
+          onStateChange: (event: YTPlayerEvent) => handleVideoStateChange(event, '10-Minute Yoga Session')
+        }
+      });
+    }
+  }, [showYogaVideo2, showYogaVideo5, showYogaVideo10, handleVideoStateChange]);
+
+  // Load YouTube API
+  useEffect(() => {
+    // Only load the API once
+    if (window.YT || document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+      apiReadyRef.current = true;
+      return;
+    }
+    
+    // This function will be called once the API is ready
+    window.onYouTubeIframeAPIReady = () => {
+      apiReadyRef.current = true;
+      initializePlayers();
+    };
+    
+    // Load the YouTube IFrame API
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+    
+    return () => {
+      window.onYouTubeIframeAPIReady = () => {};
+    };
+  }, [initializePlayers]);
+  
+  // Initialize players when API is ready and videos are shown
+  useEffect(() => {
+    if (apiReadyRef.current) {
+      initializePlayers();
+    }
+  }, [showYogaVideo2, showYogaVideo5, showYogaVideo10, initializePlayers]);
 
   // Handle video show/hide and clean up player instances
   const toggleVideo2 = () => {
@@ -238,7 +230,7 @@ export default function Page() {
       
       {logSuccess === true && videoWatched && (
         <div className="mt-4 py-2 px-4 bg-green-100 text-green-800 rounded-md">
-          ✓ "{videoWatched}" completed and logged successfully!
+          ✓ &quot;{videoWatched}&quot; completed and logged successfully!
         </div>
       )}
       

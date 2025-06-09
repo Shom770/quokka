@@ -58,7 +58,7 @@ export default function SurveyManager() {
     }
     // Update previous pathname
     previousPathname.current = pathname;
-  }, [pathname, surveyTypes]);
+  }, [pathname, surveyTypes, canShow]);
 
   // Handle survey response submission
   const handleSurveySubmit = (rating: number) => {

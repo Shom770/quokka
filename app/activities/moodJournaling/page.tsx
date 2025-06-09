@@ -1,6 +1,6 @@
 "use client"
 
-import { inter, rethinkSans } from "@/app/ui/fonts";
+import { rethinkSans } from "@/app/ui/fonts";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 
@@ -96,7 +96,7 @@ export default function Page() {
             Mood Journaling
           </h1>
           <span className="font-bold text-lg leading-tight text-orange-600 text-center">
-            Choose a time duration and use it to journal about your emotions. Below are some suggestions to help you identify what you're feeling.
+            Choose a time duration and use it to journal about your emotions. Below are some suggestions to help you identify what you&apos;re feeling.
           </span>
 
           {/* Fixed list section - doesn't scroll */}
