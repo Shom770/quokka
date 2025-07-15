@@ -21,9 +21,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ credential: account.id_token }),
             });
-            
-            console.log("Sync response status:", response.status);
-            
+                        
             if (response.ok) {
               const data = await response.json();
               console.log("Received token from server:", !!data.token);
@@ -38,7 +36,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       }
       
-      console.log("JWT returning token with serverToken:", !!token.serverToken);
       return token;
     },
     

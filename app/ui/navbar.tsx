@@ -6,11 +6,15 @@ import { Cog6ToothIcon } from "@heroicons/react/24/solid";
 import { useSession, signOut } from "next-auth/react";
 import { rethinkSans } from "@/app/ui/fonts";
 import { useState, useRef, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
   const { data: session } = useSession();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+  
+  const isLoginPage = pathname === "/login";
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -82,13 +86,15 @@ export default function Navbar() {
                   >
                     My Stats
                   </Link>
-                  <Link 
-                    href="/settings"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-300"
-                    onClick={() => setIsDropdownOpen(false)}
-                  >
-                    Settings
-                  </Link>
+                  {!isLoginPage && (
+                    <Link 
+                      href="/settings"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-300"
+                      onClick={() => setIsDropdownOpen(false)}
+                    >
+                      Settings
+                    </Link>
+                  )}
                   <button 
                     onClick={handleSignOut}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-300"
@@ -99,9 +105,11 @@ export default function Navbar() {
               </div>
             </div>
           ) : (
-            <Link href="/settings">
-              <Cog6ToothIcon className="w-12 h-12 text-orange-600" />
-            </Link>
+            !isLoginPage && (
+              <Link href="/settings">
+                <Cog6ToothIcon className="w-12 h-12 text-orange-600" />
+              </Link>
+            )
           )}
         </div>
       </div>

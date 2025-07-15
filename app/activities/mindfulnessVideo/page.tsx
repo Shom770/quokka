@@ -2,14 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
-
-// Define TypeScript types for YouTube API
-declare global {
-  interface Window {
-    YT: any;
-    onYouTubeIframeAPIReady: () => void;
-  }
-}
+import type { YTPlayer, YTPlayerEvent } from "@/types/youtube";
 
 export default function MindfulnessVideos() {
   const { data: session } = useSession();
@@ -20,8 +13,8 @@ export default function MindfulnessVideos() {
   const [videoWatched, setVideoWatched] = useState<string | null>(null);
 
   // References to player instances
-  const player1Ref = useRef<any>(null);
-  const player2Ref = useRef<any>(null);
+  const player1Ref = useRef<YTPlayer | null>(null);
+  const player2Ref = useRef<YTPlayer | null>(null);
   const apiReadyRef = useRef(false);
 
   const videoHeight = 300;
@@ -64,7 +57,7 @@ export default function MindfulnessVideos() {
       player1Ref.current = new window.YT.Player('video1', {
         videoId: 'ssss7V1_eyA',
         events: {
-          onStateChange: (event: any) => handleVideoStateChange(event, 'video1')
+          onStateChange: (event: YTPlayerEvent) => handleVideoStateChange(event, 'video1')
         }
       });
     }
@@ -73,27 +66,27 @@ export default function MindfulnessVideos() {
       player2Ref.current = new window.YT.Player('video2', {
         videoId: 'p5EVLX8XxzM',
         events: {
-          onStateChange: (event: any) => handleVideoStateChange(event, 'video2')
+          onStateChange: (event: YTPlayerEvent) => handleVideoStateChange(event, 'video2')
         }
       });
     }
   };
   
   // Handle video state changes, log when a video ends
-  const handleVideoStateChange = (event: any, videoId: string) => {
+  const handleVideoStateChange = (event: YTPlayerEvent, videoId: string) => {
     // YT.PlayerState.ENDED = 0
-    if (event.data === 0) {
+    if (event.data === window.YT.PlayerState.ENDED) {
       const videoTitle = videoId === 'video1' ? 
         "Mindfulness Video With Commentary" : 
         "Mindfulness Video Without Commentary";
       
       setVideoWatched(videoTitle);
-      logVideoActivity(videoId, videoTitle);
+      logVideoActivity(videoTitle);
     }
   };
   
   // Log video completion to server
-  const logVideoActivity = async (videoId: string, videoTitle: string) => {
+  const logVideoActivity = async (videoTitle: string) => {
     setIsLogging(true);
     
     if (session?.serverToken) {

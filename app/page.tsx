@@ -1,6 +1,38 @@
+"use client";
+
 import Cards from "@/app/ui/landing/cards";
 import { libreBodoni } from "./ui/fonts";
+import { motion } from "framer-motion";
 
+const animationVariants = {
+  pageContainer: {
+    initial: { opacity: 0 },
+    animate: { opacity: 1, transition: { duration: 0.8, ease: "easeOut" } }
+  },
+  leftSection: {
+    initial: { x: -50, opacity: 0 },
+    animate: { x: 0, opacity: 1, transition: { duration: 0.6, delay: 0.2 } }
+  },
+  rightSection: {
+    initial: { x: 50, opacity: 0 },
+    animate: { x: 0, opacity: 1, transition: { duration: 0.6, delay: 0.4 } }
+  },
+  gradientBackground: {
+    initial: { scale: 0.8, opacity: 0 },
+    animate: { scale: 1, opacity: 1, transition: { duration: 1.0, delay: 0.6, type: "spring", stiffness: 100, damping: 15 } },
+    hover: { scale: 1.1, opacity: 1, transition: { duration: 0.4 } }
+  },
+  quoteText: {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0, transition: { duration: 1.2, delay: 0.8 } },
+    hover: { scale: 1.02, transition: { duration: 0.3 } }
+  },
+  authorText: {
+    initial: { opacity: 0, y: 30 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.6, delay: 1.4 } },
+    hover: { scale: 1.05, transition: { duration: 0.3 } }
+  }
+};
 
 export default function Page() {
  const quotes = [
@@ -30,15 +62,44 @@ export default function Page() {
 
  const randomQuote = quotes[Math.floor(Math.random() * quotes.length)]
   return (
-   <div className="flex flex-row items-center justify-between w-4/5 h-full">
-     <div className="flex items-center justify-center relative w-[50%] h-[80%]">
+   <motion.div 
+     className="flex flex-row items-center justify-between w-4/5 h-full"
+     {...animationVariants.pageContainer}
+   >
+     <motion.div 
+       className="flex items-center justify-center relative w-[50%] h-[80%]"
+       {...animationVariants.leftSection}
+     >
        <Cards />
-     </div>
-     <div className="relative flex flex-col justify-center w-2/5 h-2/5 gap-2" >
-       <div className="absolute inset-0 bg-gradient-to-r from-[#F66B6B]/90 to-[#F5C114]/90 blur-[150px] rounded-xl z-0" />
-       <h1 className={`${libreBodoni.className} antialiased text-5xl text-black/75 z-10`}>{ randomQuote.quote }</h1>
-       <h1 className="text-4xl font-bold text-black/75 z-10">— { randomQuote.author} </h1>
-     </div>
-   </div>
+     </motion.div>
+     <motion.div 
+       className="relative flex flex-col justify-center w-2/5 h-2/5 gap-2"
+       {...animationVariants.rightSection}
+       whileHover={{
+         scale: 1.02,
+         transition: { duration: 0.3 }
+       }}
+     >
+       <motion.div 
+         className="absolute inset-0 bg-gradient-to-r from-[#F66B6B]/90 to-[#F5C114]/90 blur-[150px] rounded-xl z-0" 
+         {...animationVariants.gradientBackground}
+         whileHover={animationVariants.gradientBackground.hover}
+       />
+       <motion.h1 
+         className={`${libreBodoni.className} antialiased text-5xl text-black/75 z-10`}
+         {...animationVariants.quoteText}
+         whileHover={animationVariants.quoteText.hover}
+       >
+         { randomQuote.quote }
+       </motion.h1>
+       <motion.h1 
+         className="text-4xl font-bold text-black/75 z-10"
+         {...animationVariants.authorText}
+         whileHover={animationVariants.authorText.hover}
+       >
+         — { randomQuote.author} 
+       </motion.h1>
+     </motion.div>
+   </motion.div>
  )
 }

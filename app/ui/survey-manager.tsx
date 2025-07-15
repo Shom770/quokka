@@ -1,9 +1,9 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import SurveyModal from "./survey-modal";
 import { Context } from "../layout-client";
+import { usePathname } from "next/navigation";
 
 interface SurveyQuestion {
   _id: number;
@@ -12,58 +12,76 @@ interface SurveyQuestion {
   scale: string[];
 }
 
+interface SurveyApiResponse {
+  success: boolean;
+  data: SurveyQuestion;
+}
+
 export default function SurveyManager() {
   const pathname = usePathname();
-  const previousPathname = useRef(pathname);
   const [surveyTypes, setSurveyTypes] = useState<string[]>([]);
   const [surveyQuestion, setSurveyQuestion] = useState<SurveyQuestion | null>(null);
   const [showSurvey, setShowSurvey] = useState(false);
   const { canShow } = useContext(Context);
-
+  const [surveyAttempted, setSurveyAttempted] = useState(false);
+  const [prevPath, setPrevPath] = useState<string>(pathname);
 
   // Pre-cache survey types on mount
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/survey/questions/types`)
+    fetch("https://data.quokka.school/api/surveys/questions/types")
       .then((res) => res.json())
       .then((data) => {
-        // Assume data is an array of type strings
-        setSurveyTypes(data);
+        setSurveyTypes(data.data);
       })
       .catch((err) => {
         console.error("Error fetching survey types:", err);
       });
   }, []);
 
-  // Only trigger survey when returning to the homepage ("/") from a different page
+  // Track previous pathname
   useEffect(() => {
-    if (pathname === "/" && previousPathname.current !== "/") {
-      // Roll a 10% chance
-      if (Math.random() < 0.1 && canShow) {
-        if (surveyTypes.length > 0) {
-          // Determine candidate type from the previous pathname's last segment
-          const segments = previousPathname.current.split("/");
-          const possibleType = segments[segments.length - 1].toLowerCase();
-          const type = surveyTypes.includes(possibleType) ? possibleType : "general";
+    if (pathname !== "/") {
+      setSurveyAttempted(false); // Reset attempt when leaving root
+    }
+    setPrevPath(() => pathname);
+  }, [pathname]);
 
-          // Fetch the random survey question for the determined type
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/survey/random/${type}`)
-            .then((res) => res.json())
-            .then((data: SurveyQuestion) => {
-              setSurveyQuestion(data);
-              setShowSurvey(true);
-            })
-            .catch((err) => console.error("Error fetching survey question", err));
-        }
+  // Trigger survey fetch only when navigating from a non-root page to root
+  useEffect(() => {
+    if (
+      pathname === "/" &&
+      prevPath !== "/" &&
+      !surveyAttempted &&
+      surveyTypes.length > 0 &&
+      canShow
+    ) {
+      // 15% chance to show survey
+      if (Math.random() < 0.15) {
+        // Determine candidate type from the previous path's last segment
+        const segments = prevPath.split("/");
+        const possibleType = segments[segments.length - 1].toLowerCase();
+        const type = surveyTypes.includes(possibleType) ? possibleType : "general";
+        fetch(`https://data.quokka.school/api/surveys/random/${type}`)
+          .then((res) => res.json())
+          .then((data: SurveyApiResponse) => {
+            setSurveyQuestion(data.data);
+            setShowSurvey(true);
+            setSurveyAttempted(true);
+          })
+          .catch((err) => {
+            console.error("Error fetching survey question", err);
+            setSurveyAttempted(true);
+          });
+      } else {
+        setSurveyAttempted(true);
       }
     }
-    // Update previous pathname
-    previousPathname.current = pathname;
-  }, [pathname, surveyTypes, canShow]);
+  }, [pathname, prevPath, surveyTypes, canShow, surveyAttempted]);
 
   // Handle survey response submission
   const handleSurveySubmit = (rating: number) => {
     if (!surveyQuestion) return;
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/response`, {
+    fetch(`https://data.quokka.school/api/surveys/responses`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

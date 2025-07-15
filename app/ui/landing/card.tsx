@@ -10,7 +10,8 @@ export default function Card({
     iconColor,
     rotate,
     zIndex,
-    position
+    position,
+    delay = 0
 } : {
     title: string,
     text: ReactNode,
@@ -19,7 +20,8 @@ export default function Card({
     iconColor: string,
     rotate: string,
     zIndex: number,
-    position: string
+    position: string,
+    delay?: number
 }) {
     return (
         <motion.div
@@ -37,8 +39,8 @@ export default function Card({
                     damping: 10, // Controls the smoothness
                 },
             }}
-            initial={{ opacity: 1, y: 20, transform: `rotate(${rotate}) scale(1.0)`, zIndex: zIndex }}
-            animate={{ opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeInOut" } }}
+            initial={{ opacity: 0, y: 20, transform: `rotate(${rotate}) scale(1.0)`, zIndex: zIndex }}
+            animate={{ opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeInOut", delay: delay } }}
         >
             <h1 className={`text-white text-[28px] font-extrabold ${rethinkSans.className} antialiased`}>
                 {title}

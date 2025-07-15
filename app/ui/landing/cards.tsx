@@ -30,6 +30,7 @@ export default function Cards() {
           rotate="-16deg"
           zIndex={0}
           position="left-0 top-0"
+          delay={0.6}
         />
       </Link>
       <Link href="/resources">
@@ -47,6 +48,7 @@ export default function Cards() {
           rotate="-8deg"
           zIndex={5}
           position="left-[17.5%] top-[15%]"
+          delay={0.8}
         />
       </Link>
       <Link href="/activities">
@@ -65,6 +67,7 @@ export default function Cards() {
           rotate="0deg"
           zIndex={10}
           position="bottom-[15%] right-[17.5%]"
+          delay={1.0}
         />
       </Link>
       <Link href="/challenges">
@@ -83,6 +86,7 @@ export default function Cards() {
           rotate="8deg"
           zIndex={10}
           position="bottom-0 right-[5%]"
+          delay={1.2}
         />
       </Link>
     </>
