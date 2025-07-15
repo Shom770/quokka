@@ -1,3 +1,4 @@
+import React from "react";
 import { inter, rethinkSans } from "@/app/ui/fonts";
 import { motion } from "framer-motion";
 import { 
@@ -9,7 +10,7 @@ import {
   PlayCircleIcon
 } from "@heroicons/react/24/solid";
 
-const getCategoryIcon = (category: string): JSX.Element => {
+const getCategoryIcon = (category: string): React.ReactElement => {
   const lowerCategory = category.toLowerCase();
   
   if (lowerCategory.includes('mindfulness') || lowerCategory.includes('meditation')) {

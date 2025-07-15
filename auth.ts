@@ -2,12 +2,7 @@ import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-  ],
+  providers: [Google],
   callbacks: {
     async jwt({ token, account, user }) {
       // Initial sign-in
@@ -16,7 +11,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         
         if (account.provider === "google" && account.id_token) {
           try {
-            const response = await fetch(`${process.env.API_URL}/sync/session`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sync/session`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ credential: account.id_token }),
