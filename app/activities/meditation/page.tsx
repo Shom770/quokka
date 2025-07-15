@@ -2,6 +2,27 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Animation Variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: { y: 0, opacity: 1 },
+};
+
+const feedbackVariants = {
+    initial: { opacity: 0, y: 10, scale: 0.95 },
+    animate: { opacity: 1, y: 0, scale: 1 },
+    exit: { opacity: 0, y: -10, scale: 0.95 },
+};
 
 /**
  * Example Meditation page in Next.js.
@@ -9,118 +30,85 @@ import { useSession } from "next-auth/react";
  */
 export default function Page() {
   const { data: session } = useSession();
-  // Timer states
   const [timer, setTimer] = useState<number>(0);
   const [isMeditating, setIsMeditating] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   
-  // Session tracking
   const [sessionDuration, setSessionDuration] = useState<number>(0);
   const [isLogging, setIsLogging] = useState(false);
   const [logSuccess, setLogSuccess] = useState<boolean | null>(null);
 
-  // Audio states
   const [selectedSong, setSelectedSong] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(false);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Called when the user selects a time (in seconds) to start meditating
   const startMeditation = (duration: number) => {
-    // Stop any active timer/audio
-    stopMeditation();
-
+    stopMeditation(false);
     setTimer(duration);
-    setSessionDuration(duration); // Store original duration for logging
+    setSessionDuration(duration);
     setIsMeditating(true);
     setIsPaused(false);
     setLogSuccess(null);
 
-    // Start countdown
     intervalRef.current = setInterval(() => {
       setTimer((prev) => {
         if (prev <= 1) {
-          stopMeditation();
-          playAlarm(); // you can define a separate alarm if desired
-          logMeditationActivity(duration); // Log when meditation completes
+          stopMeditation(true);
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
 
-    // Load & play selected audio if any
     if (selectedSong) {
       audioRef.current = new Audio(selectedSong);
       if (!isMuted) {
-        audioRef.current.play().catch((err) =>
-          console.error("Audio play error:", err)
-        );
+        audioRef.current.play().catch((err) => console.error("Audio play error:", err));
       }
     }
   };
 
-  // Log meditation activity to the server
   const logMeditationActivity = async (duration: number) => {
     setIsLogging(true);
-    
     if (session?.serverToken) {
       try {
         const minutes = Math.floor(duration / 60);
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/sync/activities`,
-          {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sync/activities`, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${session.serverToken}`,
-            },
-            body: JSON.stringify({
-              activity_id: "meditation",
-              notes: `Completed ${minutes} minute meditation`
-            }),
-          }
-        );
-
-        if (response.ok) {
-          console.log("Meditation activity logged successfully");
-          setLogSuccess(true);
-        } else {
-          console.error("Failed to log meditation activity:", await response.text());
-          setLogSuccess(false);
-        }
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.serverToken}` },
+            body: JSON.stringify({ activity_id: "meditation", notes: `Completed ${minutes} minute meditation` }),
+        });
+        setLogSuccess(response.ok);
       } catch (error) {
         console.error("Error logging meditation activity:", error);
         setLogSuccess(false);
       }
     } else {
-      console.warn("Meditation completed but not logged - no auth token available");
       setLogSuccess(false);
     }
-    
     setIsLogging(false);
   };
 
-  // Stop timer and any playing audio
-  const stopMeditation = () => {
+  const stopMeditation = (finished: boolean) => {
     setIsMeditating(false);
     setIsPaused(false);
     if (intervalRef.current) clearInterval(intervalRef.current);
-
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
       audioRef.current = null;
     }
+    if (finished) {
+        playAlarm();
+        logMeditationActivity(sessionDuration);
+    }
   };
 
-  // Simple alarm sound (place alarm.mp3 in /public or update url)
   const playAlarm = () => {
     const alarmAudio = new Audio("/sounds/soft_alarm.mp3");
-    alarmAudio.play().catch((err) =>
-      console.error("Alarm audio error:", err)
-    );
+    alarmAudio.play().catch((err) => console.error("Alarm audio error:", err));
   };
 
   const pauseMeditation = () => {
@@ -134,31 +122,19 @@ export default function Page() {
     intervalRef.current = setInterval(() => {
       setTimer((prev) => {
         if (prev <= 1) {
-          stopMeditation();
-          playAlarm();
-          logMeditationActivity(sessionDuration);
+          stopMeditation(true);
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
-    if (!isMuted)
-      audioRef.current?.play().catch((err) =>
-        console.error("Resume error:", err)
-      );
+    if (!isMuted) audioRef.current?.play().catch((err) => console.error("Resume error:", err));
   };
 
-  // Toggle audio mute
   const toggleMute = () => {
     setIsMuted(!isMuted);
     if (!audioRef.current) return;
-    if (isMuted) {
-      audioRef.current
-        .play()
-        .catch((err) => console.error("Unmute error:", err));
-    } else {
-      audioRef.current.pause();
-    }
+    audioRef.current.muted = !isMuted;
   };
 
   const formatTime = (seconds: number) => {
@@ -168,106 +144,116 @@ export default function Page() {
   };
 
   useEffect(() => {
-    // Cleanup on unmount
     return () => {
-      stopMeditation();
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Clear success message after 3 seconds
+  
   useEffect(() => {
     if (logSuccess !== null) {
-      const timeout = setTimeout(() => {
-        setLogSuccess(null);
-      }, 3000);
+      const timeout = setTimeout(() => setLogSuccess(null), 4000);
       return () => clearTimeout(timeout);
     }
   }, [logSuccess]);
 
+  const radius = 80;
+  const circumference = 2 * Math.PI * radius;
+  const progress = sessionDuration > 0 ? timer / sessionDuration : 0;
+  const strokeDashoffset = circumference * (1 - progress);
+
   return (
-    <div className="flex flex-col items-center text-orange-600 justify-center min-h-screen gap-6 p-6">
-      <h1 className="text-3xl font-bold">Mindful Meditation</h1>
-      <p className="font-medium">Select a duration to begin your session.</p>
-      {/* Select audio track */}
-      <div className="flex items-center justify-between w-full max-w-xs">
-        <label className="font-semibold">Select a Song</label>
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="flex flex-col items-center text-orange-600 justify-center min-h-screen gap-6 p-6"
+    >
+      <motion.h1 variants={itemVariants} className="text-4xl font-bold">Mindful Meditation</motion.h1>
+      <motion.p variants={itemVariants} className="font-medium text-lg">Select a duration to begin your session.</motion.p>
+      
+      <motion.div variants={itemVariants} className="flex items-center justify-between w-full max-w-xs">
+        <label className="font-semibold">Select Background Sound</label>
         <select
-          className="border border-gray-300 text-black rounded px-2 py-1"
+          className="border border-orange-300 text-gray-700 rounded px-2 py-1 focus:ring-2 focus:ring-orange-400"
           value={selectedSong || ""}
           onChange={(e) => setSelectedSong(e.target.value || null)}
         >
-          <option value="">No music</option>
-          <option value="/songs/song1.mp3">Song 1</option>
+          <option value="">No Sound</option>
+          <option value="/sounds/song1.mp3">Gentle Rain</option>
         </select>
-      </div>
-      {/* Duration buttons */}
-      <div className="flex gap-4">
-        <button
-          onClick={() => startMeditation(120)}
-          className="bg-orange-500 text-white px-4 py-2 rounded"
-        >
-          2 minutes
-        </button>
-        <button
-          onClick={() => startMeditation(300)}
-          className="bg-orange-500 text-white px-4 py-2 rounded"
-        >
-          5 minutes
-        </button>
-        <button
-          onClick={() => startMeditation(600)}
-          className="bg-orange-500 text-white px-4 py-2 rounded"
-        >
-          10 minutes
-        </button>
-      </div>
-      {/* Meditation Timer Display */}
-      <div className="flex items-center justify-center w-40 h-40 border-4 border-orange-400 rounded-full">
-        <span className="text-3xl">{formatTime(timer)}</span>
-      </div>
-      {/* Control Buttons */}
-      {isMeditating && (
-        <div className="flex gap-4">
-          <button
-            onClick={isPaused ? resumeMeditation : pauseMeditation}
-            className="bg-yellow-500 text-white px-4 py-2 rounded"
-          >
-            {isPaused ? "Resume" : "Pause"}
-          </button>
-          <button
-            onClick={toggleMute}
-            className="bg-yellow-500 text-white px-4 py-2 rounded"
-          >
-            {isMuted ? "Unmute" : "Mute"}
-          </button>
-          <button
-            onClick={stopMeditation}
-            className="bg-red-500 text-white px-4 py-2 rounded"
-          >
-            Stop
-          </button>
-        </div>
-      )}
+      </motion.div>
       
-      {/* Activity Logging Feedback */}
-      {isLogging && (
-        <div className="mt-4 py-2 px-4 bg-yellow-100 text-yellow-800 rounded-md">
-          Logging your meditation...
-        </div>
-      )}
+      <motion.div variants={itemVariants} className="flex gap-4">
+        {[2, 5, 10].map(min => (
+            <motion.button
+                key={min}
+                onClick={() => startMeditation(min * 60)}
+                className="bg-orange-500/25 text-orange-600 font-semibold px-5 py-2 rounded-lg border border-orange-500"
+                whileHover={{ scale: 1.05, backgroundColor: "rgba(249, 115, 22, 0.35)" }}
+                whileTap={{ scale: 0.95 }}
+            >
+                {min} minutes
+            </motion.button>
+        ))}
+      </motion.div>
       
-      {logSuccess === true && (
-        <div className="mt-4 py-2 px-4 bg-green-100 text-green-800 rounded-md">
-          ✓ Meditation logged successfully!
-        </div>
-      )}
+      <motion.div
+        className="relative w-52 h-52 flex items-center justify-center mt-4"
+        animate={{ scale: isMeditating ? 1 : 0.9, opacity: isMeditating ? 1 : 0.7 }}
+        transition={{ type: "spring", stiffness: 200, damping: 20 }}
+      >
+        <motion.svg className="absolute w-full h-full transform -rotate-90" viewBox="0 0 200 200">
+            <circle cx="100" cy="100" r={radius} stroke="#FDBA74" strokeWidth="10" fill="none" />
+            <motion.circle
+                cx="100" cy="100" r={radius}
+                stroke="#F97316" strokeWidth="10" fill="none"
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                initial={{ strokeDashoffset: circumference }}
+                animate={{ strokeDashoffset }}
+                transition={{ duration: 1, ease: "linear" }}
+            />
+        </motion.svg>
+        <span className="text-5xl font-mono text-orange-700">{formatTime(timer)}</span>
+        <AnimatePresence>
+            {isMeditating && !isPaused && (
+                <motion.div
+                    className="absolute w-full h-full border-4 border-orange-200 rounded-full"
+                    animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0, 0.5] }}
+                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                />
+            )}
+        </AnimatePresence>
+      </motion.div>
       
-      {logSuccess === false && (
-        <div className="mt-4 py-2 px-4 bg-red-100 text-red-800 rounded-md">
-          Failed to log meditation. Please check your connection.
-        </div>
-      )}
-    </div>
+      <div className="h-12">
+        <AnimatePresence>
+            {isMeditating && (
+                <motion.div
+                    variants={containerVariants} initial="hidden" animate="visible" exit="hidden"
+                    className="flex gap-4"
+                >
+                    <motion.button variants={itemVariants} onClick={isPaused ? resumeMeditation : pauseMeditation} className="bg-yellow-500/80 text-white px-4 py-2 rounded-lg" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        {isPaused ? "Resume" : "Pause"}
+                    </motion.button>
+                    <motion.button variants={itemVariants} onClick={toggleMute} className="bg-yellow-500/80 text-white px-4 py-2 rounded-lg" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        {isMuted ? "Unmute" : "Mute"}
+                    </motion.button>
+                    <motion.button variants={itemVariants} onClick={() => stopMeditation(false)} className="bg-red-500/80 text-white px-4 py-2 rounded-lg" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        Stop
+                    </motion.button>
+                </motion.div>
+            )}
+        </AnimatePresence>
+      </div>
+      
+      <div className="h-12 mt-4">
+        <AnimatePresence mode="wait">
+            {isLogging && <motion.div key="logging" variants={feedbackVariants} initial="initial" animate="animate" exit="exit" className="py-2 px-4 bg-yellow-100 text-yellow-800 rounded-md">Logging your meditation...</motion.div>}
+            {logSuccess === true && <motion.div key="success" variants={feedbackVariants} initial="initial" animate="animate" exit="exit" className="py-2 px-4 bg-green-100 text-green-800 rounded-md">✓ Meditation logged successfully!</motion.div>}
+            {logSuccess === false && <motion.div key="error" variants={feedbackVariants} initial="initial" animate="animate" exit="exit" className="py-2 px-4 bg-red-100 text-red-800 rounded-md">Failed to log meditation.</motion.div>}
+        </AnimatePresence>
+      </div>
+    </motion.div>
   );
 }

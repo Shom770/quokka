@@ -1,8 +1,31 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import type { YTPlayer, YTPlayerEvent } from "@/types/youtube";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Animation Variants
+const pageVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: { y: 0, opacity: 1 },
+};
+
+const videoContainerVariants = {
+  open: { opacity: 1, height: "auto", marginTop: "1rem" },
+  collapsed: { opacity: 0, height: 0, marginTop: 0 },
+};
+
+const feedbackVariants = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -10 },
+};
 
 export default function MindfulnessVideos() {
   const { data: session } = useSession();
@@ -12,206 +35,259 @@ export default function MindfulnessVideos() {
   const [logSuccess, setLogSuccess] = useState<boolean | null>(null);
   const [videoWatched, setVideoWatched] = useState<string | null>(null);
 
-  // References to player instances
   const player1Ref = useRef<YTPlayer | null>(null);
   const player2Ref = useRef<YTPlayer | null>(null);
   const apiReadyRef = useRef(false);
 
   const videoHeight = 300;
-  
-  // Load YouTube API
+
+  const logVideoActivity = useCallback(
+    async (videoTitle: string) => {
+      setIsLogging(true);
+      if (session?.serverToken) {
+        try {
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/sync/activities`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${session.serverToken}`,
+              },
+              body: JSON.stringify({
+                activity_id: "mindfulness-video",
+                notes: `Watched ${videoTitle}`,
+              }),
+            }
+          );
+          setLogSuccess(response.ok);
+        } catch (error) {
+          console.error("Error logging video activity:", error);
+          setLogSuccess(false);
+        }
+      } else {
+        setLogSuccess(false);
+      }
+      setIsLogging(false);
+      setTimeout(() => {
+        setLogSuccess(null);
+        setVideoWatched(null);
+      }, 5000);
+    },
+    [session?.serverToken]
+  );
+
+  const handleVideoStateChange = useCallback(
+    (event: YTPlayerEvent, videoTitle: string) => {
+      if (event.data === 0) {
+        // YT.PlayerState.ENDED
+        setVideoWatched(videoTitle);
+        logVideoActivity(videoTitle);
+      }
+    },
+    [logVideoActivity]
+  );
+
+  const initializePlayers = useCallback(() => {
+    if (
+      showMindfulnessVideo1 &&
+      !player1Ref.current &&
+      document.getElementById("video1")
+    ) {
+      player1Ref.current = new window.YT.Player("video1", {
+        videoId: "ssss7V1_eyA",
+        events: {
+          onStateChange: (e) =>
+            handleVideoStateChange(e, "Mindfulness With Commentary"),
+        },
+      });
+    }
+    if (
+      showMindfulnessVideo2 &&
+      !player2Ref.current &&
+      document.getElementById("video2")
+    ) {
+      player2Ref.current = new window.YT.Player("video2", {
+        videoId: "p5EVLX8XxzM",
+        events: {
+          onStateChange: (e) =>
+            handleVideoStateChange(e, "Mindfulness Without Commentary"),
+        },
+      });
+    }
+  }, [
+    showMindfulnessVideo1,
+    showMindfulnessVideo2,
+    handleVideoStateChange,
+  ]);
+
   useEffect(() => {
-    // Only load the API once
-    if (window.YT || document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+    if (window.YT && window.YT.Player) {
       apiReadyRef.current = true;
+      initializePlayers();
       return;
     }
-    
-    // This function will be called once the API is ready
     window.onYouTubeIframeAPIReady = () => {
       apiReadyRef.current = true;
       initializePlayers();
     };
-    
-    // Load the YouTube IFrame API
-    const tag = document.createElement('script');
-    tag.src = "https://www.youtube.com/iframe_api";
-    const firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
-    
+    if (
+      !document.querySelector(
+        'script[src="https://www.youtube.com/iframe_api"]'
+      )
+    ) {
+      const tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
+      document.head.appendChild(tag);
+    }
     return () => {
       window.onYouTubeIframeAPIReady = () => {};
     };
-  }, []);
-  
-  // Initialize players when API is ready and videos are shown
+  }, [initializePlayers]);
+
   useEffect(() => {
-    if (apiReadyRef.current) {
-      initializePlayers();
-    }
-  }, [showMindfulnessVideo1, showMindfulnessVideo2]);
-  
-  // Create YouTube players
-  const initializePlayers = () => {
-    if (showMindfulnessVideo1 && !player1Ref.current && document.getElementById('video1')) {
-      player1Ref.current = new window.YT.Player('video1', {
-        videoId: 'ssss7V1_eyA',
-        events: {
-          onStateChange: (event: YTPlayerEvent) => handleVideoStateChange(event, 'video1')
-        }
-      });
-    }
-    
-    if (showMindfulnessVideo2 && !player2Ref.current && document.getElementById('video2')) {
-      player2Ref.current = new window.YT.Player('video2', {
-        videoId: 'p5EVLX8XxzM',
-        events: {
-          onStateChange: (event: YTPlayerEvent) => handleVideoStateChange(event, 'video2')
-        }
-      });
-    }
-  };
-  
-  // Handle video state changes, log when a video ends
-  const handleVideoStateChange = (event: YTPlayerEvent, videoId: string) => {
-    // YT.PlayerState.ENDED = 0
-    if (event.data === window.YT.PlayerState.ENDED) {
-      const videoTitle = videoId === 'video1' ? 
-        "Mindfulness Video With Commentary" : 
-        "Mindfulness Video Without Commentary";
-      
-      setVideoWatched(videoTitle);
-      logVideoActivity(videoTitle);
-    }
-  };
-  
-  // Log video completion to server
-  const logVideoActivity = async (videoTitle: string) => {
-    setIsLogging(true);
-    
-    if (session?.serverToken) {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/sync/activities`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${session.serverToken}`,
-            },
-            body: JSON.stringify({
-              activity_id: "mindfulness-video",
-              notes: `Watched ${videoTitle}`
-            }),
-          }
-        );
+    if (apiReadyRef.current) initializePlayers();
+  }, [
+    showMindfulnessVideo1,
+    showMindfulnessVideo2,
+    initializePlayers,
+  ]);
 
-        if (response.ok) {
-          console.log("Video activity logged successfully");
-          setLogSuccess(true);
-        } else {
-          console.error("Failed to log video activity:", await response.text());
-          setLogSuccess(false);
-        }
-      } catch (error) {
-        console.error("Error logging video activity:", error);
-        setLogSuccess(false);
+  const createToggle =
+    (
+      isShowing: boolean,
+      setter: React.Dispatch<React.SetStateAction<boolean>>,
+      playerRef: React.MutableRefObject<YTPlayer | null>
+    ) =>
+    () => {
+      if (isShowing && playerRef.current) {
+        playerRef.current.destroy();
+        playerRef.current = null;
       }
-    } else {
-      console.warn("Video watched but not logged - no auth token available");
-      setLogSuccess(false);
-    }
-    
-    setIsLogging(false);
-    
-    // Clear success message after a few seconds
-    setTimeout(() => {
-      setLogSuccess(null);
-      setVideoWatched(null);
-    }, 5000);
-  };
+      setter(!isShowing);
+    };
 
-  // Handle video show/hide and clean up player instances
-  const toggleVideo1 = () => {
-    if (showMindfulnessVideo1 && player1Ref.current) {
-      player1Ref.current.destroy();
-      player1Ref.current = null;
-    }
-    setShowMindfulnessVideo1(!showMindfulnessVideo1);
-  };
+  const toggleVideo1 = createToggle(
+    showMindfulnessVideo1,
+    setShowMindfulnessVideo1,
+    player1Ref
+  );
+  const toggleVideo2 = createToggle(
+    showMindfulnessVideo2,
+    setShowMindfulnessVideo2,
+    player2Ref
+  );
 
-  const toggleVideo2 = () => {
-    if (showMindfulnessVideo2 && player2Ref.current) {
-      player2Ref.current.destroy();
-      player2Ref.current = null;
-    }
-    setShowMindfulnessVideo2(!showMindfulnessVideo2);
-  };
+  const renderVideoSection = (
+    title: string,
+    videoId: string,
+    isShowing: boolean,
+    toggleFn: () => void
+  ) => (
+    <motion.div
+      variants={itemVariants}
+      className="p-4 border border-orange-300 rounded-lg shadow-sm"
+    >
+      <div className="flex items-center justify-between">
+        <p className="text-lg font-semibold text-orange-600">{title}</p>
+        <motion.button
+          className="text-orange-500 font-semibold underline"
+          onClick={toggleFn}
+          whileHover={{ color: "#c2410c" }}
+          whileTap={{ scale: 0.95 }}
+        >
+          {isShowing ? "Hide" : "Show"}
+        </motion.button>
+      </div>
+      <AnimatePresence>
+        {isShowing && (
+          <motion.div
+            key={videoId}
+            variants={videoContainerVariants}
+            initial="collapsed"
+            animate="open"
+            exit="collapsed"
+            transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
+            className="overflow-hidden"
+          >
+            <div
+              id={videoId}
+              className="w-full rounded-md"
+              style={{ height: videoHeight }}
+            ></div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
 
   return (
-    <div className="flex flex-col w-1/3 space-y-6 p-8">
-      <h1 className="text-3xl font-bold text-orange-600 mb-4">
+    <motion.div
+      variants={pageVariants}
+      initial="hidden"
+      animate="visible"
+      className="flex flex-col w-full md:w-1/2 space-y-6 p-4 md:p-8"
+    >
+      <motion.h1
+        variants={itemVariants}
+        className="text-4xl font-bold text-orange-600"
+      >
         Mindfulness Videos
-      </h1>
+      </motion.h1>
 
-      {/* Video With Commentary */}
-      <div className="p-4 border border-orange-300 rounded-lg shadow">
-        <div className="flex items-center justify-between">
-          <p className="text-md font-semibold text-orange-500">
-            Video With Commentary
-          </p>
-          <button
-            className="text-orange-500 underline"
-            onClick={toggleVideo1}
-          >
-            {showMindfulnessVideo1 ? "Hide" : "Show"}
-          </button>
-        </div>
-        {showMindfulnessVideo1 && (
-          <div className="flex flex-col mt-4 space-y-4">
-            <div id="video1" className="w-full" style={{height: videoHeight}}></div>
-          </div>
-        )}
+      {renderVideoSection(
+        "Video With Commentary",
+        "video1",
+        showMindfulnessVideo1,
+        toggleVideo1
+      )}
+      {renderVideoSection(
+        "Video Without Commentary",
+        "video2",
+        showMindfulnessVideo2,
+        toggleVideo2
+      )}
+
+      <div className="h-14">
+        <AnimatePresence mode="wait">
+          {isLogging && (
+            <motion.div
+              key="logging"
+              variants={feedbackVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="py-2 px-4 bg-yellow-100 text-yellow-800 rounded-md"
+            >
+              Logging your activity...
+            </motion.div>
+          )}
+          {logSuccess === true && videoWatched && (
+            <motion.div
+              key="success"
+              variants={feedbackVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="py-2 px-4 bg-green-100 text-green-800 rounded-md"
+            >
+              ✓ “{videoWatched}” logged successfully!
+            </motion.div>
+          )}
+          {logSuccess === false && (
+            <motion.div
+              key="error"
+              variants={feedbackVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="py-2 px-4 bg-red-100 text-red-800 rounded-md"
+            >
+              Failed to log video completion.
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-
-      {/* Video Without Commentary */}
-      <div className="p-4 border border-orange-300 rounded-lg shadow">
-        <div className="flex items-center justify-between">
-          <p className="text-md font-semibold text-orange-500">
-            Video Without Commentary
-          </p>
-          <button
-            className="text-orange-500 underline"
-            onClick={toggleVideo2}
-          >
-            {showMindfulnessVideo2 ? "Hide" : "Show"}
-          </button>
-        </div>
-        {showMindfulnessVideo2 && (
-          <div className="flex flex-col mt-4 space-y-4">
-            <div id="video2" className="w-full" style={{height: videoHeight}}></div>
-          </div>
-        )}
-      </div>
-
-      {/* Activity Logging Feedback */}
-      {isLogging && (
-        <div className="mt-4 py-2 px-4 bg-yellow-100 text-yellow-800 rounded-md">
-          Logging your activity...
-        </div>
-      )}
-      
-      {logSuccess === true && videoWatched && (
-        <div className="mt-4 py-2 px-4 bg-green-100 text-green-800 rounded-md">
-          ✓ &quot;{videoWatched}&quot; completed and logged successfully!
-        </div>
-      )}
-      
-      {logSuccess === false && (
-        <div className="mt-4 py-2 px-4 bg-red-100 text-red-800 rounded-md">
-          Failed to log video completion. Please check your connection.
-        </div>
-      )}
-    </div>
+    </motion.div>
   );
 }

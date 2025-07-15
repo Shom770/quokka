@@ -2,210 +2,204 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Animation Variants
+const viewVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.98 },
+  visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: "easeInOut" } },
+  exit: { opacity: 0, y: -20, scale: 0.98, transition: { duration: 0.3, ease: "easeInOut" } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 },
+};
+
+const feedbackVariants = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -10 },
+};
+
+// Define the four phases of square breathing
+const phases = ["Breathe In", "Hold", "Breathe Out", "Hold "]; // Space on 2nd hold to differentiate keys
+const phaseDuration = 4;
 
 export default function SquareBreathing() {
   const { data: session } = useSession();
-  
-  // States for exercise control
+
   const [started, setStarted] = useState(false);
-  const [phase, setPhase] = useState("");
-  const [counter, setCounter] = useState(4);
+  const [phaseIndex, setPhaseIndex] = useState(0);
+  const [counter, setCounter] = useState(phaseDuration);
   const [circleScale, setCircleScale] = useState(1);
-  
-  // States for activity logging
   const [isLogging, setIsLogging] = useState(false);
   const [logSuccess, setLogSuccess] = useState<boolean | null>(null);
-  const [exerciseDuration, setExerciseDuration] = useState(0);
-  
-  // Duration in seconds for each phase
-  const phaseDuration = 4;
-  
-  // Reference for tracking total exercise duration
-  const startTimeRef = useRef<number | null>(null);
 
-  // Update counter and phase based on interval
+  const startTimeRef = useRef<number | null>(null);
+  const phase = phases[phaseIndex];
+
+  // Corrected: Effect to handle the 1-second countdown
   useEffect(() => {
     if (!started) return;
     const interval = setInterval(() => {
-      setCounter((prev) => {
-        if (prev === 1) {
-          // Cycle phases: Breathe In, Hold, Breathe Out, Wait
-          if (phase === "Breathe In") {
-            setPhase("Hold");
-          } else if (phase === "Hold") {
-            setPhase("Breathe Out");
-          } else if (phase === "Breathe Out") {
-            setPhase("Wait");
-          } else if (phase === "Wait") {
-            setPhase("Breathe In");
-          }
-          return phaseDuration;
-        }
-        return prev - 1;
-      });
+      setCounter((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(interval);
-  }, [phase, started]);
+  }, [started]);
 
-  // Animate circle scale based on phase changes
+  // Corrected: Effect to handle phase changes when the counter reaches zero
   useEffect(() => {
-    if (!started) return;
+    if (started && counter === 0) {
+      setPhaseIndex((prevIndex) => (prevIndex + 1) % phases.length);
+      setCounter(phaseDuration);
+    }
+  }, [counter, started]);
+
+
+  // Effect to control the circle's scale based on the current phase
+  useEffect(() => {
     if (phase === "Breathe In") {
       setCircleScale(1.5);
     } else if (phase === "Breathe Out") {
       setCircleScale(1);
     }
-    // No scale update during Hold or Wait
-  }, [phase, started]);
+    // During "Hold" phases, the scale remains static
+  }, [phase]);
 
-  // Start the exercise
   const startExercise = () => {
     setStarted(true);
-    setPhase("Breathe In");
+    setPhaseIndex(0);
     setCounter(phaseDuration);
     startTimeRef.current = Date.now();
     setLogSuccess(null);
   };
 
-  // Log breathing activity to the server
   const logBreathingActivity = async (durationSeconds: number) => {
     setIsLogging(true);
-    
     if (session?.serverToken) {
       try {
         const minutes = Math.round(durationSeconds / 60);
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/sync/activities`,
-          {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sync/activities`, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${session.serverToken}`,
-            },
-            body: JSON.stringify({
-              activity_id: "square-breathing",
-              notes: `Completed ${minutes} minute${minutes !== 1 ? 's' : ''} of square breathing`
-            }),
-          }
-        );
-
-        if (response.ok) {
-          console.log("Breathing activity logged successfully");
-          setLogSuccess(true);
-        } else {
-          console.error("Failed to log breathing activity:", await response.text());
-          setLogSuccess(false);
-        }
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.serverToken}` },
+            body: JSON.stringify({ activity_id: "square-breathing", notes: `Completed ${minutes} minute${minutes !== 1 ? 's' : ''} of square breathing` }),
+        });
+        setLogSuccess(response.ok);
       } catch (error) {
+        // Log the caught error to the console for debugging
         console.error("Error logging breathing activity:", error);
         setLogSuccess(false);
       }
     } else {
-      console.warn("Breathing exercise completed but not logged - no auth token available");
+      console.warn("Breathing exercise not logged: no session token.");
       setLogSuccess(false);
     }
-    
     setIsLogging(false);
   };
 
-  // Finish the exercise and reset states
   const finishExercise = () => {
     if (startTimeRef.current) {
-      const durationSeconds = Math.round((Date.now() - startTimeRef.current) / 1000);
-      setExerciseDuration(durationSeconds);
-      logBreathingActivity(durationSeconds);
+      const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
+      logBreathingActivity(duration);
     }
-    
     setStarted(false);
-    setPhase("");
-    setCounter(phaseDuration);
     setCircleScale(1);
     startTimeRef.current = null;
   };
 
-  // Clear success message after 5 seconds
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
     if (logSuccess !== null) {
-      timeoutId = setTimeout(() => {
-        setLogSuccess(null);
-      }, 5000);
+      const timeoutId = setTimeout(() => setLogSuccess(null), 5000);
+      return () => clearTimeout(timeoutId);
     }
-    return () => clearTimeout(timeoutId);
   }, [logSuccess]);
 
   return (
-    <div
-      className={`flex flex-col items-center text-orange-600 min-h-[90%] p-8 mb-6 ${
-        started ? "justify-between" : "justify-center"
-      }`}
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
+      className="flex flex-col items-center text-orange-600 justify-center w-full min-h-[90%] p-8"
     >
-      <div className="mt-8 text-center">
-        <h1 className="text-3xl font-bold mb-4">Square Breathing</h1>
-        <p className="text-lg mb-6">
-          Follow the guided square breathing exercise to relax and focus.
-        </p>
+      <div className="text-center w-full max-w-md">
+        <motion.h1 variants={itemVariants} className="text-4xl font-bold mb-4">Square Breathing</motion.h1>
+        <motion.p variants={itemVariants} className="text-lg mb-8">
+          Follow the guided breathing exercise to relax and focus your mind.
+        </motion.p>
       </div>
 
-      {!started ? (
-        <div className="flex flex-col items-center">
-          <button
-            onClick={startExercise}
-            className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-md"
+      <AnimatePresence mode="wait">
+        {!started ? (
+          <motion.div
+            key="start-view"
+            variants={viewVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="flex flex-col items-center"
           >
-            Begin Exercise
-          </button>
-          
-          {/* Activity logging feedback */}
-          {isLogging && (
-            <div className="mt-4 py-2 px-4 bg-yellow-100 text-yellow-800 rounded-md">
-              Logging your breathing exercise...
+            <motion.button
+              onClick={startExercise}
+              className="px-8 py-3 bg-orange-500 text-white text-lg font-semibold rounded-lg shadow-md"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Begin Exercise
+            </motion.button>
+            <div className="h-20 mt-4">
+                <AnimatePresence>
+                    {isLogging && <motion.div key="logging" variants={feedbackVariants} initial="initial" animate="animate" exit="exit" className="py-2 px-4 bg-yellow-100 text-yellow-800 rounded-md">Logging your session...</motion.div>}
+                    {logSuccess === true && <motion.div key="success" variants={feedbackVariants} initial="initial" animate="animate" exit="exit" className="py-2 px-4 bg-green-100 text-green-800 rounded-md">✓ Session logged successfully!</motion.div>}
+                    {logSuccess === false && <motion.div key="error" variants={feedbackVariants} initial="initial" animate="animate" exit="exit" className="py-2 px-4 bg-red-100 text-red-800 rounded-md">Failed to log your session.</motion.div>}
+                </AnimatePresence>
             </div>
-          )}
-          
-          {logSuccess === true && (
-            <div className="mt-4 py-2 px-4 bg-green-100 text-green-800 rounded-md">
-              ✓ Breathing exercise logged successfully!
-              <div className="text-sm mt-1">
-                {Math.floor(exerciseDuration / 60)} minutes, {exerciseDuration % 60} seconds completed
+          </motion.div>
+        ) : (
+          <motion.div
+            key="active-view"
+            variants={viewVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="flex flex-col items-center justify-between flex-1 w-full"
+          >
+            <div className="flex-1 flex items-center justify-center">
+              <div className="relative flex items-center justify-center">
+                <motion.div
+                  className="rounded-full bg-orange-400"
+                  animate={{ scale: circleScale }}
+                  transition={{ duration: phaseDuration, ease: "easeInOut" }}
+                  style={{ width: 300, height: 300 }}
+                />
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-white pointer-events-none">
+                  <AnimatePresence mode="wait">
+                    <motion.p
+                      key={phase}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.5 }}
+                      className="text-3xl font-medium"
+                    >
+                      {phase.trim()}
+                    </motion.p>
+                  </AnimatePresence>
+                  <p className="text-5xl font-bold">{counter}s</p>
+                </div>
               </div>
             </div>
-          )}
-          
-          {logSuccess === false && (
-            <div className="mt-4 py-2 px-4 bg-red-100 text-red-800 rounded-md">
-              Failed to log your breathing exercise. Please try again later.
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center flex-1 justify-center">
-          <div className="relative">
-            <div
-              className="rounded-full bg-orange-500 transition-transform duration-[4000ms]"
-              style={{
-                width: 300,
-                height: 300,
-                transform: `scale(${circleScale})`,
-              }}
-            />
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              {/* Phase text is centered in the circle */}
-              <p className="text-2xl text-white font-medium">{phase}</p>
-              <p className="text-4xl text-white font-bold">{counter}s</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {started && (
-        <button
-          onClick={finishExercise}
-          className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-md mt-8 mb-8"
-        >
-          Finish Exercise
-        </button>
-      )}
-    </div>
+            <motion.button
+              onClick={finishExercise}
+              className="px-8 py-3 bg-orange-500 text-white font-semibold rounded-lg shadow-md mb-8"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Finish Exercise
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
