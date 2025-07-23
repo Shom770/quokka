@@ -1,5 +1,5 @@
 import React from "react";
-import { inter, rethinkSans } from "@/app/ui/fonts";
+import { inter, rethinkSans } from "@/components/fonts";
 import { motion } from "framer-motion";
 import { 
   HeartIcon, 

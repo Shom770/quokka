@@ -1,6 +1,6 @@
 "use client";
 
-import Resource from "@/app/ui/resource";
+import Resource from "@/components/resource";
 import lifeline988Image from "@/public/resources/988lifeline.png";
 import dbsaImage from "@/public/resources/dbsa.png";
 import trevorImage from "@/public/resources/trevor.png";
@@ -9,7 +9,7 @@ import namiImage from "@/public/resources/nami.jpg";
 import hotlineImage from "@/public/resources/hotline.png";
 import safeImage from "@/public/resources/safe.png";
 import lhicImage from "@/public/resources/HCLHIC.png";
-import { rethinkSans } from "../ui/fonts";
+import { rethinkSans } from "@/components/fonts";
 import { motion } from "framer-motion";
 import { HeartIcon, ShieldCheckIcon, ChatBubbleLeftEllipsisIcon } from "@heroicons/react/24/solid";
 

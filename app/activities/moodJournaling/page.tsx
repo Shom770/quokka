@@ -1,6 +1,6 @@
 "use client";
 
-import { rethinkSans } from "@/app/ui/fonts";
+import { rethinkSans } from "@/components/fonts";
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";

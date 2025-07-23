@@ -1,7 +1,18 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-// --- Calendar Helper ---
+import { useSession } from "next-auth/react";
+import { CalendarIcon, TrophyIcon } from "@heroicons/react/24/solid";
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useTransform,
+  animate,
+  type AnimationPlaybackControls,
+} from "framer-motion";
+import { rethinkSans } from "@/components/fonts";
+
 function getMonthDays(year: number, month: number) {
   // month is 0-indexed
   const lastDay = new Date(year, month + 1, 0);
@@ -15,18 +26,6 @@ function getMonthDays(year: number, month: number) {
 function isSameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
-import { useSession } from "next-auth/react";
-import { CalendarIcon, TrophyIcon } from "@heroicons/react/24/solid";
-import {
-  motion,
-  AnimatePresence,
-  useMotionValue,
-  useTransform,
-  animate,
-  type AnimationPlaybackControls, // Import the correct type
-} from "framer-motion";
-import { rethinkSans } from "@/app/ui/fonts";
-
 // --- Types ---
 type ActivityCount = {
   total_count: number;
@@ -97,6 +96,21 @@ export default function StatsPage() {
   const [selectedDate, setSelectedDate] = useState(
     today.toISOString().split("T")[0]
   );
+  // Track previous date for animation direction
+  const [prevDate, setPrevDate] = useState(selectedDate);
+  const [dateDirection, setDateDirection] = useState<"left"|"right">("left");
+
+  // Update direction when selectedDate changes
+  useEffect(() => {
+    if (selectedDate !== prevDate) {
+      if (selectedDate > prevDate) {
+        setDateDirection("left"); // date increased, slide left
+      } else {
+        setDateDirection("right"); // date decreased, slide right
+      }
+      setPrevDate(selectedDate);
+    }
+  }, [selectedDate, prevDate]);
   // Calendar state
   const [calendarMonth, setCalendarMonth] = useState(today.getMonth());
   const [calendarYear, setCalendarYear] = useState(today.getFullYear());
@@ -302,11 +316,29 @@ export default function StatsPage() {
           </motion.div>
         </div>
 
-        <motion.div variants={itemVariants} className="bg-white border border-orange-200 rounded-lg p-6 shadow-sm">
+        <motion.div
+          variants={itemVariants}
+          className="bg-white border border-orange-200 rounded-lg p-6 shadow-sm"
+          layout
+          transition={{ type: "ease", duration: 0.5 }}
+        >
           <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
             <h2 className="text-xl font-bold text-orange-800 flex items-center"><CalendarIcon className="h-6 w-6 mr-2 text-orange-600" />Daily Activities</h2>
           </div>
-          <p className="text-gray-600 mb-4">{formatDate(selectedDate)}</p>
+          <div className="text-gray-600 mb-4 min-h-[28px]">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span
+                key={selectedDate}
+                initial={{ opacity: 0, x: dateDirection === "left" ? 30 : -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: dateDirection === "left" ? -30 : 30 }}
+                transition={{ duration: 0.35 }}
+                className="block"
+              >
+                {formatDate(selectedDate)}
+              </motion.span>
+            </AnimatePresence>
+          </div>
           <ul className="space-y-3">
             {calendarLoading ? (
               <div className="flex justify-center items-center py-8">
@@ -339,7 +371,7 @@ export default function StatsPage() {
                     </motion.li>
                   ))
                 ) : (
-                  <motion.div key="no-activity" variants={listItemVariants} initial="hidden" animate="visible" exit="exit" className="text-center py-6 text-gray-500">No activities completed on this day.</motion.div>
+                  <motion.div key="no-activity" variants={listItemVariants} initial="hidden" animate="visible" exit="exit" className="text-center py-6 text-gray-500">No activity 😔</motion.div>
                 )}
               </AnimatePresence>
             )}

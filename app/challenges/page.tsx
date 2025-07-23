@@ -1,8 +1,8 @@
 "use client";
 
-import { rethinkSans } from "@/app/ui/fonts";
+import { rethinkSans } from "@/components/fonts";
 import { useState, useEffect } from "react";
-import ChallengeBox from "../ui/challenges/challenge-box";
+import ChallengeBox from "@/components/challenges/challenge-box";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { SparklesIcon, TrophyIcon, FireIcon } from "@heroicons/react/24/solid";

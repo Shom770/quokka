@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Cog6ToothIcon } from "@heroicons/react/24/solid";
 import { useSession, signOut } from "next-auth/react";
-import { rethinkSans } from "@/app/ui/fonts";
+import { rethinkSans } from "@/components/fonts";
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
 

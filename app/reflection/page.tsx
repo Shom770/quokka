@@ -2,7 +2,7 @@
 
 import React from "react";
 import { questions } from "./questions";
-import { rethinkSans } from "../ui/fonts";
+import { rethinkSans } from "@/components/fonts";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircleIcon,

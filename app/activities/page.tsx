@@ -1,7 +1,7 @@
 "use client";
 
-import ActivityCard from "../ui/activites/activity-card";
-import { rethinkSans } from "../ui/fonts";
+import ActivityCard from "@/components/activites/activity-card";
+import { rethinkSans } from "@/components/fonts";
 import { motion } from "framer-motion";
 
 const animationVariants = {

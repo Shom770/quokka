@@ -1,9 +1,9 @@
 "use client";
 
 import { useContext } from "react";
-import { rethinkSans } from "../ui/fonts";
-import Switch from "../ui/settings/switch";
-import { Context } from "../layout-client";
+import { rethinkSans } from "@/components/fonts";
+import Switch from "@/components/settings/switch";
+import { Context } from "@/app/layout-client";
 import { motion } from "framer-motion";
 
 // Animation Variants

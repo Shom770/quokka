@@ -1,7 +1,7 @@
 // activities/sleepTracker
 "use client";
 
-import { rethinkSans } from "@/app/ui/fonts";
+import { rethinkSans } from "@/components/fonts";
 import React, { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { type Session } from "next-auth";

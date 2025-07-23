@@ -1,8 +1,8 @@
 "use client"
 
 import "./globals.css";
-import Navbar from "@/app/ui/navbar";
-import SurveyManager from "./ui/survey-manager";
+import Navbar from "@/components/navbar";
+import SurveyManager from "@/components/survey-manager";
 import { useEffect, useState } from "react";
 import React from "react";
 import { SessionProvider } from "next-auth/react";

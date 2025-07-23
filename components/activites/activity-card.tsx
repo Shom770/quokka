@@ -1,4 +1,4 @@
-import { inter, rethinkSans } from "@/app/ui/fonts"
+import { inter, rethinkSans } from "@/components/fonts"
 import Link from "next/link"
 
 export default function LandingCard({

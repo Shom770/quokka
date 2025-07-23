@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { figtree } from "@/app/ui/fonts";
+import { figtree } from "@/components/fonts";
 import "./globals.css";
-import LayoutClient from "./layout-client";
+import LayoutClient from "@/app/layout-client";
 
 export const metadata: Metadata = {
  title: "Quokka",
