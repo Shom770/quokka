@@ -52,6 +52,7 @@ export default function Page() {
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [completed, setCompleted] = useState(false);
+  const [checkedCompletion, setCheckedCompletion] = useState(false);
   const [posting, setPosting] = useState(false);
   const [postError, setPostError] = useState("");
 
@@ -71,6 +72,34 @@ export default function Page() {
     };
     fetchChallenge();
   }, []);
+
+  // Check if today's challenge is already completed
+  useEffect(() => {
+    const checkCompleted = async () => {
+      if (!challenge || checkedCompletion) return;
+      try {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const todayStr = `${yyyy}-${mm}-${dd}`;
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sync/calendar?date=${todayStr}`, {
+          headers: session?.serverToken ? { Authorization: `Bearer ${session.serverToken}` } : undefined
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data && data.activities) {
+          const found = data.activities.some((a: any) => a.type === 'challenge' && String(a.activity_id) === String(challenge.id));
+          if (found) setCompleted(true);
+        }
+      } catch (err) {
+        // ignore
+      } finally {
+        setCheckedCompletion(true);
+      }
+    };
+    checkCompleted();
+  }, [challenge, session, checkedCompletion]);
 
   const handleToggle = async () => {
     if (!challenge || completed || posting || !session?.serverToken) return;
@@ -99,22 +128,7 @@ export default function Page() {
     }
   };
 
-  if (isLoading || posting) {
-    return (
-      <motion.div 
-        className="flex items-center justify-center w-full h-full"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <motion.div 
-          className="rounded-full h-12 w-12 border-4 border-orange-600 border-t-transparent"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-        />
-      </motion.div>
-    );
-  }
+
 
   return (
     <motion.div 
@@ -176,32 +190,44 @@ export default function Page() {
             className="w-full max-w-md space-y-6"
             {...animationVariants.challengeCard}
           >
-            <ChallengeBox
-              category={`${challenge.theme}`}
-              description={challenge.description}
-              isCompleted={completed}
-              onToggle={handleToggle}
-              allChallengesAccomplished={completed}
-            />
-            {postError && (
-              <div className="text-center text-red-500 text-sm mt-2">{postError}</div>
-            )}
-            {completed && (
-              <motion.div 
-                className="text-center space-y-2"
-                {...animationVariants.completionMessage}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <TrophyIcon className="w-6 h-6 text-yellow-500" />
-                  <h2 className={`${rethinkSans.className} antialiased text-2xl text-orange-600 font-extrabold`}>
-                    Challenge Complete!
-                  </h2>
-                  <SparklesIcon className="w-6 h-6 text-yellow-500" />
-                </div>
-                <p className="text-gray-600 font-medium">
-                  You&apos;re making great progress on your wellness journey!
-                </p>
-              </motion.div>
+            {(isLoading || posting) ? (
+              <div className="flex items-center justify-center w-full h-full z-10">
+                <motion.div 
+                  className="rounded-full h-12 w-12 border-4 border-orange-600 border-t-transparent"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                />
+              </div>
+            ) : (
+              <>
+                <ChallengeBox
+                  category={`${challenge.theme}`}
+                  description={challenge.description}
+                  isCompleted={completed}
+                  onToggle={handleToggle}
+                  allChallengesAccomplished={completed}
+                />
+                {postError && (
+                  <div className="text-center text-red-500 text-sm mt-2">{postError}</div>
+                )}
+                {completed && (
+                  <motion.div 
+                    className="text-center space-y-2"
+                    {...animationVariants.completionMessage}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <TrophyIcon className="w-6 h-6 text-yellow-500" />
+                      <h2 className={`${rethinkSans.className} antialiased text-2xl text-orange-600 font-extrabold`}>
+                        Challenge Complete!
+                      </h2>
+                      <SparklesIcon className="w-6 h-6 text-yellow-500" />
+                    </div>
+                    <p className="text-gray-600 font-medium">
+                      You&apos;re making great progress on your wellness journey!
+                    </p>
+                  </motion.div>
+                )}
+              </>
             )}
           </motion.div>
         )}
