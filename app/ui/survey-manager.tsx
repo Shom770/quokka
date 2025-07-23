@@ -26,8 +26,9 @@ export default function SurveyManager() {
   const [surveyAttempted, setSurveyAttempted] = useState(false);
   const [prevPath, setPrevPath] = useState<string>(pathname);
 
-  // Pre-cache survey types on mount
+  // Pre-cache survey types on mount, but only if canShow is true
   useEffect(() => {
+    if (!canShow) return;
     fetch("https://data.quokka.school/api/surveys/questions/types")
       .then((res) => res.json())
       .then((data) => {
@@ -36,7 +37,7 @@ export default function SurveyManager() {
       .catch((err) => {
         console.error("Error fetching survey types:", err);
       });
-  }, []);
+  }, [canShow]);
 
   // Track previous pathname
   useEffect(() => {
@@ -56,7 +57,7 @@ export default function SurveyManager() {
       canShow
     ) {
       // 15% chance to show survey
-      if (Math.random() < 0.15) {
+      if (Math.random() < 0.99) {
         // Determine candidate type from the previous path's last segment
         const segments = prevPath.split("/");
         const possibleType = segments[segments.length - 1].toLowerCase();

@@ -20,11 +20,13 @@ export default function RootLayout({
  children: React.ReactNode;
 }>) {
   
- const [canShow, setCanShow] = useState(false);
 
- useEffect(() => {
-  setCanShow(JSON.parse(localStorage.getItem("canShow") ?? "true"));
- }, [])
+ const [canShow, setCanShow] = useState(() => {
+   if (typeof window !== "undefined") {
+     return JSON.parse(localStorage.getItem("canShow") ?? "true");
+   }
+   return true;
+ });
 
  useEffect(() => {
   localStorage.setItem("canShow", JSON.stringify(canShow)); 

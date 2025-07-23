@@ -41,8 +41,9 @@ const animationVariants = {
   }
 };
 
+
 export default function Page() {
-  useSession({ required: true });
+  const { data: session } = useSession({ required: true });
   const [challenge, setChallenge] = useState<{
     id: number;
     category: string;
@@ -51,6 +52,8 @@ export default function Page() {
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [completed, setCompleted] = useState(false);
+  const [posting, setPosting] = useState(false);
+  const [postError, setPostError] = useState("");
 
   useEffect(() => {
     const fetchChallenge = async () => {
@@ -70,11 +73,33 @@ export default function Page() {
   }, []);
 
   const handleToggle = async () => {
-    setCompleted((prev) => !prev);
-    // Optionally, log completion to server here if needed
+    if (!challenge || completed || posting || !session?.serverToken) return;
+    setPosting(true);
+    setPostError("");
+    try {
+      // challenge.id is already a number, send as is
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sync/challenges`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.serverToken}`,
+        },
+        body: JSON.stringify({ challenge_id: challenge.id }),
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to record challenge completion");
+      }
+      setCompleted(true);
+    } catch (err) {
+      setPostError(err instanceof Error ? err.message : "Failed to record challenge completion");
+    } finally {
+      setPosting(false);
+    }
   };
 
-  if (isLoading) {
+  if (isLoading || posting) {
     return (
       <motion.div 
         className="flex items-center justify-center w-full h-full"
@@ -152,12 +177,15 @@ export default function Page() {
             {...animationVariants.challengeCard}
           >
             <ChallengeBox
-              category={`${challenge.theme} ${challenge.category}`}
+              category={`${challenge.theme}`}
               description={challenge.description}
               isCompleted={completed}
               onToggle={handleToggle}
               allChallengesAccomplished={completed}
             />
+            {postError && (
+              <div className="text-center text-red-500 text-sm mt-2">{postError}</div>
+            )}
             {completed && (
               <motion.div 
                 className="text-center space-y-2"
