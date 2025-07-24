@@ -29,7 +29,7 @@ const viewVariants = {
 
 
 export default function Page() {
-  const { data: session } = useSession({ required: true });
+  useSession({ required: true });
   const [time, setTime] = useState<number | null>(null);
   const [originalDuration, setOriginalDuration] = useState<number | null>(null);
   const [isLogging, setIsLogging] = useState(false);
@@ -55,7 +55,7 @@ export default function Page() {
       setLogSuccess(false);
     }
     setIsLogging(false);
-  }, [originalDuration, session?.serverToken]);
+  }, [originalDuration]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;

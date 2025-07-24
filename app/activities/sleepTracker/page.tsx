@@ -4,7 +4,6 @@
 import { rethinkSans } from "@/components/fonts";
 import React, { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { type Session } from "next-auth";
 import { motion } from "framer-motion";
 
 // --- Types ---
@@ -53,7 +52,7 @@ const variants = {
   card: { initial: { opacity: 0, y: 30 }, animate: { opacity: 1, y: 0, transition: { duration: 0.6, type: "spring", stiffness: 80 } } },
 };
 
-const SleepHistory = ({ session }: { session: Session | null }) => {
+const SleepHistory = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<SleepStats | null>(null);
@@ -81,8 +80,8 @@ const SleepHistory = ({ session }: { session: Session | null }) => {
   }, [dateRange]);
 
   useEffect(() => {
-    if (session?.serverToken) fetchSleepStats();
-  }, [session?.serverToken, fetchSleepStats]);
+    fetchSleepStats();
+  }, [fetchSleepStats]);
 
   return (
     <motion.div
@@ -162,7 +161,7 @@ const SleepHistory = ({ session }: { session: Session | null }) => {
 };
 
 export default function Page() {
-  const { data: session } = useSession({ required: true });
+  useSession({ required: true });
   const [additionalSleepHours, setAdditionalSleepHours] = useState("");
   const [sleepQuality, setSleepQuality] = useState<number | null>(null);
   const [sleepNotes, setSleepNotes] = useState("");
@@ -250,7 +249,7 @@ export default function Page() {
         {logSuccess === false && (<motion.div variants={variants.card} className="py-2 px-4 bg-red-100 text-red-800 rounded-md text-center">✗ {logMessage}</motion.div>)}
       </motion.div>
 
-      <SleepHistory session={session} />
+      <SleepHistory />
     </motion.div>
   );
 }
