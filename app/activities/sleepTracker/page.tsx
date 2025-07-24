@@ -66,12 +66,10 @@ const SleepHistory = ({ session }: { session: Session | null }) => {
     setLoading(true);
     setError(null);
     try {
-      const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/sync/sleep/stats`);
+      const url = new URL("/api/sleep/stats", window.location.origin);
       url.searchParams.append("start_date", dateRange.startDate);
       url.searchParams.append("end_date", dateRange.endDate);
-      const res = await fetch(url.toString(), {
-        headers: { Authorization: `Bearer ${session?.serverToken}` },
-      });
+      const res = await fetch(url.toString());
       if (!res.ok) throw new Error(`Fetch error ${res.status}`);
       const data = await res.json() as SleepStats;
       setStats(data);
@@ -80,7 +78,7 @@ const SleepHistory = ({ session }: { session: Session | null }) => {
     } finally {
       setLoading(false);
     }
-  }, [dateRange, session?.serverToken]);
+  }, [dateRange]);
 
   useEffect(() => {
     if (session?.serverToken) fetchSleepStats();
@@ -164,7 +162,7 @@ const SleepHistory = ({ session }: { session: Session | null }) => {
 };
 
 export default function Page() {
-  const { data: session } = useSession();
+  const { data: session } = useSession({ required: true });
   const [additionalSleepHours, setAdditionalSleepHours] = useState("");
   const [sleepQuality, setSleepQuality] = useState<number | null>(null);
   const [sleepNotes, setSleepNotes] = useState("");
@@ -179,16 +177,11 @@ export default function Page() {
   );
 
   const logSleepData = async (hours: number) => {
-    if (!session?.serverToken) {
-      setLogSuccess(false);
-      setLogMessage("Not logged in");
-      return;
-    }
     setIsLogging(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sync/sleep`, {
+      const res = await fetch("/api/sleep", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.serverToken}` },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ hours, quality: sleepQuality, notes: sleepNotes || null, date: selectedDate }),
       });
       if (!res.ok) throw new Error(await res.text());

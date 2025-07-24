@@ -29,7 +29,7 @@ const feedbackVariants = {
  * Place any MP3 files into your public/ folder or fetch them dynamically.
  */
 export default function Page() {
-  const { data: session } = useSession();
+  useSession({ required: true });
   const [timer, setTimer] = useState<number>(0);
   const [isMeditating, setIsMeditating] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -72,20 +72,16 @@ export default function Page() {
 
   const logMeditationActivity = async (duration: number) => {
     setIsLogging(true);
-    if (session?.serverToken) {
-      try {
-        const minutes = Math.floor(duration / 60);
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sync/activities`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.serverToken}` },
-            body: JSON.stringify({ activity_id: "meditation", notes: `Completed ${minutes} minute meditation` }),
-        });
-        setLogSuccess(response.ok);
-      } catch (error) {
-        console.error("Error logging meditation activity:", error);
-        setLogSuccess(false);
-      }
-    } else {
+    try {
+      const minutes = Math.floor(duration / 60);
+      const response = await fetch("/api/activities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activity_id: "meditation", notes: `Completed ${minutes} minute meditation` }),
+      });
+      setLogSuccess(response.ok);
+    } catch (error) {
+      console.error("Error logging meditation activity:", error);
       setLogSuccess(false);
     }
     setIsLogging(false);

@@ -53,7 +53,7 @@ type CalendarActivity = {
 };
 
 export default function Page() {
-  const { data: session } = useSession({ required: true });
+  useSession({ required: true });
   const [challenge, setChallenge] = useState<{
     id: number;
     category: string;
@@ -96,9 +96,7 @@ export default function Page() {
         const mm = String(today.getMonth() + 1).padStart(2, '0');
         const dd = String(today.getDate()).padStart(2, '0');
         const todayStr = `${yyyy}-${mm}-${dd}`;
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sync/calendar?date=${todayStr}`, {
-          headers: session?.serverToken ? { Authorization: `Bearer ${session.serverToken}` } : undefined
-        });
+        const res = await fetch(`/api/calendar?date=${todayStr}`);
         if (!res.ok) return;
         const data = await res.json() as { activities?: CalendarActivity[] };
         if (data && data.activities) {
@@ -114,19 +112,18 @@ export default function Page() {
       }
     };
     checkCompleted();
-  }, [challenge, session, checkedCompletion]);
+  }, [challenge, checkedCompletion]);
 
   const handleToggle = async () => {
-    if (!challenge || completed || posting || !session?.serverToken) return;
+    if (!challenge || completed || posting) return;
     setPosting(true);
     setPostError("");
     try {
       // challenge.id is already a number, send as is
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sync/challenges`, {
+      const res = await fetch(`/api/challenges`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.serverToken}`,
         },
         body: JSON.stringify({ challenge_id: challenge.id }),
         credentials: "include",

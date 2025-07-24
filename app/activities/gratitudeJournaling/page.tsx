@@ -113,7 +113,7 @@ const GratitudeItem = ({
 };
 
 export default function Page() {
-  const { data: session } = useSession();
+  const { data: session } = useSession({ required: true });
   const [gratitudes, setGratitudes] = useState({
     gratitude1: false,
     gratitude2: false,
@@ -136,28 +136,20 @@ export default function Page() {
     const logActivity = async () => {
       if (allCompleted && !isLogging && logSuccess === null) {
         setIsLogging(true);
-        if (session?.serverToken) {
-          try {
-            const response = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/sync/activities`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${session.serverToken}`,
-                },
-                body: JSON.stringify({
-                  activity_id: "gratitude-journaling",
-                  notes: "Completed 3 gratitude items",
-                }),
-              }
-            );
-            setLogSuccess(response.ok);
-          } catch (error) {
-            console.error("Error logging gratitude activity:", error);
-            setLogSuccess(false);
-          }
-        } else {
+        try {
+          const response = await fetch("/api/activities", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              activity_id: "gratitude-journaling",
+              notes: "Completed 3 gratitude items",
+            }),
+          });
+          setLogSuccess(response.ok);
+        } catch (error) {
+          console.error("Error logging gratitude activity:", error);
           setLogSuccess(false);
         }
         setIsLogging(false);

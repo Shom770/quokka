@@ -85,7 +85,7 @@ function AnimatedCounter({ to }: { to: number }) {
 }
 
 export default function StatsPage() {
-  const { data: session } = useSession();
+  useSession({ required: true });
   const [isLoading, setIsLoading] = useState(true);
   const [counts, setCounts] = useState<ActivityCount | null>(null);
   const [streak, setStreak] = useState<Streak | null>(null);
@@ -117,17 +117,12 @@ export default function StatsPage() {
   const [error, setError] = useState("");
 
   const fetchStats = useCallback(async () => {
-    if (!session?.serverToken) return;
     setIsLoading(true);
     setError("");
     try {
       const [countsResponse, streakResponse] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/sync/counts`, {
-          headers: { Authorization: `Bearer ${session.serverToken}` },
-        }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/sync/streak`, {
-          headers: { Authorization: `Bearer ${session.serverToken}` },
-        }),
+        fetch("/api/counts"),
+        fetch("/api/streak"),
       ]);
       if (!countsResponse.ok) throw new Error("Failed to fetch activity counts");
       if (!streakResponse.ok) throw new Error("Failed to fetch streak data");
@@ -140,10 +135,10 @@ export default function StatsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [session?.serverToken]);
+  }, []);
 
   const fetchCalendarItems = useCallback(async () => {
-    if (!selectedDate || !session?.serverToken || !streak) return; // Wait for streak to load
+    if (!selectedDate || !streak) return; // Wait for streak to load
     // If already cached, use cache
     if (calendarCache[selectedDate]) {
       return;
@@ -156,10 +151,7 @@ export default function StatsPage() {
     }
     setCalendarLoading(true);
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/sync/calendar?date=${selectedDate}`,
-        { headers: { Authorization: `Bearer ${session.serverToken}` } }
-      );
+      const res = await fetch(`/api/calendar?date=${selectedDate}`);
       if (!res.ok) throw new Error("Failed to fetch calendar items");
       const data = await res.json() as CalendarResponse;
       setCalendarCache(prev => ({ ...prev, [selectedDate]: data }));
@@ -168,7 +160,7 @@ export default function StatsPage() {
     } finally {
       setCalendarLoading(false);
     }
-  }, [selectedDate, session?.serverToken, calendarCache, streak]);
+  }, [selectedDate, calendarCache, streak]);
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
   useEffect(() => { fetchStats(); }, [fetchStats]);

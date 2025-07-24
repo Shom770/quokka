@@ -1,31 +1,45 @@
 // app/api/streak/route.ts
+
 import { getRequestContext } from '@cloudflare/next-on-pages'
 import { NextResponse } from 'next/server'
 import * as jose from 'jose'
+import { auth } from '@/auth'   // adjust path if needed
 
 export const runtime = 'edge'
 
 // HMAC secret for your own JWTs
-const authSecret = new TextEncoder().encode(process.env.AUTH_SECRET || '')
+const AUTH_SECRET = process.env.AUTH_SECRET || ''
+const authSecret = new TextEncoder().encode(AUTH_SECRET)
 
-/** Verify incoming Bearer token and return user_id or throw a NextResponse */
-async function verifyToken(request: Request): Promise<string> {
-  const auth = request.headers.get('authorization') || ''
-  const match = auth.match(/^Bearer (.+)$/)
+/**
+ * Extract userId from NextAuth session or fallback to Bearer JWT.
+ * Throws a NextResponse(401) if neither yields a valid ID.
+ */
+async function resolveUserId(request: Request): Promise<string> {
+  // 1️⃣ Try NextAuth session
+  const session = await auth()
+  if (session?.sub && typeof session.sub === 'string') {
+    return session.sub
+  }
+
+  // 2️⃣ Fallback to Authorization header
+  const authHeader = request.headers.get('authorization') || ''
+  const match = authHeader.match(/^Bearer (.+)$/)
   if (!match) {
     throw new NextResponse(
-      JSON.stringify({ message: 'Missing or malformed Authorization header' }),
+      JSON.stringify({ message: 'Missing credentials (cookie or Bearer token)' }),
       { status: 401 }
     )
   }
+
   try {
     const { payload } = await jose.jwtVerify(match[1], authSecret, {
       algorithms: ['HS256'],
     })
-    if (typeof payload.user_id !== 'string') {
-      throw new Error('Invalid token payload')
+    if (typeof payload.user_id === 'string') {
+      return payload.user_id
     }
-    return payload.user_id
+    throw new Error('Invalid token payload')
   } catch {
     throw new NextResponse(
       JSON.stringify({ message: 'Invalid or expired token' }),
@@ -37,9 +51,9 @@ async function verifyToken(request: Request): Promise<string> {
 export async function GET(request: Request) {
   let userId: string
   try {
-    userId = await verifyToken(request)
-  } catch (resp) {
-    return resp as NextResponse
+    userId = await resolveUserId(request)
+  } catch (res) {
+    return res as NextResponse
   }
 
   const { env } = await getRequestContext()
@@ -73,7 +87,10 @@ export async function GET(request: Request) {
       )
     )
   `
-  const streakResult = await env.users.prepare(streakSql).bind(userId).first<{ streak_count: number }>()
+  const streakResult = await env.users
+    .prepare(streakSql)
+    .bind(userId)
+    .first<{ streak_count: number }>()
   const streakCount = streakResult?.streak_count ?? 0
 
   // 2️⃣ Get all activity dates for the current month
@@ -91,7 +108,10 @@ export async function GET(request: Request) {
       AND date(completed_at) BETWEEN ?2 AND ?3
     ORDER BY activity_date ASC
   `
-  const monthRes = await env.users.prepare(monthSql).bind(userId, firstDay, lastDay).all<{ activity_date: string }>()
+  const monthRes = await env.users
+    .prepare(monthSql)
+    .bind(userId, firstDay, lastDay)
+    .all<{ activity_date: string }>()
   const streakDates = Array.isArray(monthRes.results)
     ? monthRes.results.map((r) => r.activity_date)
     : []

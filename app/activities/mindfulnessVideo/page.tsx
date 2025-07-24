@@ -28,7 +28,7 @@ const feedbackVariants = {
 };
 
 export default function MindfulnessVideos() {
-  const { data: session } = useSession();
+  useSession({ required: true });
   const [showMindfulnessVideo1, setShowMindfulnessVideo1] = useState(false);
   const [showMindfulnessVideo2, setShowMindfulnessVideo2] = useState(false);
   const [isLogging, setIsLogging] = useState(false);
@@ -44,28 +44,18 @@ export default function MindfulnessVideos() {
   const logVideoActivity = useCallback(
     async (videoTitle: string) => {
       setIsLogging(true);
-      if (session?.serverToken) {
-        try {
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/sync/activities`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${session.serverToken}`,
-              },
-              body: JSON.stringify({
-                activity_id: "mindfulness-video",
-                notes: `Watched ${videoTitle}`,
-              }),
-            }
-          );
-          setLogSuccess(response.ok);
-        } catch (error) {
-          console.error("Error logging video activity:", error);
-          setLogSuccess(false);
-        }
-      } else {
+      try {
+        const response = await fetch("/api/activities", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            activity_id: "mindfulness-video",
+            notes: `Watched ${videoTitle}`,
+          }),
+        });
+        setLogSuccess(response.ok);
+      } catch (error) {
+        console.error("Error logging video activity:", error);
         setLogSuccess(false);
       }
       setIsLogging(false);
@@ -74,7 +64,7 @@ export default function MindfulnessVideos() {
         setVideoWatched(null);
       }, 5000);
     },
-    [session?.serverToken]
+    []
   );
 
   const handleVideoStateChange = useCallback(

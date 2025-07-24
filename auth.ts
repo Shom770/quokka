@@ -2,40 +2,11 @@
 
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
-
-/**
- * Asynchronously fetches a server-side token by syncing the Google session.
- * @param idToken The Google ID token to be sent for verification.
- * @returns The server token if the sync is successful, otherwise null.
- */
-async function syncSession(idToken: string): Promise<string | null> {
-  try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sync/session`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ credential: idToken }),
-    });
-
-    if (response.ok) {
-      const data = await response.json() as { token?: string };
-      console.log("Received token from server:", !!data.token);
-      return typeof data.token === "string" ? data.token : null;
-    } else {
-      const errorText = await response.text();
-      console.error("Failed sync response:", errorText);
-      return null;
-    }
-  } catch (error) {
-    console.error("Error in sync request:", error);
-    return null;
-  }
-}
-
+import { decodeJwt } from "jose";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Google({
-      // Ensure you request 'offline' access to get a refresh token
       authorization: {
         params: {
           access_type: "offline",
@@ -46,94 +17,75 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async jwt({ token, account }) {
-      // Initial sign-in
-      if (account) {
-        console.log("JWT callback: Initial sign-in");
-        // Persist the OAuth access and refresh tokens in the JWT
+      // Initial sign-in: persist tokens + decode sub
+      if (account && account.provider === "google" && account.id_token) {
         token.idToken = account.id_token;
         token.refreshToken = account.refresh_token;
         token.expires_at = account.expires_at;
 
-        // Sync with your backend to get the initial server token
-        if (account.provider === "google" && account.id_token) {
-            const serverToken = await syncSession(account.id_token);
-            if (serverToken) {
-                token.serverToken = serverToken;
-            } else {
-                token.error = "InitialSyncError";
-            }
+        // Decode Google 'sub' (unique user ID)
+        const decoded = decodeJwt(account.id_token);
+        if (decoded.sub && typeof decoded.sub === "string") {
+          token.sub = decoded.sub;
         }
+      }
+
+      // If token still valid (with 5‑min buffer), return it
+      if (token.expires_at && Date.now() < (token.expires_at - 5 * 60) * 1000) {
         return token;
       }
 
-      // Return previous token if the access token has not expired yet
-      // We use a 5-minute buffer to proactively refresh
-      if (Date.now() < ((token.expires_at as number) - 5 * 60) * 1000) {
-        return token;
-      }
-
-      // If the access token has expired, try to refresh it
-      console.log("JWT callback: Token has expired, attempting to refresh");
+      // Otherwise, refresh the Google tokens
       if (!token.refreshToken) {
-        console.error("No refresh token available.");
         token.error = "RefreshTokenError";
         return token;
       }
 
       try {
         const url = "https://oauth2.googleapis.com/token";
-        const body = new URLSearchParams({
+        const params = new URLSearchParams({
           client_id: process.env.AUTH_GOOGLE_ID!,
           client_secret: process.env.AUTH_GOOGLE_SECRET!,
           grant_type: "refresh_token",
-          refresh_token: token.refreshToken as string,
+          refresh_token: token.refreshToken,
         });
 
-        const response = await fetch(url, {
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        const resp = await fetch(url, {
           method: "POST",
-          body,
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: params,
         });
-
-        const refreshedTokens = await response.json() as {
+        const refreshed = (await resp.json()) as {
           id_token: string;
           expires_in: number;
           refresh_token?: string;
         };
-
-        if (!response.ok) {
-          throw refreshedTokens;
+        if (!resp.ok || !refreshed.id_token) {
+          throw new Error("Failed to refresh Google token");
         }
-        
-        console.log("Successfully refreshed Google token");
 
-        // Update the token with the new values from Google and clear any previous errors
-        token.idToken = refreshedTokens.id_token;
-        token.expires_at = Math.floor(Date.now() / 1000 + refreshedTokens.expires_in);
-        token.refreshToken = refreshedTokens.refresh_token ?? token.refreshToken;
-        token.error = undefined;
+        token.idToken = refreshed.id_token;
+        token.expires_at = Math.floor(Date.now() / 1000 + refreshed.expires_in);
+        token.refreshToken = refreshed.refresh_token ?? token.refreshToken;
+        delete token.error;
 
-        // Re-sync with the backend using the new id_token
-        console.log("Re-syncing session with new token");
-        const newServerToken = await syncSession(token.idToken as string);
-        if (newServerToken) {
-            token.serverToken = newServerToken;
-        } else {
-            token.error = "RefreshSyncError";
+        // Decode sub again (should be the same)
+        const decoded = decodeJwt(refreshed.id_token);
+        if (decoded.sub && typeof decoded.sub === "string") {
+          token.sub = decoded.sub;
         }
 
         return token;
-
-      } catch (error) {
-        console.error("Error refreshing access token:", error);
+      } catch (err) {
+        console.error("Error refreshing Google token:", err);
         token.error = "RefreshTokenError";
         return token;
       }
     },
 
     async session({ session, token }) {
-      // Pass the custom properties from the JWT to the client-side session
-      session.serverToken = token.serverToken;
+      // Expose the Google sub on the client session
+      session.sub = token.sub;
       session.error = token.error;
       return session;
     },

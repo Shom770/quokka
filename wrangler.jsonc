@@ -30,6 +30,11 @@
 			"binding": "users",
 			"database_name": "quokka-user",
 			"database_id": "7bfe3721-6501-45f7-a79a-f8adaf28f95e",
+		},
+		{
+			"binding": "challenges",
+			"database_name": "quokka-challenges",
+			"database_id": "8a04ec7c-ea5a-4927-8d25-6f2d7cbceb3a",
 		}
 	]
 

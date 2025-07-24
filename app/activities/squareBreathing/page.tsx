@@ -27,7 +27,7 @@ const phases = ["Breathe In", "Hold", "Breathe Out", "Hold "]; // Space on 2nd h
 const phaseDuration = 4;
 
 export default function SquareBreathing() {
-  const { data: session } = useSession();
+  useSession({ required: true });
 
   const [started, setStarted] = useState(false);
   const [phaseIndex, setPhaseIndex] = useState(0);
@@ -77,22 +77,17 @@ export default function SquareBreathing() {
 
   const logBreathingActivity = async (durationSeconds: number) => {
     setIsLogging(true);
-    if (session?.serverToken) {
-      try {
-        const minutes = Math.round(durationSeconds / 60);
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sync/activities`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.serverToken}` },
-            body: JSON.stringify({ activity_id: "square-breathing", notes: `Completed ${minutes} minute${minutes !== 1 ? 's' : ''} of square breathing` }),
-        });
-        setLogSuccess(response.ok);
-      } catch (error) {
-        // Log the caught error to the console for debugging
-        console.error("Error logging breathing activity:", error);
-        setLogSuccess(false);
-      }
-    } else {
-      console.warn("Breathing exercise not logged: no session token.");
+    try {
+      const minutes = Math.round(durationSeconds / 60);
+      const response = await fetch("/api/activities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activity_id: "square-breathing", notes: `Completed ${minutes} minute${minutes !== 1 ? 's' : ''} of square breathing` }),
+      });
+      setLogSuccess(response.ok);
+    } catch (error) {
+      // Log the caught error to the console for debugging
+      console.error("Error logging breathing activity:", error);
       setLogSuccess(false);
     }
     setIsLogging(false);

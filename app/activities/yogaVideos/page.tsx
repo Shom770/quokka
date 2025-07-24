@@ -28,7 +28,7 @@ const feedbackVariants = {
 };
 
 export default function Page() {
-  const { data: session } = useSession();
+  useSession({ required: true });
   const [showYogaVideo2, setShowYogaVideo2] = useState(false);
   const [showYogaVideo5, setShowYogaVideo5] = useState(false);
   const [showYogaVideo10, setShowYogaVideo10] = useState(false);
@@ -47,28 +47,18 @@ export default function Page() {
   const logYogaActivity = useCallback(
     async (videoTitle: string) => {
       setIsLogging(true);
-      if (session?.serverToken) {
-        try {
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/sync/activities`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${session.serverToken}`,
-              },
-              body: JSON.stringify({
-                activity_id: "yoga-video",
-                notes: `Completed ${videoTitle}`,
-              }),
-            }
-          );
-          setLogSuccess(response.ok);
-        } catch (error) {
-          console.error("Error logging yoga activity:", error);
-          setLogSuccess(false);
-        }
-      } else {
+      try {
+        const response = await fetch("/api/activities", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            activity_id: "yoga-video",
+            notes: `Completed ${videoTitle}`,
+          }),
+        });
+        setLogSuccess(response.ok);
+      } catch (error) {
+        console.error("Error logging yoga activity:", error);
         setLogSuccess(false);
       }
       setIsLogging(false);
@@ -77,7 +67,7 @@ export default function Page() {
         setVideoWatched(null);
       }, 5000);
     },
-    [session?.serverToken]
+    []
   );
 
   const handleVideoStateChange = useCallback(

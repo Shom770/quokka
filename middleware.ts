@@ -6,7 +6,7 @@ export default auth((req) => {
   const path = nextUrl.pathname;
 
   // Paths that don’t require login
-  const publicPaths = ["/login", "/api/auth"];
+  const publicPaths = ["/login", "/api"];
 
   const isAuthenticated = !!userAuth?.user;
   const isPublicPath = publicPaths.some(
@@ -28,6 +28,6 @@ export const config = {
     /*
      * Protect everything except static files, the auth API, and the login page
      */
-    "/((?!_next/static|_next/image|favicon.ico|login|api/auth).*)",
+    "/((?!_next/static|_next/image|favicon.ico|login|api).*)",
   ],
 };

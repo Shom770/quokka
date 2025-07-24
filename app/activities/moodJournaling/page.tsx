@@ -29,7 +29,7 @@ const viewVariants = {
 
 
 export default function Page() {
-  const { data: session } = useSession();
+  const { data: session } = useSession({ required: true });
   const [time, setTime] = useState<number | null>(null);
   const [originalDuration, setOriginalDuration] = useState<number | null>(null);
   const [isLogging, setIsLogging] = useState(false);
@@ -39,29 +39,19 @@ export default function Page() {
   const logJournalingActivity = useCallback(async () => {
     if (!originalDuration) return;
     setIsLogging(true);
-    if (session?.serverToken) {
-      try {
-        const minutes = Math.floor(originalDuration / 60);
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/sync/activities`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${session.serverToken}`,
-            },
-            body: JSON.stringify({
-              activity_id: "mood-journaling",
-              notes: `Completed ${minutes} minute mood journaling session`,
-            }),
-          }
-        );
-        setLogSuccess(response.ok);
-      } catch (error) {
-        console.error("Error logging journaling activity:", error);
-        setLogSuccess(false);
-      }
-    } else {
+    try {
+      const minutes = Math.floor(originalDuration / 60);
+      const response = await fetch("/api/activities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          activity_id: "mood-journaling",
+          notes: `Completed ${minutes} minute mood journaling session`,
+        }),
+      });
+      setLogSuccess(response.ok);
+    } catch (error) {
+      console.error("Error logging journaling activity:", error);
       setLogSuccess(false);
     }
     setIsLogging(false);

@@ -22,7 +22,7 @@ const viewVariants = {
 };
 
 export default function BookReadingActivity() {
-  const { data: session } = useSession();
+  useSession({ required: true });
   const [selectedTime, setSelectedTime] = useState<number | null>(null);
   const [timer, setTimer] = useState<number>(0);
   const [isTimerActive, setIsTimerActive] = useState<boolean>(false);
@@ -66,19 +66,15 @@ export default function BookReadingActivity() {
   const handleCompletion = async () => {
     if (!selectedTime) return;
     setIsLogging(true);
-    if (session?.serverToken) {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sync/activities`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.serverToken}` },
-            body: JSON.stringify({ activity_id: "book-reading", notes: `Reading session for ${selectedTime} minutes` }),
-        });
-        setLogSuccess(response.ok);
-      } catch (error) {
-        console.error("Error logging book reading activity:", error);
-        setLogSuccess(false);
-      }
-    } else {
+    try {
+      const response = await fetch("/api/activities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activity_id: "book-reading", notes: `Reading session for ${selectedTime} minutes` }),
+      });
+      setLogSuccess(response.ok);
+    } catch (error) {
+      console.error("Error logging book reading activity:", error);
       setLogSuccess(false);
     }
     setIsLogging(false);
