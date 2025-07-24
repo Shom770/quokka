@@ -57,7 +57,10 @@ export default function Page() {
     const fetchChallenge = async () => {
       try {
         const res = await fetch("https://data.quokka.school/api/challenges/daily");
-        const data = await res.json();
+        const data = await res.json() as {
+          success?: boolean;
+          data?: { challenge?: { id: number; category: string; theme: string; description: string } };
+        };
         if (data.success && data.data && data.data.challenge) {
           setChallenge(data.data.challenge);
         }
@@ -85,7 +88,7 @@ export default function Page() {
           headers: session?.serverToken ? { Authorization: `Bearer ${session.serverToken}` } : undefined
         });
         if (!res.ok) return;
-        const data = await res.json();
+        const data = await res.json() as { activities?: CalendarActivity[] };
         if (data && data.activities) {
           const found = (data.activities as CalendarActivity[]).some(
             (a) => a.type === 'challenge' && String(a.activity_id) === String(challenge.id)
@@ -115,7 +118,7 @@ export default function Page() {
         body: JSON.stringify({ challenge_id: challenge.id }),
         credentials: "include",
       });
-      const data = await res.json();
+      const data = await res.json() as { success?: boolean; message?: string };
       if (!res.ok || !data.success) {
         throw new Error(data.message || "Failed to record challenge completion");
       }

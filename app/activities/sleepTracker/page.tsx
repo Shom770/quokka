@@ -73,7 +73,7 @@ const SleepHistory = ({ session }: { session: Session | null }) => {
         headers: { Authorization: `Bearer ${session?.serverToken}` },
       });
       if (!res.ok) throw new Error(`Fetch error ${res.status}`);
-      const data = await res.json();
+      const data = await res.json() as SleepStats;
       setStats(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");

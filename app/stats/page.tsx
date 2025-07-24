@@ -131,8 +131,8 @@ export default function StatsPage() {
       ]);
       if (!countsResponse.ok) throw new Error("Failed to fetch activity counts");
       if (!streakResponse.ok) throw new Error("Failed to fetch streak data");
-      const countsData = await countsResponse.json();
-      const streakData = await streakResponse.json();
+      const countsData = await countsResponse.json() as ActivityCount;
+      const streakData = await streakResponse.json() as Streak;
       setCounts(countsData);
       setStreak(streakData);
     } catch (err) {
@@ -161,7 +161,7 @@ export default function StatsPage() {
         { headers: { Authorization: `Bearer ${session.serverToken}` } }
       );
       if (!res.ok) throw new Error("Failed to fetch calendar items");
-      const data = await res.json();
+      const data = await res.json() as CalendarResponse;
       setCalendarCache(prev => ({ ...prev, [selectedDate]: data }));
     } catch (err) {
       console.error("Error fetching calendar items:", err);

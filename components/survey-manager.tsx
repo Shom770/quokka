@@ -35,7 +35,7 @@ export default function SurveyManager() {
   useEffect(() => {
     if (!canShow) return;
     fetch("https://data.quokka.school/api/surveys/questions/types")
-      .then((res) => res.json())
+      .then((res) => res.json() as Promise<{ data: string[] }>)
       .then((data) => {
         setSurveyTypes(data.data);
       })
@@ -68,8 +68,8 @@ export default function SurveyManager() {
         const possibleType = segments[segments.length - 1].toLowerCase();
         const type = surveyTypes.includes(possibleType) ? possibleType : "general";
         fetch(`https://data.quokka.school/api/surveys/random/${type}`)
-          .then((res) => res.json())
-          .then((data: SurveyApiResponse) => {
+          .then((res) => res.json() as Promise<SurveyApiResponse>)
+          .then((data) => {
             setSurveyQuestion(data.data);
             setShowSurvey(true);
             setSurveyAttempted(true);

@@ -17,9 +17,9 @@ async function syncSession(idToken: string): Promise<string | null> {
     });
 
     if (response.ok) {
-      const data = await response.json();
+      const data = await response.json() as { token?: string };
       console.log("Received token from server:", !!data.token);
-      return data.token;
+      return typeof data.token === "string" ? data.token : null;
     } else {
       const errorText = await response.text();
       console.error("Failed sync response:", errorText);
@@ -95,7 +95,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           body,
         });
 
-        const refreshedTokens = await response.json();
+        const refreshedTokens = await response.json() as {
+          id_token: string;
+          expires_in: number;
+          refresh_token?: string;
+        };
 
         if (!response.ok) {
           throw refreshedTokens;
