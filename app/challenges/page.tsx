@@ -41,6 +41,16 @@ const animationVariants = {
   }
 };
 
+// Add this type above your component if not already defined:
+type CalendarActivity = {
+  id: number;
+  activity_id: string;
+  type: string;
+  completed_at: string;
+  notes?: string | null;
+  challenge_theme?: string;
+  challenge_description?: string;
+};
 
 export default function Page() {
   const { data: session } = useSession({ required: true });
@@ -89,10 +99,12 @@ export default function Page() {
         if (!res.ok) return;
         const data = await res.json();
         if (data && data.activities) {
-          const found = data.activities.some((a: any) => a.type === 'challenge' && String(a.activity_id) === String(challenge.id));
+          const found = (data.activities as CalendarActivity[]).some(
+            (a) => a.type === 'challenge' && String(a.activity_id) === String(challenge.id)
+          );
           if (found) setCompleted(true);
         }
-      } catch (err) {
+      } catch {
         // ignore
       } finally {
         setCheckedCompletion(true);
