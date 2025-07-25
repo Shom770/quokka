@@ -382,42 +382,90 @@ export default function StatsPage() {
                   </div>
                 ))}
               </div>
-              <div className="grid grid-cols-7 gap-1 w-full">
+              <div className="grid grid-cols-7 gap-1 w-full relative">
                 {(() => {
                   const days = getMonthDays(calendarYear, calendarMonth);
                   const firstDay = days[0].getDay();
                   const blanks = Array(firstDay).fill(null);
-                  const streakSet = new Set(
-                    (streak?.streak_dates || []).map((d) =>
-                      parseLocalDate(d).toDateString()
-                    )
-                  );
+                  const streakDates = (streak?.streak_dates || []).map(d => parseLocalDate(d));
+                  const streakSet = new Set(streakDates.map(d => d.toDateString()));
+
+                  // Find streak groups (consecutive days)
+                  const streakGroups: number[][] = [];
+                  let group: number[] = [];
+                  for (let i = 0; i < days.length; i++) {
+                    if (streakSet.has(days[i].toDateString())) {
+                      if (group.length === 0 || days[i].getDate() === days[i-1]?.getDate() + 1) {
+                        group.push(i);
+                      } else {
+                        streakGroups.push([...group]);
+                        group = [i];
+                      }
+                    } else if (group.length) {
+                      streakGroups.push([...group]);
+                      group = [];
+                    }
+                  }
+                  if (group.length) streakGroups.push([...group]);
+
+                  // Render blanks
+                  const blankEls = blanks.map((_, i) => <div key={"blank-" + i} />);
+
+                  // Render streak backgrounds (pills)
+                  const pillEls = streakGroups.map((group, idx) => {
+                    if (group.length < 2) return null; // Only show pill for 2+ streaks
+                    return (
+                      <div
+                        key={"pill-" + idx}
+                        style={{
+                          gridColumnStart: group[0] + 1 + firstDay,
+                          gridColumnEnd: group[group.length-1] + 2 + firstDay,
+                          zIndex: 0,
+                        }}
+                        className="absolute h-8 bg-orange-100"
+                      />
+                    );
+                  });
+
+                  // Render day buttons (streak group: first/last rounded+border, middle no border/radius)
+                  const dayEls = days.map((day, i) => {
+                    const isStreak = streakSet.has(day.toDateString());
+                    const isSelected = isSameDay(day, parseLocalDate(selectedDate));
+                    let pillClass = "rounded-full border border-orange-200";
+                    let isMiddleStreak = false;
+                    for (const group of streakGroups) {
+                      if (group.length > 1 && group.includes(i)) {
+                        if (i === group[0]) pillClass = "rounded-l-full border border-orange-200";
+                        else if (i === group[group.length-1]) pillClass = "rounded-r-full border border-orange-200";
+                        else {
+                          pillClass = "border-none rounded-none";
+                          isMiddleStreak = true;
+                        }
+                        break;
+                      }
+                    }
+                    return (
+                      <button
+                        key={day.toISOString()}
+                        onClick={() => setSelectedDate(day.toISOString().split("T")[0])}
+                        className={`aspect-square w-8 flex items-center justify-center mx-auto text-sm font-bold transition relative z-10 ${
+                          isSelected
+                            ? `bg-orange-200 border-orange-500 text-orange-900 border ${pillClass}`
+                            : isStreak
+                            ? `bg-orange-100 text-orange-800 hover:bg-orange-100 ${pillClass}`
+                            : "bg-orange-50/50 border border-orange-100 text-orange-700 hover:bg-orange-100 rounded-full"
+                        }`}
+                        style={isMiddleStreak ? { boxShadow: 'none' } : {}}
+                      >
+                        {isStreak ? <span>🔥</span> : day.getDate()}
+                      </button>
+                    );
+                  });
+
                   return [
-                    ...blanks.map((_, i) => <div key={"blank-" + i} />),
-                    ...days.map((day) => {
-                      const isStreak = streakSet.has(day.toDateString());
-                      const isSelected = isSameDay(
-                        day,
-                        parseLocalDate(selectedDate)
-                      );
-                      return (
-                        <button
-                          key={day.toISOString()}
-                          onClick={() =>
-                            setSelectedDate(day.toISOString().split("T")[0])
-                          }
-                          className={`aspect-square w-8 rounded-full flex items-center justify-center mx-auto text-sm font-bold transition border ${
-                            isSelected
-                              ? "bg-orange-300 border-orange-500 text-orange-900"
-                              : isStreak
-                              ? "bg-orange-200 text-orange-800 hover:bg-orange-100"
-                              : "bg-orange-50 border-orange-100 text-orange-700 hover:bg-orange-100"
-                          }`}
-                        >
-                          {isStreak ? <span>🔥</span> : day.getDate()}
-                        </button>
-                      );
-                    }),
+                    ...blankEls,
+                    ...pillEls,
+                    ...dayEls,
                   ];
                 })()}
               </div>

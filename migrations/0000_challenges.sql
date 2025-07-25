@@ -1,0 +1,7 @@
+CREATE TABLE challenges (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  category TEXT NOT NULL,
+  theme TEXT,
+  description TEXT NOT NULL,
+  points INTEGER NOT NULL DEFAULT 0
+);
