@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import ChallengeBox from "@/components/challenges/challenge-box";
 import { useSession } from "next-auth/react";
+import { rethinkSans } from "@/components/fonts";
+import { SparklesIcon, TrophyIcon } from "@heroicons/react/24/solid";
 
 const animationVariants = {
   pageContainer: {
@@ -23,7 +25,11 @@ const animationVariants = {
     initial: { scale: 0.8, opacity: 0 },
     animate: { scale: 1, opacity: 1, transition: { duration: 1.0, delay: 0.6, type: "spring", stiffness: 100, damping: 15 } },
     hover: { scale: 1.1, opacity: 1, transition: { duration: 0.4 } }
-  }
+  },
+  completionMessage: {
+    initial: { opacity: 0, y: 20, scale: 0.8 },
+    animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.6, type: "spring", stiffness: 120, damping: 10 } }
+  },
 };
 
 type CalendarActivity = {
@@ -127,7 +133,7 @@ export default function Page() {
 
   return (
     <motion.div
-      className="flex flex-row items-center justify-between w-4/5 h-full"
+      className="flex flex-row-reverse items-center justify-between w-4/5 h-full"
       {...animationVariants.pageContainer}
     >
       <motion.div
@@ -137,11 +143,11 @@ export default function Page() {
         <Cards />
       </motion.div>
       <motion.div
-        className="relative flex flex-col justify-center w-2/5 h-2/5 gap-2"
+        className="relative flex flex-col justify-center w-2/5 h-2/5 gap-8"
         {...animationVariants.rightSection}
       >
         <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-[#F66B6B]/90 to-[#F5C114]/90 blur-[150px] rounded-xl z-0"
+          className="absolute inset-2 bg-gradient-to-r from-[#F66B6B]/90 to-[#F5C114]/90 blur-[150px] rounded-xl z-0"
           {...animationVariants.gradientBackground}
         />
         {(isLoading || posting) ? (
@@ -154,6 +160,14 @@ export default function Page() {
           </div>
         ) : (
           <>
+            <div className="space-y-0">
+              <h1 className={`${rethinkSans.className} antialiased text-orange-600 font-extrabold text-4xl leading-[1] drop-shadow-sm`}>
+              Your Daily Challenge
+              </h1>
+              <p className="text-gray-600 text-lg font-medium 4">
+                Push yourself to be better today
+              </p>
+            </div>
             {challenge && (
               <ChallengeBox
                 category={challenge.theme}
@@ -167,6 +181,23 @@ export default function Page() {
               <div className="text-center text-red-500 text-sm mt-2 z-10">
                 {postError}
               </div>
+            )}
+            {completed && (
+              <motion.div 
+                className="text-center space-y-0 mt-4"
+                {...animationVariants.completionMessage}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <TrophyIcon className="w-6 h-6 text-yellow-500" />
+                  <h2 className={`${rethinkSans.className} antialiased text-2xl text-orange-600 font-extrabold`}>
+                    Challenge Complete!
+                  </h2>
+                  <SparklesIcon className="w-6 h-6 text-yellow-500" />
+                </div>
+                <p className="text-gray-600 font-medium">
+                  You&apos;re making great progress on your wellness journey!
+                </p>
+              </motion.div>
             )}
           </>
         )}

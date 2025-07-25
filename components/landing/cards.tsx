@@ -27,9 +27,9 @@ export default function Cards() {
           icon={PencilIcon}
           iconColor="#FFE5E5"
           color="#F66B6B"
-          rotate="-16deg"
+          rotate="-12deg"
           zIndex={0}
-          position="left-0 top-0"
+          position="right-[30%] top-0"
           delay={0.6}
         />
       </Link>
@@ -45,9 +45,9 @@ export default function Cards() {
           icon={BookmarkIcon}
           iconColor="#FFE8DC"
           color="#FD906C"
-          rotate="-8deg"
+          rotate="0deg"
           zIndex={5}
-          position="left-[17.5%] top-[15%]"
+          position="right-[20%] top-[15%]"
           delay={0.8}
         />
       </Link>
@@ -64,29 +64,10 @@ export default function Cards() {
           icon={BookOpenIcon}
           iconColor="#FFE5E5"
           color="#B35D40"
-          rotate="0deg"
+          rotate="12deg"
           zIndex={10}
-          position="bottom-[15%] right-[17.5%]"
+          position="bottom-[15%] right-[12.5%]"
           delay={1.0}
-        />
-      </Link>
-      <Link href="/challenges">
-        <Card
-          title="daily challenges"
-          text={
-            <p>
-              New challenges every day that{" "}
-              <span className="font-extrabold">push you</span> to be the{" "}
-              <span className="font-extrabold">best version of yourself.</span>
-            </p>
-          }
-          icon={TrophyIcon}
-          iconColor="#FFD9C7"
-          color="#80432E"
-          rotate="8deg"
-          zIndex={10}
-          position="bottom-0 right-[5%]"
-          delay={1.2}
         />
       </Link>
     </>

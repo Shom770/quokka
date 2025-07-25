@@ -48,7 +48,7 @@ export default function ChallengeBox({ category, description, isCompleted, allCh
 
    return (
        <motion.button
-            className={`relative group w-full min-h-[280px] p-6 rounded-2xl transition-all duration-300 transform hover:scale-105 ${!isCompleted ? 'bg-white border-2 border-orange-200 text-gray-700 shadow-lg hover:shadow-xl' : 'bg-gradient-to-br from-orange-500 to-yellow-500 text-white shadow-xl hover:shadow-2xl'}`}
+            className={`relative group w-full min-h-[280px] p-6 rounded-2xl transition-all duration-300 transform z-10 hover:scale-105 ${!isCompleted ? 'bg-white border-2 border-orange-200 text-gray-700 shadow-lg hover:shadow-xl' : 'bg-gradient-to-br from-orange-500 to-yellow-500 text-white shadow-xl hover:shadow-2xl'}`}
             onClick={onToggle}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
