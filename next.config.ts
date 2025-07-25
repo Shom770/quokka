@@ -1,25 +1,18 @@
+import { setupDevPlatform } from '@cloudflare/next-on-pages/next-dev';
+
+// Here we use the @cloudflare/next-on-pages next-dev module to allow us to
+// use bindings during local development (when running the application with
+// `next dev`). This function is only necessary during development and
+// has no impact outside of that. For more information see:
+// https://github.com/cloudflare/next-on-pages/blob/main/internal-packages/next-dev/README.md
+setupDevPlatform().catch(console.error);
+
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    remotePatterns: [new URL("https://lh3.googleusercontent.com/**")]
-  }
-  // output: "export",
-  // images: {
-  //   loader: "custom",
-  //   imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-  //   deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-  // },
-  // transpilePackages: ["next-image-export-optimizer"],
-  // env: {
-  //   nextImageExportOptimizer_imageFolderPath: "public/images",
-  //   nextImageExportOptimizer_exportFolderPath: "out",
-  //   nextImageExportOptimizer_quality: "75",
-  //   nextImageExportOptimizer_storePicturesInWEBP: "true",
-  //   nextImageExportOptimizer_exportFolderName: "nextImageExportOptimizer",
-  //   nextImageExportOptimizer_generateAndUseBlurImages: "true",
-  //   nextImageExportOptimizer_remoteImageCacheTTL: "0",
-  // },
+    remotePatterns: [new URL('https://lh3.googleusercontent.com/a/*')],
+  },
 };
 
 export default nextConfig;

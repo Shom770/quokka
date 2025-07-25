@@ -24,7 +24,11 @@ function getMonthDays(year: number, month: number) {
 }
 
 function isSameDay(a: Date, b: Date) {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
 }
 // --- Types ---
 type ActivityCount = {
@@ -90,15 +94,22 @@ export default function StatsPage() {
   const [counts, setCounts] = useState<ActivityCount | null>(null);
   const [streak, setStreak] = useState<Streak | null>(null);
   // Calendar cache: { [date: string]: CalendarResponse }
-  const [calendarCache, setCalendarCache] = useState<{ [date: string]: CalendarResponse }>({});
+  const [calendarCache, setCalendarCache] = useState<{
+    [date: string]: CalendarResponse;
+  }>({});
   const [calendarLoading, setCalendarLoading] = useState(false);
+  // Get local date string (YYYY-MM-DD) in user's timezone
+  function getLocalDateString(date: Date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
   const today = new Date();
-  const [selectedDate, setSelectedDate] = useState(
-    today.toISOString().split("T")[0]
-  );
+  const [selectedDate, setSelectedDate] = useState(getLocalDateString(today));
   // Track previous date for animation direction
   const [prevDate, setPrevDate] = useState(selectedDate);
-  const [dateDirection, setDateDirection] = useState<"left"|"right">("left");
+  const [dateDirection, setDateDirection] = useState<"left" | "right">("left");
 
   // Update direction when selectedDate changes
   useEffect(() => {
@@ -124,10 +135,11 @@ export default function StatsPage() {
         fetch("/api/counts"),
         fetch("/api/streak"),
       ]);
-      if (!countsResponse.ok) throw new Error("Failed to fetch activity counts");
+      if (!countsResponse.ok)
+        throw new Error("Failed to fetch activity counts");
       if (!streakResponse.ok) throw new Error("Failed to fetch streak data");
-      const countsData = await countsResponse.json() as ActivityCount;
-      const streakData = await streakResponse.json() as Streak;
+      const countsData = (await countsResponse.json()) as ActivityCount;
+      const streakData = (await streakResponse.json()) as Streak;
       setCounts(countsData);
       setStreak(streakData);
     } catch (err) {
@@ -146,15 +158,18 @@ export default function StatsPage() {
     // Only fetch if the selectedDate is in the streak
     const streakSet = new Set(streak.streak_dates || []);
     if (!streakSet.has(selectedDate)) {
-      setCalendarCache(prev => ({ ...prev, [selectedDate]: { date: selectedDate, activities: [] } }));
+      setCalendarCache((prev) => ({
+        ...prev,
+        [selectedDate]: { date: selectedDate, activities: [] },
+      }));
       return;
     }
     setCalendarLoading(true);
     try {
       const res = await fetch(`/api/calendar?date=${selectedDate}`);
       if (!res.ok) throw new Error("Failed to fetch calendar items");
-      const data = await res.json() as CalendarResponse;
-      setCalendarCache(prev => ({ ...prev, [selectedDate]: data }));
+      const data = (await res.json()) as CalendarResponse;
+      setCalendarCache((prev) => ({ ...prev, [selectedDate]: data }));
     } catch (err) {
       console.error("Error fetching calendar items:", err);
     } finally {
@@ -162,36 +177,63 @@ export default function StatsPage() {
     }
   }, [selectedDate, calendarCache, streak]);
 
-  useEffect(() => { window.scrollTo(0, 0); }, []);
-  useEffect(() => { fetchStats(); }, [fetchStats]);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
   // Fetch calendar items when selectedDate or streak changes
-  useEffect(() => { fetchCalendarItems(); }, [fetchCalendarItems, selectedDate, streak]);
+  useEffect(() => {
+    fetchCalendarItems();
+  }, [fetchCalendarItems, selectedDate, streak]);
 
   // Parse date string as local date (not UTC) to avoid off-by-one error
   const parseLocalDate = (dateString: string) => {
     const [year, month, day] = dateString.split("-").map(Number);
     return new Date(year, month - 1, day);
   };
-  const formatDate = (dateString: string) => parseLocalDate(dateString).toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
-  const formatTimeFromISO = (isoString: string) => new Date(isoString).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  const formatDate = (dateString: string) =>
+    parseLocalDate(dateString).toLocaleDateString(undefined, {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  const formatTimeFromISO = (isoString: string) =>
+    new Date(isoString).toLocaleTimeString(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
-  const getActivityName = (activity: CalendarActivity & { challenge_theme?: string }) => {
-    if (activity.type === 'challenge') {
+  const getActivityName = (
+    activity: CalendarActivity & { challenge_theme?: string }
+  ) => {
+    if (activity.type === "challenge") {
       // Show the challenge theme if available
-      return activity.challenge_theme || 'Challenge';
+      return activity.challenge_theme || "Challenge";
     }
-    const activityLabels: Record<string, string> = { 'meditation': 'Meditation', 'gratitude-journaling': 'Gratitude', 'mood-journaling': 'Mood Journal', 'sleep-tracking': 'Sleep Tracking', 'square-breathing': 'Breathing', 'book-reading': 'Reading', 'yoga-video': 'Yoga', 'mindfulness-video': 'Mindfulness' };
+    const activityLabels: Record<string, string> = {
+      meditation: "Meditation",
+      "gratitude-journaling": "Gratitude",
+      "mood-journaling": "Mood Journal",
+      "sleep-tracking": "Sleep Tracking",
+      "square-breathing": "Breathing",
+      "book-reading": "Reading",
+      "yoga-video": "Yoga",
+      "mindfulness-video": "Mindfulness",
+    };
     return activityLabels[activity.activity_id] || activity.activity_id;
   };
 
   const getCategoryEmoji = (activity: CalendarActivity) => {
-    if (activity.type !== 'challenge') return '📝';
-    if (activity.activity_id.includes('Personal')) return '🌟';
-    if (activity.activity_id.includes('Creativity')) return '🧩';
-    if (activity.activity_id.includes('Social')) return '🧑‍🤝‍🧑';
-    if (activity.activity_id.includes('Mindfulness')) return '🧘';
-    if (activity.activity_id.includes('Physical')) return '🏃‍♂️';
-    return '🏆';
+    if (activity.type !== "challenge") return "📝";
+    if (activity.activity_id.includes("Personal")) return "🌟";
+    if (activity.activity_id.includes("Creativity")) return "🧩";
+    if (activity.activity_id.includes("Social")) return "🧑‍🤝‍🧑";
+    if (activity.activity_id.includes("Mindfulness")) return "🧘";
+    if (activity.activity_id.includes("Physical")) return "🏃‍♂️";
+    return "🏆";
   };
 
   if (isLoading) {
@@ -213,7 +255,6 @@ export default function StatsPage() {
     );
   }
 
-
   return (
     <motion.div
       variants={pageVariants}
@@ -234,50 +275,111 @@ export default function StatsPage() {
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Activities Card */}
-          <motion.div variants={itemVariants} whileHover={{ y: -5 }} className="bg-orange-50 border border-orange-200 p-6 rounded-lg shadow-sm">
+          <motion.div
+            variants={itemVariants}
+            whileHover={{ y: -5 }}
+            className="bg-orange-50 border border-orange-200 p-6 rounded-lg shadow-sm"
+          >
             <div className="flex items-center mb-4">
               <TrophyIcon className="h-8 w-8 text-orange-500 mr-3" />
               <h2 className="text-xl font-bold text-orange-800">Activities</h2>
             </div>
-            <p className="text-sm text-gray-600">Total: <span className="font-bold text-lg"><AnimatedCounter to={counts?.total_count || 0} /></span></p>
+            <p className="text-sm text-gray-600">
+              Total:{" "}
+              <span className="font-bold text-lg">
+                <AnimatedCounter to={counts?.total_count || 0} />
+              </span>
+            </p>
             <div className="flex justify-between mt-2">
-              <p className="text-sm text-gray-600">Activities: <span className="font-bold text-lg"><AnimatedCounter to={counts?.activity_count || 0} /></span></p>
-              <p className="text-sm text-gray-600">Challenges: <span className="font-bold text-lg"><AnimatedCounter to={counts?.challenge_count || 0} /></span></p>
+              <p className="text-sm text-gray-600">
+                Activities:{" "}
+                <span className="font-bold text-lg">
+                  <AnimatedCounter to={counts?.activity_count || 0} />
+                </span>
+              </p>
+              <p className="text-sm text-gray-600">
+                Challenges:{" "}
+                <span className="font-bold text-lg">
+                  <AnimatedCounter to={counts?.challenge_count || 0} />
+                </span>
+              </p>
             </div>
             <div className="w-full bg-yellow-400 rounded-full h-2.5 mt-2 overflow-hidden">
-              <motion.div className="bg-orange-400 h-2.5 rounded-full" initial={{ width: 0 }} animate={{ width: `${counts?.total_count ? (counts.activity_count / counts.total_count) * 100 : 0}%` }} transition={{ duration: 1, ease: "easeOut" }} />
+              <motion.div
+                className="bg-orange-400 h-2.5 rounded-full"
+                initial={{ width: 0 }}
+                animate={{
+                  width: `${
+                    counts?.total_count
+                      ? (counts.activity_count / counts.total_count) * 100
+                      : 0
+                  }%`,
+                }}
+                transition={{ duration: 1, ease: "easeOut" }}
+              />
             </div>
           </motion.div>
 
           {/* Calendar Card */}
-          <motion.div variants={itemVariants} className="bg-white border border-orange-200 rounded-lg p-6 shadow-sm">
+          <motion.div
+            variants={itemVariants}
+            className="bg-white border border-orange-200 rounded-lg p-6 shadow-sm"
+          >
             <div className="flex flex-col items-center">
               <div className="flex items-center justify-between w-full mb-4">
                 <button
                   onClick={() => {
-                    setCalendarMonth(m => m === 0 ? 11 : m - 1);
-                    if (calendarMonth === 0) setCalendarYear(y => y - 1);
+                    setCalendarMonth((m) => (m === 0 ? 11 : m - 1));
+                    if (calendarMonth === 0) setCalendarYear((y) => y - 1);
                   }}
                   className="text-orange-500 px-2 py-1 rounded-xl hover:bg-orange-100 transition-colors"
-                >&lt;</button>
-                <span className="font-bold text-orange-700 text-lg">{new Date(calendarYear, calendarMonth).toLocaleString(undefined, { month: 'long', year: 'numeric' })}</span>
+                >
+                  &lt;
+                </button>
+                <span className="font-bold text-orange-700 text-lg">
+                  {new Date(calendarYear, calendarMonth).toLocaleString(
+                    undefined,
+                    { month: "long", year: "numeric" }
+                  )}
+                </span>
                 {/* Prevent going past the current month */}
                 <button
                   onClick={() => {
                     // Only allow if not at current month/year
                     const now = new Date();
-                    if (calendarYear < now.getFullYear() || (calendarYear === now.getFullYear() && calendarMonth < now.getMonth())) {
-                      setCalendarMonth(m => m === 11 ? 0 : m + 1);
-                      if (calendarMonth === 11) setCalendarYear(y => y + 1);
+                    if (
+                      calendarYear < now.getFullYear() ||
+                      (calendarYear === now.getFullYear() &&
+                        calendarMonth < now.getMonth())
+                    ) {
+                      setCalendarMonth((m) => (m === 11 ? 0 : m + 1));
+                      if (calendarMonth === 11) setCalendarYear((y) => y + 1);
                     }
                   }}
-                  disabled={calendarYear > new Date().getFullYear() || (calendarYear === new Date().getFullYear() && calendarMonth >= new Date().getMonth())}
-                  className={`text-orange-500 px-2 py-1 rounded-xl transition-colors ${calendarYear > new Date().getFullYear() || (calendarYear === new Date().getFullYear() && calendarMonth >= new Date().getMonth()) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-orange-100'}`}
-                >&gt;</button>
+                  disabled={
+                    calendarYear > new Date().getFullYear() ||
+                    (calendarYear === new Date().getFullYear() &&
+                      calendarMonth >= new Date().getMonth())
+                  }
+                  className={`text-orange-500 px-2 py-1 rounded-xl transition-colors ${
+                    calendarYear > new Date().getFullYear() ||
+                    (calendarYear === new Date().getFullYear() &&
+                      calendarMonth >= new Date().getMonth())
+                      ? "opacity-40 cursor-not-allowed"
+                      : "hover:bg-orange-100"
+                  }`}
+                >
+                  &gt;
+                </button>
               </div>
               <div className="grid grid-cols-7 gap-1 w-full mb-2">
-                {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d => (
-                  <div key={d} className="text-xs text-center font-semibold text-orange-600">{d}</div>
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+                  <div
+                    key={d}
+                    className="text-xs text-center font-semibold text-orange-600"
+                  >
+                    {d}
+                  </div>
                 ))}
               </div>
               <div className="grid grid-cols-7 gap-1 w-full">
@@ -285,22 +387,37 @@ export default function StatsPage() {
                   const days = getMonthDays(calendarYear, calendarMonth);
                   const firstDay = days[0].getDay();
                   const blanks = Array(firstDay).fill(null);
-                  const streakSet = new Set((streak?.streak_dates || []).map(d => parseLocalDate(d).toDateString()));
+                  const streakSet = new Set(
+                    (streak?.streak_dates || []).map((d) =>
+                      parseLocalDate(d).toDateString()
+                    )
+                  );
                   return [
-                    ...blanks.map((_, i) => <div key={"blank-"+i} />),
-                    ...days.map(day => {
+                    ...blanks.map((_, i) => <div key={"blank-" + i} />),
+                    ...days.map((day) => {
                       const isStreak = streakSet.has(day.toDateString());
-                      const isSelected = isSameDay(day, parseLocalDate(selectedDate));
+                      const isSelected = isSameDay(
+                        day,
+                        parseLocalDate(selectedDate)
+                      );
                       return (
                         <button
                           key={day.toISOString()}
-                          onClick={() => setSelectedDate(day.toISOString().split("T")[0])}
-                          className={`aspect-square w-8 rounded-full flex items-center justify-center mx-auto text-sm font-bold transition border ${isSelected ? "bg-orange-200 border-orange-500 text-orange-900" : "bg-orange-50 border-orange-100 text-orange-700 hover:bg-orange-100"}`}
+                          onClick={() =>
+                            setSelectedDate(day.toISOString().split("T")[0])
+                          }
+                          className={`aspect-square w-8 rounded-full flex items-center justify-center mx-auto text-sm font-bold transition border ${
+                            isSelected
+                              ? "bg-orange-300 border-orange-500 text-orange-900"
+                              : isStreak
+                              ? "bg-orange-200 text-orange-800 hover:bg-orange-100"
+                              : "bg-orange-50 border-orange-100 text-orange-700 hover:bg-orange-100"
+                          }`}
                         >
                           {isStreak ? <span>🔥</span> : day.getDate()}
                         </button>
                       );
-                    })
+                    }),
                   ];
                 })()}
               </div>
@@ -315,7 +432,10 @@ export default function StatsPage() {
           transition={{ type: "ease", duration: 0.5 }}
         >
           <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
-            <h2 className="text-xl font-bold text-orange-800 flex items-center"><CalendarIcon className="h-6 w-6 mr-2 text-orange-600" />Daily Activities</h2>
+            <h2 className="text-xl font-bold text-orange-800 flex items-center">
+              <CalendarIcon className="h-6 w-6 mr-2 text-orange-600" />
+              Daily Activities
+            </h2>
           </div>
           <div className="text-gray-600 mb-4 min-h-[28px]">
             <AnimatePresence mode="wait" initial={false}>
@@ -338,32 +458,63 @@ export default function StatsPage() {
               </div>
             ) : (
               <AnimatePresence>
-                {calendarCache[selectedDate]?.activities && calendarCache[selectedDate].activities.length > 0 ? (
-                  calendarCache[selectedDate].activities.map((activity, index) => (
-                    <motion.li key={activity.id} variants={listItemVariants} initial="hidden" animate="visible" exit="exit" transition={{ delay: index * 0.05 }} className="p-3 rounded-md bg-orange-50 border border-orange-100">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <span className="text-sm font-medium text-gray-600 flex items-center">
-                            <span className="mr-2">{getCategoryEmoji(activity)}</span>
-                            {getActivityName(activity)}
-                          </span>
-                          {/* Show challenge description if type is challenge */}
-                          {activity.type === 'challenge' && activity.challenge_description && (
-                            <p className="text-xs text-gray-500 mt-1">{activity.challenge_description}</p>
-                          )}
-                          {activity.notes && (
-                            <p className="text-xs text-gray-500 mt-1">{activity.notes}</p>
-                          )}
+                {calendarCache[selectedDate]?.activities &&
+                calendarCache[selectedDate].activities.length > 0 ? (
+                  calendarCache[selectedDate].activities.map(
+                    (activity, index) => (
+                      <motion.li
+                        key={activity.id}
+                        variants={listItemVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        transition={{ delay: index * 0.05 }}
+                        className="p-3 rounded-md bg-orange-50 border border-orange-100"
+                      >
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <span className="text-sm font-medium text-gray-600 flex items-center">
+                              <span className="mr-2">
+                                {getCategoryEmoji(activity)}
+                              </span>
+                              {getActivityName(activity)}
+                            </span>
+                            {/* Show challenge description if type is challenge */}
+                            {activity.type === "challenge" &&
+                              activity.challenge_description && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {activity.challenge_description}
+                                </p>
+                              )}
+                            {activity.notes && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                {activity.notes}
+                              </p>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">
+                              Completed
+                            </span>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {formatTimeFromISO(activity.completed_at)}
+                            </p>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">Completed</span>
-                          <p className="text-xs text-gray-500 mt-1">{formatTimeFromISO(activity.completed_at)}</p>
-                        </div>
-                      </div>
-                    </motion.li>
-                  ))
+                      </motion.li>
+                    )
+                  )
                 ) : (
-                  <motion.div key="no-activity" variants={listItemVariants} initial="hidden" animate="visible" exit="exit" className="text-center py-6 text-gray-500">No activity 😔</motion.div>
+                  <motion.div
+                    key="no-activity"
+                    variants={listItemVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    className="text-center py-6 text-gray-500"
+                  >
+                    No activity 😔
+                  </motion.div>
                 )}
               </AnimatePresence>
             )}
