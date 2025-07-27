@@ -2,19 +2,45 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Cog6ToothIcon } from "@heroicons/react/24/solid";
+import { Cog6ToothIcon, FireIcon } from "@heroicons/react/24/solid";
 import { useSession, signOut } from "next-auth/react";
 import { rethinkSans } from "@/components/fonts";
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 
 export default function Navbar() {
   const { data: session } = useSession();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [streakCount, setStreakCount] = useState(0);
+  const [isLoadingStreak, setIsLoadingStreak] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   
   const isLoginPage = pathname === "/login";
+
+  // Fetch streak count
+  useEffect(() => {
+    const fetchStreak = async () => {
+      try {
+        const res = await fetch("/api/streak", {
+          credentials: "include",
+        });
+        if (res.ok) {
+          const data = await res.json() as { streak_count: number };
+          setStreakCount(data.streak_count || 0);
+        }
+      } catch (error) {
+        console.error("Failed to fetch streak", error);
+      } finally {
+        setIsLoadingStreak(false);
+      }
+    };
+
+    if (session) {
+      fetchStreak();
+    }
+  }, [session]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -39,20 +65,54 @@ export default function Navbar() {
   };
 
   return (
-    <div className="flex flex-row items-center justify-between w-full pt-8 px-20 h-[10vh]">
-      <Link href="/">
-        <div className="-space-y-3 hover:opacity-80 transition-opacity duration-200">
-          <h1 className={`${rethinkSans.className} antialiased font-extrabold text-[40px] text-orange-600`}>
-            quokka
-          </h1>
-          <h1 className="font-medium text-orange-600">
-            Be the best version of yourself
-          </h1>
-        </div>
-      </Link>
+    <motion.div 
+      className="flex flex-row items-center justify-between w-full pt-8 px-20 h-[10vh]"
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut", delay: 3.3 }}
+    >
+      <motion.div
+        initial={{ opacity: 0, x: -30 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6, delay: 3.5, ease: "easeOut" }}
+      >
+        <Link href="/">
+          <div className="-space-y-3 hover:opacity-80 transition-opacity duration-200">
+            <h1 className={`${rethinkSans.className} antialiased font-extrabold text-[40px] text-orange-600`}>
+              quokka
+            </h1>
+            <h1 className="font-medium text-orange-600">
+              Be the best version of yourself
+            </h1>
+          </div>
+        </Link>
+      </motion.div>
 
-      <div className="flex items-center space-x-6">
-        {/* Removed the standalone Stats link here */}
+      <motion.div 
+        className="flex items-center space-x-6"
+        initial={{ opacity: 0, x: 30 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6, delay: 3.7, ease: "easeOut" }}
+      >
+        {/* Streak Counter */}
+        {session && !isLoginPage && (
+          <motion.div 
+            className="flex items-center bg-gradient-to-r from-orange-100 to-yellow-100 px-4 py-2 rounded-full shadow-sm"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.6, ease: "easeOut" }}
+          >
+            <FireIcon className="w-5 h-5 text-orange-600 mr-2" />
+            {isLoadingStreak ? (
+              <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+            ) : (
+              <span className={`${rethinkSans.className} font-bold text-orange-600 text-lg mr-1`}>
+                {streakCount}
+              </span>
+            )}
+            <span className="text-orange-600 font-medium text-sm ml-0.5">day streak</span>
+          </motion.div>
+        )}
         
         <div className="relative" ref={dropdownRef}>
           {session?.user?.image ? (
@@ -112,7 +172,7 @@ export default function Navbar() {
             )
           )}
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

@@ -8,12 +8,20 @@ import {
 } from "@heroicons/react/24/solid";
 import Link from "next/link";
 import Card from "./card";
+import { RefObject } from "react";
 
-export default function Cards() {
+interface CardsProps {
+  meditationCardRef: RefObject<HTMLDivElement | null>;
+  journalingCardRef: RefObject<HTMLDivElement | null>;
+  resourcesCardRef: RefObject<HTMLDivElement | null>;
+}
+
+export default function Cards({ meditationCardRef, journalingCardRef, resourcesCardRef }: CardsProps) {
   return (
     <>
-      <Link href="/reflection">
+      <Link href="/reflection" className="journaling-card">
         <Card
+          ref={journalingCardRef}
           title="mental health reflection"
           text={
             <p>
@@ -33,8 +41,9 @@ export default function Cards() {
           delay={0.6}
         />
       </Link>
-      <Link href="/resources">
+      <Link href="/resources" className="resources-card">
         <Card
+          ref={resourcesCardRef}
           title="mental health resources"
           text={
             <p>
@@ -51,8 +60,9 @@ export default function Cards() {
           delay={0.8}
         />
       </Link>
-      <Link href="/activities">
+      <Link href="/activities" className="meditation-card">
         <Card
+          ref={meditationCardRef}
           title="activities"
           text={
             <p>

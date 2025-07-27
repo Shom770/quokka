@@ -2,28 +2,31 @@
 
 import Cards from "@/components/landing/cards";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import ChallengeBox from "@/components/challenges/challenge-box";
 import { useSession } from "next-auth/react";
 import { rethinkSans } from "@/components/fonts";
 import { SparklesIcon, TrophyIcon } from "@heroicons/react/24/solid";
+import TutorialOverlay from "@/components/tutorial-overlay";
+import WelcomeAnimation from "@/components/welcome-animation";
+import { useTutorial } from "@/hooks/use-tutorial";
 
 const animationVariants = {
   pageContainer: {
     initial: { opacity: 0 },
-    animate: { opacity: 1, transition: { duration: 0.8, ease: "easeOut" } }
+    animate: { opacity: 1, transition: { duration: 0.8, ease: "easeOut", delay: 3.3 } }
   },
   leftSection: {
     initial: { x: -50, opacity: 0 },
-    animate: { x: 0, opacity: 1, transition: { duration: 0.6, delay: 0.2 } }
+    animate: { x: 0, opacity: 1, transition: { duration: 0.6, delay: 3.5, ease: "easeOut" } }
   },
   rightSection: {
     initial: { x: 50, opacity: 0 },
-    animate: { x: 0, opacity: 1, transition: { duration: 0.6, delay: 0.4 } }
+    animate: { x: 0, opacity: 1, transition: { duration: 0.6, delay: 3.7, ease: "easeOut" } }
   },
   gradientBackground: {
     initial: { scale: 0.8, opacity: 0 },
-    animate: { scale: 1, opacity: 1, transition: { duration: 1.0, delay: 0.6, type: "spring", stiffness: 100, damping: 15 } },
+    animate: { scale: 1, opacity: 1, transition: { duration: 1.0, delay: 3.9, type: "spring", stiffness: 100, damping: 15 } },
     hover: { scale: 1.1, opacity: 1, transition: { duration: 0.4 } }
   },
   completionMessage: {
@@ -44,6 +47,16 @@ type CalendarActivity = {
 
 export default function Page() {
   useSession({ required: true });
+  const { showTutorial, completeTutorial, skipTutorial } = useTutorial();
+  const [showWelcome, setShowWelcome] = useState(true);
+  
+  // Create refs for tutorial
+  const activityCardsRef = useRef<HTMLDivElement>(null);
+  const meditationCardRef = useRef<HTMLDivElement>(null);
+  const journalingCardRef = useRef<HTMLDivElement>(null);
+  const resourcesCardRef = useRef<HTMLDivElement>(null);
+  const challengeBoxRef = useRef<HTMLDivElement>(null);
+
   const [challenge, setChallenge] = useState<{
     id: number;
     category: string;
@@ -55,6 +68,10 @@ export default function Page() {
   const [checkedCompletion, setCheckedCompletion] = useState(false);
   const [posting, setPosting] = useState(false);
   const [postError, setPostError] = useState("");
+
+  const handleWelcomeComplete = () => {
+    setShowWelcome(false);
+  };
 
   useEffect(() => {
     const fetchChallenge = async () => {
@@ -132,76 +149,104 @@ export default function Page() {
   };
 
   return (
-    <motion.div
-      className="flex flex-row-reverse items-center justify-between w-4/5 h-full"
-      {...animationVariants.pageContainer}
-    >
+    <>
+      {/* Welcome Animation */}
+      {showWelcome && (
+        <WelcomeAnimation onComplete={handleWelcomeComplete} />
+      )}
+
       <motion.div
-        className="flex items-center justify-center relative w-[50%] h-[80%]"
-        {...animationVariants.leftSection}
-      >
-        <Cards />
-      </motion.div>
-      <motion.div
-        className="relative flex flex-col justify-center w-2/5 h-2/5 gap-8"
-        {...animationVariants.rightSection}
+        className="flex flex-row-reverse items-center justify-between w-4/5 h-full"
+        {...animationVariants.pageContainer}
       >
         <motion.div
-          className="absolute inset-2 bg-gradient-to-r from-[#F66B6B]/90 to-[#F5C114]/90 blur-[150px] rounded-xl z-0"
-          {...animationVariants.gradientBackground}
-        />
-        {(isLoading || posting) ? (
-          <div className="flex items-center justify-center w-full h-full z-10">
-            <motion.div
-              className="rounded-full h-12 w-12 border-4 border-orange-600 border-t-transparent"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            />
-          </div>
-        ) : (
-          <>
-            <div className="space-y-0">
-              <h1 className={`${rethinkSans.className} antialiased text-orange-600 font-extrabold text-4xl leading-[1] drop-shadow-sm`}>
-              Your Daily Challenge
-              </h1>
-              <p className="text-gray-600 text-lg font-medium 4">
-                Push yourself to be better today
-              </p>
-            </div>
-            {challenge && (
-              <ChallengeBox
-                category={challenge.theme}
-                description={challenge.description}
-                isCompleted={completed}
-                onToggle={handleToggle}
-                allChallengesAccomplished={completed}
+          ref={activityCardsRef}
+          className="flex items-center justify-center relative w-[50%] h-[80%] activity-cards"
+          {...animationVariants.leftSection}
+        >
+          <Cards 
+            meditationCardRef={meditationCardRef}
+            journalingCardRef={journalingCardRef}
+            resourcesCardRef={resourcesCardRef}
+          />
+        </motion.div>
+        <motion.div
+          className="relative flex flex-col justify-center w-2/5 h-2/5 gap-8"
+          {...animationVariants.rightSection}
+        >
+          <motion.div
+            className="absolute inset-2 bg-gradient-to-r from-[#F66B6B]/90 to-[#F5C114]/90 blur-[150px] rounded-xl z-0"
+            {...animationVariants.gradientBackground}
+          />
+          {(isLoading || posting) ? (
+            <div className="flex items-center justify-center w-full h-full z-10">
+              <motion.div
+                className="rounded-full h-12 w-12 border-4 border-orange-600 border-t-transparent"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
               />
-            )}
-            {postError && (
-              <div className="text-center text-red-500 text-sm mt-2 z-10">
-                {postError}
-              </div>
-            )}
-            {completed && (
-              <motion.div 
-                className="text-center space-y-0 mt-4"
-                {...animationVariants.completionMessage}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <TrophyIcon className="w-6 h-6 text-yellow-500" />
-                  <h2 className={`${rethinkSans.className} antialiased text-2xl text-orange-600 font-extrabold`}>
-                    Challenge Complete!
-                  </h2>
-                  <SparklesIcon className="w-6 h-6 text-yellow-500" />
-                </div>
-                <p className="text-gray-600 font-medium">
-                  You&apos;re making great progress on your wellness journey!
+            </div>
+          ) : (
+            <>
+              <div className="space-y-0">
+                <h1 className={`${rethinkSans.className} antialiased text-orange-600 font-extrabold text-4xl leading-[1] drop-shadow-sm`}>
+                Your Daily Challenge
+                </h1>
+                <p className="text-gray-600 text-lg font-medium 4">
+                  Push yourself to be better today
                 </p>
-              </motion.div>
-            )}
-          </>
-        )}
+              </div>
+              {challenge && (
+                <div ref={challengeBoxRef} className="challenge-box">
+                  <ChallengeBox
+                    category={challenge.theme}
+                    description={challenge.description}
+                    isCompleted={completed}
+                    onToggle={handleToggle}
+                    allChallengesAccomplished={completed}
+                  />
+                </div>
+              )}
+              {postError && (
+                <div className="text-center text-red-500 text-sm mt-2 z-10">
+                  {postError}
+                </div>
+              )}
+              {completed && (
+                <motion.div 
+                  className="text-center space-y-0 mt-4"
+                  {...animationVariants.completionMessage}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <TrophyIcon className="w-6 h-6 text-yellow-500" />
+                    <h2 className={`${rethinkSans.className} antialiased text-2xl text-orange-600 font-extrabold`}>
+                      Challenge Complete!
+                    </h2>
+                    <SparklesIcon className="w-6 h-6 text-yellow-500" />
+                  </div>
+                  <p className="text-gray-600 font-medium">
+                    You&apos;re making great progress on your wellness journey!
+                  </p>
+                </motion.div>
+              )}
+            </>
+          )}
+        </motion.div>
       </motion.div>
-    </motion.div>
+
+      {/* Tutorial Overlay */}
+      <TutorialOverlay
+        isVisible={showTutorial}
+        onComplete={completeTutorial}
+        onSkip={skipTutorial}
+        refs={{
+          activityCards: activityCardsRef,
+          meditationCard: meditationCardRef,
+          journalingCard: journalingCardRef,
+          resourcesCard: resourcesCardRef,
+          challengeBox: challengeBoxRef,
+        }}
+      />
+    </>
   );
 }

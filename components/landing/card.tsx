@@ -1,18 +1,8 @@
-import { FC, ReactNode, SVGProps } from "react";
+import { FC, ReactNode, SVGProps, forwardRef } from "react";
 import { motion } from 'framer-motion';
 import { rethinkSans } from "../fonts";
 
-export default function Card({ 
-    title,
-    text,
-    icon: Icon,
-    color,
-    iconColor,
-    rotate,
-    zIndex,
-    position,
-    delay = 0
-} : {
+interface CardProps {
     title: string,
     text: ReactNode,
     icon: FC<SVGProps<SVGSVGElement>>,
@@ -22,9 +12,22 @@ export default function Card({
     zIndex: number,
     position: string,
     delay?: number
-}) {
+}
+
+const Card = forwardRef<HTMLDivElement, CardProps>(({ 
+    title,
+    text,
+    icon: Icon,
+    color,
+    iconColor,
+    rotate,
+    zIndex,
+    position,
+    delay = 0
+}, ref) => {
     return (
         <motion.div
+            ref={ref}
             key={title}
             className={`absolute ${position} flex flex-col px-8 items-center justify-around py-4 gap-2 w-[360px] h-[400px] rounded-2xl transition-all duration-150 ease-in-out`}
             style={{
@@ -51,4 +54,8 @@ export default function Card({
             </h1>
         </motion.div>
     )
-}
+});
+
+Card.displayName = 'Card';
+
+export default Card;
