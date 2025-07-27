@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { XMarkIcon, ChevronLeftIcon, ChevronRightIcon, SparklesIcon } from "@heroicons/react/24/solid";
+import { XMarkIcon, ChevronLeftIcon, SparklesIcon } from "@heroicons/react/24/solid";
 import { rethinkSans } from "@/components/fonts";
 
 interface TutorialStep {

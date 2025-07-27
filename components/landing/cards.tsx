@@ -4,7 +4,6 @@ import {
   BookmarkIcon,
   BookOpenIcon,
   PencilIcon,
-  TrophyIcon,
 } from "@heroicons/react/24/solid";
 import Link from "next/link";
 import Card from "./card";
