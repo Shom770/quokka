@@ -45,11 +45,19 @@ type CalendarActivity = {
   challenge_description?: string;
 };
 
+type Challenge = {
+  id: number;
+  category: string;
+  theme: string;
+  description: string;
+  points?: number;
+};
+
 export default function Page() {
   useSession({ required: true });
   const { showTutorial, completeTutorial, skipTutorial } = useTutorial();
   const [showWelcome, setShowWelcome] = useState(true);
-  
+
   // Create refs for tutorial
   const activityCardsRef = useRef<HTMLDivElement>(null);
   const meditationCardRef = useRef<HTMLDivElement>(null);
@@ -57,45 +65,45 @@ export default function Page() {
   const resourcesCardRef = useRef<HTMLDivElement>(null);
   const challengeBoxRef = useRef<HTMLDivElement>(null);
 
-  const [challenge, setChallenge] = useState<{
-    id: number;
-    category: string;
-    theme: string;
-    description: string;
-  } | null>(null);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [completed, setCompleted] = useState(false);
+  const [completed, setCompleted] = useState<{ [id: number]: boolean }>({});
   const [checkedCompletion, setCheckedCompletion] = useState(false);
-  const [posting, setPosting] = useState(false);
-  const [postError, setPostError] = useState("");
+  const [posting, setPosting] = useState<{ [id: number]: boolean }>({});
+  const [postError, setPostError] = useState<{ [id: number]: string }>({});
+
+  // Track which challenge is hovered for z-index pop
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   const handleWelcomeComplete = () => {
     setShowWelcome(false);
   };
 
+  // Fetch all daily challenges
   useEffect(() => {
-    const fetchChallenge = async () => {
+    const fetchChallenges = async () => {
       try {
         const res = await fetch("https://data.quokka.school/api/challenges/daily");
-        const data = (await res.json()) as {
-          success?: boolean;
-          data?: { challenge?: { id: number; category: string; theme: string; description: string } };
+        const data = await res.json() as {
+          success: boolean;
+          data: { challenges: Challenge[] };
         };
-        if (data.success && data.data?.challenge) {
-          setChallenge(data.data.challenge);
+        if (data.success && Array.isArray(data.data?.challenges)) {
+          setChallenges(data.data.challenges);
         }
       } catch (error) {
-        console.error("Failed to fetch daily challenge", error);
+        console.error("Failed to fetch daily challenges", error);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchChallenge();
+    fetchChallenges();
   }, []);
 
+  // Check completion for all challenges
   useEffect(() => {
     const checkCompleted = async () => {
-      if (!challenge || checkedCompletion) return;
+      if (!challenges.length || checkedCompletion) return;
       try {
         const today = new Date();
         const yyyy = today.getFullYear();
@@ -108,14 +116,17 @@ export default function Page() {
         });
         if (!res.ok) return;
         const data = (await res.json()) as { activities?: CalendarActivity[] };
+        const completedMap: { [id: number]: boolean } = {};
         if (data.activities) {
-          const found = data.activities.some(
-            (a) =>
-              a.type === "challenge" &&
-              String(a.activity_id) === String(challenge.id)
-          );
-          if (found) setCompleted(true);
+          for (const challenge of challenges) {
+            completedMap[challenge.id] = data.activities.some(
+              (a) =>
+                a.type === "challenge" &&
+                String(a.activity_id) === String(challenge.id)
+            );
+          }
         }
+        setCompleted(completedMap);
       } catch {
         // ignore
       } finally {
@@ -123,30 +134,36 @@ export default function Page() {
       }
     };
     checkCompleted();
-  }, [challenge, checkedCompletion]);
+  }, [challenges, checkedCompletion]);
 
-  const handleToggle = async () => {
-    if (!challenge || completed || posting) return;
-    setPosting(true);
-    setPostError("");
+  // Handle marking a challenge as complete
+  const handleToggle = async (challengeId: number) => {
+    if (completed[challengeId] || posting[challengeId]) return;
+    setPosting((prev) => ({ ...prev, [challengeId]: true }));
+    setPostError((prev) => ({ ...prev, [challengeId]: "" }));
     try {
       const res = await fetch("/api/challenges", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ challenge_id: challenge.id }),
+        body: JSON.stringify({ challenge_id: challengeId }),
       });
-      const data = (await res.json()) as { success?: boolean; message?: string };
+      const data = await res.json() as { success: boolean; message?: string };
       if (!res.ok || !data.success) {
         throw new Error(data.message || "Failed to record challenge completion");
       }
-      setCompleted(true);
+      setCompleted((prev) => ({ ...prev, [challengeId]: true }));
     } catch (err) {
-      setPostError(err instanceof Error ? err.message : "Failed to record challenge completion");
+      setPostError((prev) => ({
+        ...prev,
+        [challengeId]: err instanceof Error ? err.message : "Failed to record challenge completion"
+      }));
     } finally {
-      setPosting(false);
+      setPosting((prev) => ({ ...prev, [challengeId]: false }));
     }
   };
+
+  const allCompleted = challenges.length > 0 && challenges.every((c) => completed[c.id]);
 
   return (
     <>
@@ -178,7 +195,7 @@ export default function Page() {
             className="absolute inset-2 bg-gradient-to-r from-[#F66B6B]/90 to-[#F5C114]/90 blur-[150px] rounded-xl z-0"
             {...animationVariants.gradientBackground}
           />
-          {(isLoading || posting) ? (
+          {(isLoading || Object.values(posting).some(Boolean)) ? (
             <div className="flex items-center justify-center w-full h-full z-10">
               <motion.div
                 className="rounded-full h-12 w-12 border-4 border-orange-600 border-t-transparent"
@@ -188,31 +205,56 @@ export default function Page() {
             </div>
           ) : (
             <>
-              <div className="space-y-0">
+              <div>
                 <h1 className={`${rethinkSans.className} antialiased text-orange-600 font-extrabold text-4xl leading-[1] drop-shadow-sm`}>
-                Your Daily Challenge
+                  Your Daily Challenges
                 </h1>
                 <p className="text-gray-600 text-lg font-medium 4">
                   Push yourself to be better today
                 </p>
               </div>
-              {challenge && (
-                <div ref={challengeBoxRef} className="challenge-box">
-                  <ChallengeBox
-                    category={challenge.theme}
-                    description={challenge.description}
-                    isCompleted={completed}
-                    onToggle={handleToggle}
-                    allChallengesAccomplished={completed}
-                  />
-                </div>
-              )}
-              {postError && (
+              {/* Vertically stacked Challenge Cards */}
+              <div
+                ref={challengeBoxRef}
+                className="relative w-full"
+                style={{ height: `${challenges.length * 90 + 40}px` }} // adjust height as needed
+              >
+                {challenges.map((challenge, idx) => (
+                  <div
+                    key={challenge.id}
+                    className={`
+                      absolute left-0 right-0 transition-all duration-300
+                      group cursor-pointer
+                    `}
+                    style={{
+                      top: `${idx * 60}px`, // vertical offset
+                      zIndex: hoveredIdx === idx ? 50 : 10 + idx,
+                      transform: hoveredIdx === idx
+                        ? "scale(1.06) translateY(-12px)"
+                        : "scale(1) translateY(0)",
+                      boxShadow: hoveredIdx === idx
+                        ? "0 8px 32px 0 rgba(0,0,0,0.18)"
+                        : "0 2px 8px 0 rgba(0,0,0,0.08)",
+                    }}
+                    onMouseEnter={() => setHoveredIdx(idx)}
+                    onMouseLeave={() => setHoveredIdx(null)}
+                  >
+                    <ChallengeBox
+                      category={challenge.theme}
+                      description={challenge.description}
+                      isCompleted={!!completed[challenge.id]}
+                      onToggle={() => handleToggle(challenge.id)}
+                      allChallengesAccomplished={!!completed[challenge.id]}
+                    />
+                  </div>
+                ))}
+              </div>
+              {Object.values(postError).some(Boolean) && (
                 <div className="text-center text-red-500 text-sm mt-2 z-10">
-                  {postError}
+                  {Object.values(postError).filter(Boolean).join(", ")}
                 </div>
               )}
-              {completed && (
+              {allCompleted && (
                 <motion.div 
                   className="text-center space-y-0 mt-4"
                   {...animationVariants.completionMessage}
@@ -220,7 +262,7 @@ export default function Page() {
                   <div className="flex items-center justify-center gap-2">
                     <TrophyIcon className="w-6 h-6 text-yellow-500" />
                     <h2 className={`${rethinkSans.className} antialiased text-2xl text-orange-600 font-extrabold`}>
-                      Challenge Complete!
+                      All Challenges Complete!
                     </h2>
                     <SparklesIcon className="w-6 h-6 text-yellow-500" />
                   </div>
