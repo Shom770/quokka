@@ -102,7 +102,26 @@ export async function POST(request: Request) {
     )
   }
 
-  // 5️⃣ Return success
+  // 5️⃣ Create user row if not exists, then add 50 points
+  await env.users
+    .prepare(`
+      INSERT INTO users (user_id, points)
+      VALUES (?1, 0)
+      ON CONFLICT(user_id) DO NOTHING
+    `)
+    .bind(userId)
+    .run()
+
+  await env.users
+    .prepare(`
+      UPDATE users
+      SET points = points + 50
+      WHERE user_id = ?1
+    `)
+    .bind(userId)
+    .run()
+
+  // 6️⃣ Return success
   return NextResponse.json(
     { success: true, timestamp },
     { status: 201 }

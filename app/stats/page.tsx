@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
-import { CalendarIcon, TrophyIcon } from "@heroicons/react/24/solid";
+import { TrophyIcon, CalendarIcon, StarIcon } from "@heroicons/react/24/solid";
 import {
   motion,
   AnimatePresence,
@@ -76,7 +76,6 @@ const listItemVariants = {
 function AnimatedCounter({ to }: { to: number }) {
   const count = useMotionValue(0);
   const rounded = useTransform(count, (latest) => Math.round(latest));
-  // Use the specific type instead of 'any'
   const controlsRef = useRef<AnimationPlaybackControls | null>(null);
 
   useEffect(() => {
@@ -93,6 +92,7 @@ export default function StatsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [counts, setCounts] = useState<ActivityCount | null>(null);
   const [streak, setStreak] = useState<Streak | null>(null);
+  const [points, setPoints] = useState<number>(0); // <-- add points state
   // Calendar cache: { [date: string]: CalendarResponse }
   const [calendarCache, setCalendarCache] = useState<{
     [date: string]: CalendarResponse;
@@ -236,6 +236,22 @@ export default function StatsPage() {
     return "🏆";
   };
 
+  // Fetch points
+  useEffect(() => {
+    const fetchPoints = async () => {
+      try {
+        const res = await fetch("/api/points");
+        if (res.ok) {
+          const data: { points: number } = await res.json();
+          setPoints(data.points);
+        }
+      } catch {
+        setPoints(0);
+      }
+    };
+    fetchPoints();
+  }, []);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[80vh]">
@@ -317,6 +333,13 @@ export default function StatsPage() {
                 }}
                 transition={{ duration: 1, ease: "easeOut" }}
               />
+            </div>
+            {/* Points display below progress bar */}
+            <div className="flex items-center mt-4 text-orange-700 font-bold text-lg gap-2">
+              <StarIcon className="w-6 h-6 text-yellow-400" />
+              <span>
+                <AnimatedCounter to={points} /> points
+              </span>
             </div>
           </motion.div>
 
@@ -435,9 +458,11 @@ export default function StatsPage() {
                     let isMiddleStreak = false;
                     for (const group of streakGroups) {
                       if (group.length > 1 && group.includes(i)) {
-                        if (i === group[0]) pillClass = "rounded-l-full border border-orange-200";
-                        else if (i === group[group.length-1]) pillClass = "rounded-r-full border border-orange-200";
-                        else {
+                        if (i === group[0]) {
+                          pillClass = "rounded-l-full border border-orange-200";
+                        } else if (i === group[group.length-1]) {
+                          pillClass = "rounded-r-full border border-orange-200";
+                        } else {
                           pillClass = "border-none rounded-none";
                           isMiddleStreak = true;
                         }

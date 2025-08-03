@@ -10,6 +10,18 @@ import {
   ArrowLeftIcon,
 } from "@heroicons/react/24/solid";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+
+type Reflection = {
+  id: number;
+  responses: { question: string; answer: string }[];
+  created_at: string;
+};
+
+type ReflectionsResponse = {
+  reflections: Reflection[];
+};
 
 const animationVariants = {
   pageContainer: {
@@ -43,7 +55,7 @@ const animationVariants = {
 };
 
 export default function Page() {
-  const [stage, setStage] = React.useState<"intro" | "quiz" | "result">(
+  const [stage, setStage] = React.useState<"intro" | "quiz" | "result" | "save">(
     "intro"
   );
   const [current, setCurrent] = React.useState<number>(0);
@@ -51,6 +63,14 @@ export default function Page() {
     questions.map(() => "")
   );
   const [goal, setGoal] = React.useState<string | null>(null);
+  const [isSaving, setIsSaving] = React.useState(false);
+  const [saveSuccess, setSaveSuccess] = React.useState<boolean | null>(null);
+  const [showPast, setShowPast] = React.useState(false);
+  const [pastReflections, setPastReflections] = React.useState<
+    { id: number; responses: { question: string; answer: string }[]; created_at: string }[]
+  >([]);
+  const [loadingPast, setLoadingPast] = React.useState(false);
+  const router = useRouter();
 
   const handleOptionChange = (option: string) => {
     const copy = [...selected];
@@ -98,6 +118,52 @@ export default function Page() {
     setStage("result");
   };
 
+  const handleSaveReflection = async () => {
+    setIsSaving(true);
+    setSaveSuccess(null);
+    try {
+      const res = await fetch("/api/reflection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          responses: questions.map((q, i) => ({
+            question: q.question,
+            answer: selected[i],
+          })),
+        }),
+      });
+      if (res.ok) {
+        setSaveSuccess(true);
+      } else {
+        setSaveSuccess(false);
+      }
+    } catch {
+      setSaveSuccess(false);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    if (stage === "save") {
+      handleSaveReflection();
+    }
+  }, [stage]);
+
+  // Fetch past reflections when showPast is true
+  useEffect(() => {
+    if (showPast) {
+      setLoadingPast(true);
+      fetch("/api/reflection")
+        .then((res) => res.json())
+        .then((data) => {
+          const typed = data as ReflectionsResponse;
+          setPastReflections(typed.reflections || []);
+        })
+        .finally(() => setLoadingPast(false));
+    }
+  }, [showPast]);
+
   return (
     <motion.div
       className="relative w-full max-w-xl mx-auto p-4"
@@ -106,7 +172,7 @@ export default function Page() {
       variants={animationVariants.pageContainer}
     >
       <AnimatePresence mode="wait">
-        {stage === "intro" && (
+        {stage === "intro" && !showPast && (
           <motion.div
             key="intro"
             className="text-center p-6 bg-orange-100 rounded-xl shadow"
@@ -132,17 +198,86 @@ export default function Page() {
               Answer these questions to get personalized wellness
               recommendations.
             </motion.p>
-            <motion.button
-              className="mt-6 px-4 py-2 bg-orange-500 text-white rounded-lg flex items-center mx-auto"
-              onClick={() => setStage("quiz")}
-              initial="initial"
-              animate="animate"
-              variants={animationVariants.navButton}
-              whileHover="hover"
-            >
-              Start
-              <ArrowRightIcon className="w-5 h-5 ml-2" />
-            </motion.button>
+            <div className="flex flex-col gap-4 mt-6">
+              <motion.button
+                className="px-4 py-2 bg-orange-500 text-white rounded-lg flex items-center mx-auto"
+                onClick={() => setStage("quiz")}
+                initial="initial"
+                animate="animate"
+                variants={animationVariants.navButton}
+                whileHover="hover"
+              >
+                Start Reflection
+                <ArrowRightIcon className="w-5 h-5 ml-2" />
+              </motion.button>
+              <motion.button
+                className="px-4 py-2 bg-white border border-orange-400 text-orange-600 rounded-lg flex items-center mx-auto hover:bg-orange-50 transition"
+                onClick={() => setShowPast(true)}
+                initial="initial"
+                animate="animate"
+                variants={animationVariants.navButton}
+                whileHover="hover"
+              >
+                View Past Reflections
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+
+        {stage === "intro" && showPast && (
+          <motion.div
+            key="past"
+            className="p-6 bg-orange-50 rounded-xl shadow"
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            variants={animationVariants.card}
+          >
+            <h2 className="text-3xl font-extrabold text-orange-700 mb-8 text-center">
+              Your Past Reflections
+            </h2>
+            {loadingPast ? (
+              <div className="flex justify-center items-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-400"></div>
+              </div>
+            ) : pastReflections.length === 0 ? (
+              <p className="text-gray-500 text-center">No past reflections found.</p>
+            ) : (
+              <div className="grid grid-cols-1 gap-6 max-h-[32rem] overflow-y-auto">
+                {pastReflections.map((reflection) => (
+                  <motion.div
+                    key={reflection.id}
+                    className="relative rounded-2xl border-2 border-orange-200 bg-gradient-to-br from-orange-100/80 to-white shadow-lg p-6 flex flex-col gap-3 hover:shadow-xl transition-all group"
+                    initial={{ opacity: 0, y: 30, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    whileHover={{ scale: 1.025 }}
+                  >
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-4xl drop-shadow-sm">📝</span>
+                      <span className="text-xs font-semibold text-orange-500 tracking-wide">
+                        {new Date(reflection.created_at).toLocaleString()}
+                      </span>
+                    </div>
+                    <ul className="list-none pl-0 flex flex-col gap-2">
+                      {reflection.responses.map((r, idx) => (
+                        <li key={idx} className="flex flex-col bg-orange-50/80 rounded-lg px-3 py-2 border border-orange-100 group-hover:border-orange-300 transition">
+                          <span className="font-semibold text-gray-700 text-sm">{r.question}</span>
+                          <span className="text-orange-700 font-medium text-base mt-1">{r.answer}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+            <div className="flex justify-center mt-10">
+              <button
+                className="px-6 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 shadow transition"
+                onClick={() => setShowPast(false)}
+              >
+                Back
+              </button>
+            </div>
           </motion.div>
         )}
 
@@ -239,7 +374,8 @@ export default function Page() {
               Your Recommendation
             </h3>
             <p className="mt-2 text-gray-800">
-              Try <span className="text-orange-600 font-bold">{goal}</span>.
+              Try{" "}
+              <span className="text-orange-600 font-bold">{goal}</span>.
             </p>
             <Link
               href="/activities"
@@ -247,6 +383,77 @@ export default function Page() {
             >
               Explore activities
             </Link>
+            <div className="mt-8">
+              <p className="mb-2 text-gray-700 font-medium">
+                Would you like to save your reflection?
+              </p>
+              <div className="flex justify-center gap-4">
+                <button
+                  className="px-4 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition"
+                  onClick={() => setStage("save")}
+                  disabled={isSaving}
+                >
+                  Yes, save it
+                </button>
+                <button
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition"
+                  onClick={() => router.push("/")}
+                  disabled={isSaving}
+                >
+                  No, skip
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {stage === "save" && (
+          <motion.div
+            key="save"
+            className="p-6 bg-orange-50 rounded-xl shadow text-center"
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            variants={animationVariants.card}
+          >
+            <h3 className="text-xl font-bold text-gray-900 mb-4">
+              Saving your reflection...
+            </h3>
+            {isSaving ? (
+              <div className="flex justify-center items-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
+              </div>
+            ) : saveSuccess === true ? (
+              <div>
+                <p className="text-green-600 font-semibold mb-2">
+                  Reflection saved!
+                </p>
+                <button
+                  className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition"
+                  onClick={() => router.push("/")}
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              <div>
+                <p className="text-red-600 font-semibold mb-2">
+                  Failed to save reflection.
+                </p>
+                <button
+                  className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition"
+                  onClick={handleSaveReflection}
+                >
+                  Try Again
+                </button>
+                <button
+                  className="mt-4 ml-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition"
+                  onClick={() => router.push("/")}
+                >
+                  Skip
+                </button>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
