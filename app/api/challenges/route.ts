@@ -56,16 +56,17 @@ export async function POST(request: Request) {
 
   const { env } = await getRequestContext()
 
-  // check exists
-  const chk = await env.challenges
-    .prepare('SELECT id FROM challenges WHERE id = ?1')
+  // check challenge exists and get points
+  const challengeRow = await env.challenges
+    .prepare('SELECT id, points FROM challenges WHERE id = ?1')
     .bind(challenge_id)
-    .first<{ id: number }>()
-  if (!chk) {
+    .first<{ id: number, points: number }>()
+  if (!challengeRow) {
     return NextResponse.json({ message: 'Challenge not found' }, { status: 404 })
   }
+  const points = challengeRow.points ?? 0
 
-  // insert
+  // insert activity
   const timestamp = new Date().toISOString()
   const ins = await env.users
     .prepare(`
@@ -81,5 +82,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: 'DB error' }, { status: 500 })
   }
 
-  return NextResponse.json({ success: true, timestamp }, { status: 201 })
+  // create user row if not exists, then add points
+  await env.users
+    .prepare(`
+      INSERT INTO users (user_id, points)
+      VALUES (?1, 0)
+      ON CONFLICT(user_id) DO NOTHING
+    `)
+    .bind(userId)
+    .run()
+
+  await env.users
+    .prepare(`
+      UPDATE users
+      SET points = points + ?1
+      WHERE user_id = ?2
+    `)
+    .bind(points, userId)
+    .run()
+
+  return NextResponse.json({ success: true, timestamp, points }, { status: 201 })
 }

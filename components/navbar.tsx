@@ -96,22 +96,24 @@ export default function Navbar() {
       >
         {/* Streak Counter */}
         {session && !isLoginPage && (
-          <motion.div 
-            className="flex items-center bg-gradient-to-r from-orange-100 to-yellow-100 px-4 py-2 rounded-full shadow-sm"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.6, ease: "easeOut" }}
-          >
-            <FireIcon className="w-5 h-5 text-orange-600 mr-2" />
-            {isLoadingStreak ? (
-              <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin mr-2"></div>
-            ) : (
-              <span className={`${rethinkSans.className} font-bold text-orange-600 text-lg mr-1`}>
-                {streakCount}
-              </span>
-            )}
-            <span className="text-orange-600 font-medium text-sm ml-0.5">day streak</span>
-          </motion.div>
+          <Link href="/stats" tabIndex={0} aria-label="View your stats">
+            <motion.div 
+              className="flex items-center bg-gradient-to-r from-orange-100 to-yellow-100 px-4 py-2 rounded-full shadow-sm cursor-pointer hover:shadow-md transition"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.6, ease: "easeOut" }}
+            >
+              <FireIcon className="w-5 h-5 text-orange-600 mr-2" />
+              {isLoadingStreak ? (
+                <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+              ) : (
+                <span className={`${rethinkSans.className} font-bold text-orange-600 text-lg mr-1`}>
+                  {streakCount}
+                </span>
+              )}
+              <span className="text-orange-600 font-medium text-sm ml-0.5">day streak</span>
+            </motion.div>
+          </Link>
         )}
         
         <div className="relative" ref={dropdownRef}>

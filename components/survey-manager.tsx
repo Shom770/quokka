@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 
 let PROBABILITY = 0.15;
 if (process.env.NODE_ENV === "development") {
-  PROBABILITY = 1; // For testing purposes, show survey every time in development
+  PROBABILITY = 1;
 }
 
 interface SurveyQuestion {

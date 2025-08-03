@@ -1,8 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { XMarkIcon, ChevronLeftIcon, SparklesIcon } from "@heroicons/react/24/solid";
+import {
+  XMarkIcon,
+  ChevronLeftIcon,
+  SparklesIcon,
+} from "@heroicons/react/24/solid";
 import { rethinkSans } from "@/components/fonts";
 
 interface TutorialStep {
@@ -25,90 +29,109 @@ interface TutorialOverlayProps {
   };
 }
 
-export default function TutorialOverlay({ isVisible, onComplete, onSkip, refs }: TutorialOverlayProps) {
+export default function TutorialOverlay({
+  isVisible,
+  onComplete,
+  onSkip,
+  refs,
+}: TutorialOverlayProps) {
   const [currentStep, setCurrentStep] = useState(0);
 
-  const tutorialSteps: TutorialStep[] = [
-    {
-      id: "challenge",
-      ref: refs.challengeBox,
-      title: "Daily Challenge",
-      description: "Complete daily challenges to build healthy habits and track your progress."
-    },
-    {
-      id: "reflection",
-      ref: refs.journalingCard,
-      title: "Mental Health Reflection",
-      description: "Reflect on your mental health and understand yourself better."
-    },
-    {
-      id: "resources",
-      ref: refs.resourcesCard,
-      title: "Resources",
-      description: "Find mental health resources and support when you need help."
-    },
-    {
-      id: "activities",
-      ref: refs.meditationCard,
-      title: "Activities",
-      description: "Access meditation, breathing exercises, yoga, and other wellness activities."
-    }
-  ];
+  const tutorialSteps: TutorialStep[] = useMemo(
+    () => [
+      {
+        id: "challenge",
+        ref: refs.challengeBox,
+        title: "Daily Challenge",
+        description:
+          "Complete daily challenges to build healthy habits and track your progress.",
+      },
+      {
+        id: "reflection",
+        ref: refs.journalingCard,
+        title: "Mental Health Reflection",
+        description:
+          "Reflect on your mental health and understand yourself better.",
+      },
+      {
+        id: "resources",
+        ref: refs.resourcesCard,
+        title: "Resources",
+        description:
+          "Find mental health resources and support when you need help.",
+      },
+      {
+        id: "activities",
+        ref: refs.meditationCard,
+        title: "Activities",
+        description:
+          "Access meditation, breathing exercises, yoga, and other wellness activities.",
+      },
+    ],
+    [
+      refs.challengeBox,
+      refs.journalingCard,
+      refs.resourcesCard,
+      refs.meditationCard,
+    ]
+  );
 
   const currentStepData = tutorialSteps[currentStep];
 
   useEffect(() => {
     if (isVisible) {
       // Initially dim all tutorial elements
-      tutorialSteps.forEach(step => {
+      tutorialSteps.forEach((step) => {
         if (step.ref?.current) {
-          step.ref.current.style.filter = 'blur(2px) brightness(0.7)';
+          step.ref.current.style.filter = "blur(2px) brightness(0.7)";
         }
       });
-      
+
       // Then highlight the current element
       if (currentStepData?.ref?.current) {
         const element = currentStepData.ref.current;
-        element.style.boxShadow = '0 0 0 4px rgba(251, 146, 60, 0.8), 0 0 20px rgba(251, 146, 60, 0.6)';
-        element.style.borderRadius = '16px';
-        element.style.zIndex = '1000';
-        element.style.filter = 'none'; // Remove any blur from highlighted element
+        element.style.boxShadow =
+          "0 0 0 4px rgba(251, 146, 60, 0.8), 0 0 20px rgba(251, 146, 60, 0.6)";
+        element.style.borderRadius = "16px";
+        element.style.zIndex = "1000";
+        element.style.filter = "none"; // Remove any blur from highlighted element
       }
     }
-  }, [isVisible, currentStep, currentStepData]);
+  }, [isVisible, currentStepData, tutorialSteps]);
 
   useEffect(() => {
     if (isVisible && currentStepData?.ref?.current) {
       // Add highlight style to current element
       const element = currentStepData.ref.current;
-      element.style.boxShadow = '0 0 0 4px rgba(251, 146, 60, 0.8), 0 0 20px rgba(251, 146, 60, 0.6)';
-      element.style.borderRadius = '16px';
-      element.style.zIndex = '1000';
-      element.style.filter = 'none'; // Remove any blur from highlighted element
-      
+      element.style.boxShadow =
+        "0 0 0 4px rgba(251, 146, 60, 0.8), 0 0 20px rgba(251, 146, 60, 0.6)";
+      element.style.borderRadius = "16px";
+      element.style.zIndex = "1000";
+      element.style.filter = "none"; // Remove any blur from highlighted element
+
       // Remove highlight from other elements and add blur
       tutorialSteps.forEach((step, index) => {
         if (index !== currentStep && step.ref?.current) {
-          step.ref.current.style.boxShadow = '';
-          step.ref.current.style.borderRadius = '';
-          step.ref.current.style.zIndex = '';
-          step.ref.current.style.filter = 'blur(2px) brightness(0.7)'; // Dim and blur other elements
+          step.ref.current.style.boxShadow = "";
+          step.ref.current.style.borderRadius = "";
+          step.ref.current.style.zIndex = "";
+          step.ref.current.style.filter = "blur(2px) brightness(0.7)"; // Dim and blur other elements
         }
       });
     }
-  }, [currentStep, currentStepData]);
+  }, [isVisible, currentStep, currentStepData, tutorialSteps]);
 
   const nextStep = () => {
     if (currentStep < tutorialSteps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
       // Remove all highlights and blur effects
-      tutorialSteps.forEach(step => {
+      tutorialSteps.forEach((step) => {
         if (step.ref?.current) {
-          step.ref.current.style.boxShadow = '';
-          step.ref.current.style.borderRadius = '';
-          step.ref.current.style.zIndex = '';
-          step.ref.current.style.filter = '';
+          step.ref.current.style.boxShadow = "";
+          step.ref.current.style.borderRadius = "";
+          step.ref.current.style.zIndex = "";
+          step.ref.current.style.filter = "";
         }
       });
       onComplete();
@@ -123,12 +146,12 @@ export default function TutorialOverlay({ isVisible, onComplete, onSkip, refs }:
 
   const handleSkip = () => {
     // Remove all highlights and blur effects
-    tutorialSteps.forEach(step => {
+    tutorialSteps.forEach((step) => {
       if (step.ref?.current) {
-        step.ref.current.style.boxShadow = '';
-        step.ref.current.style.borderRadius = '';
-        step.ref.current.style.zIndex = '';
-        step.ref.current.style.filter = '';
+        step.ref.current.style.boxShadow = "";
+        step.ref.current.style.borderRadius = "";
+        step.ref.current.style.zIndex = "";
+        step.ref.current.style.filter = "";
       }
     });
     onSkip();
@@ -146,7 +169,7 @@ export default function TutorialOverlay({ isVisible, onComplete, onSkip, refs }:
       >
         {/* Backdrop */}
         <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-        
+
         {/* Animated background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-yellow-500/5 to-red-500/5" />
 
@@ -164,19 +187,21 @@ export default function TutorialOverlay({ isVisible, onComplete, onSkip, refs }:
           {/* Decorative elements */}
           <div className="absolute -top-2 -left-2 w-4 h-4 bg-gradient-to-r from-orange-400 to-yellow-400 rounded-full" />
           <div className="absolute -bottom-2 -right-2 w-4 h-4 bg-gradient-to-r from-orange-400 to-yellow-400 rounded-full" />
-          
+
           <div className="relative">
             <div className="flex items-center gap-2 mb-3">
               <SparklesIcon className="w-5 h-5 text-orange-500" />
-              <h3 className={`${rethinkSans.className} font-bold text-xl text-orange-600`}>
+              <h3
+                className={`${rethinkSans.className} font-bold text-xl text-orange-600`}
+              >
                 {currentStepData?.title}
               </h3>
             </div>
-            
+
             <p className="text-gray-700 text-sm leading-relaxed mb-6">
               {currentStepData?.description}
             </p>
-            
+
             {/* Progress indicator */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex space-x-1">
@@ -184,10 +209,10 @@ export default function TutorialOverlay({ isVisible, onComplete, onSkip, refs }:
                   <motion.div
                     key={index}
                     className={`h-1.5 rounded-full transition-all duration-300 ${
-                      index <= currentStep ? 'bg-orange-500' : 'bg-gray-200'
+                      index <= currentStep ? "bg-orange-500" : "bg-gray-200"
                     }`}
-                    style={{ width: index === currentStep ? '24px' : '8px' }}
-                    animate={{ width: index === currentStep ? '24px' : '8px' }}
+                    style={{ width: index === currentStep ? "24px" : "8px" }}
+                    animate={{ width: index === currentStep ? "24px" : "8px" }}
                   />
                 ))}
               </div>
@@ -195,7 +220,7 @@ export default function TutorialOverlay({ isVisible, onComplete, onSkip, refs }:
                 {currentStep + 1} of {tutorialSteps.length}
               </span>
             </div>
-            
+
             {/* Navigation buttons */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -210,7 +235,7 @@ export default function TutorialOverlay({ isVisible, onComplete, onSkip, refs }:
                   </motion.button>
                 )}
               </div>
-              
+
               <div className="flex items-center gap-3">
                 <motion.button
                   onClick={handleSkip}
@@ -226,7 +251,9 @@ export default function TutorialOverlay({ isVisible, onComplete, onSkip, refs }:
                   whileHover={{ scale: 1.05, y: -1 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  {currentStep === tutorialSteps.length - 1 ? "Get Started" : "Next"}
+                  {currentStep === tutorialSteps.length - 1
+                    ? "Get Started"
+                    : "Next"}
                 </motion.button>
               </div>
             </div>
@@ -245,4 +272,4 @@ export default function TutorialOverlay({ isVisible, onComplete, onSkip, refs }:
       </motion.div>
     </AnimatePresence>
   );
-} 
+}
