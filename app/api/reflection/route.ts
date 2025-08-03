@@ -37,6 +37,15 @@ async function resolveUserId(request: Request): Promise<string> {
   }
 }
 
+type ReflectionResponse = {
+  question: string
+  answer: string
+}
+
+type ReflectionRequestBody = {
+  responses: ReflectionResponse[]
+}
+
 export async function POST(request: Request) {
   let userId: string
   try {
@@ -45,7 +54,7 @@ export async function POST(request: Request) {
     return resp as NextResponse
   }
 
-  let body: unknown
+  let body: ReflectionRequestBody
   try {
     body = await request.json()
   } catch {
@@ -53,16 +62,11 @@ export async function POST(request: Request) {
   }
 
   // Expecting { responses: [...] }
-  if (
-    !body ||
-    typeof body !== 'object' ||
-    !('responses' in body) ||
-    !Array.isArray((body as any).responses)
-  ) {
+  if (!body || typeof body !== 'object' || !Array.isArray(body.responses)) {
     return NextResponse.json({ message: 'Missing or invalid responses' }, { status: 400 })
   }
 
-  const responsesJson = JSON.stringify((body as any).responses)
+  const responsesJson = JSON.stringify(body.responses)
 
   const { env } = await getRequestContext()
   const result = await env.users

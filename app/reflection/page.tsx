@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useCallback } from "react";
 import { questions } from "./questions";
 import { rethinkSans } from "@/components/fonts";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,7 +11,6 @@ import {
 } from "@heroicons/react/24/solid";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 
 type Reflection = {
   id: number;
@@ -118,7 +117,8 @@ export default function Page() {
     setStage("result");
   };
 
-  const handleSaveReflection = async () => {
+  // Wrap handleSaveReflection in useCallback
+  const handleSaveReflection = useCallback(async () => {
     setIsSaving(true);
     setSaveSuccess(null);
     try {
@@ -142,13 +142,13 @@ export default function Page() {
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [selected]);
 
   useEffect(() => {
     if (stage === "save") {
       handleSaveReflection();
     }
-  }, [stage]);
+  }, [stage, handleSaveReflection]);
 
   // Fetch past reflections when showPast is true
   useEffect(() => {
