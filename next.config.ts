@@ -1,4 +1,5 @@
 import { setupDevPlatform } from '@cloudflare/next-on-pages/next-dev';
+import createNextIntlPlugin from 'next-intl/plugin';
 
 // Here we use the @cloudflare/next-on-pages next-dev module to allow us to
 // use bindings during local development (when running the application with
@@ -15,4 +16,5 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const withNextIntl = createNextIntlPlugin();
+export default withNextIntl(nextConfig);

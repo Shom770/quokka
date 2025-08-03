@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { libreBodoni } from "@/components/fonts";
+import { useTranslations } from "next-intl";
 
 const animationVariants = {
   pageEntry: {
@@ -44,6 +45,9 @@ const animationVariants = {
 export default function LoginPage() {
   const { status } = useSession();
   const router = useRouter();
+
+  const t = useTranslations('test');
+  console.log(t('test_key'));
 
   // Redirect to home if already authenticated
   useEffect(() => {
