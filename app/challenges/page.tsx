@@ -52,44 +52,54 @@ type CalendarActivity = {
   challenge_description?: string;
 };
 
+type Challenge = {
+  id: number;
+  category: string;
+  theme: string;
+  description: string;
+};
+
 export default function Page() {
   useSession({ required: true });
-  const [challenge, setChallenge] = useState<{
-    id: number;
-    category: string;
-    theme: string;
-    description: string;
-  } | null>(null);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [completed, setCompleted] = useState(false);
+  const [completedChallenges, setCompletedChallenges] = useState<Set<number>>(new Set());
   const [checkedCompletion, setCheckedCompletion] = useState(false);
   const [posting, setPosting] = useState(false);
   const [postError, setPostError] = useState("");
 
   useEffect(() => {
-    const fetchChallenge = async () => {
+    const fetchChallenges = async () => {
       try {
-        const res = await fetch("https://data.quokka.school/api/challenges/daily");
-        const data = await res.json() as {
-          success?: boolean;
-          data?: { challenge?: { id: number; category: string; theme: string; description: string } };
-        };
-        if (data.success && data.data && data.data.challenge) {
-          setChallenge(data.data.challenge);
-        }
+        // Fetch 3 challenges
+        const challengePromises = Array.from({ length: 3 }, () =>
+          fetch("https://data.quokka.school/api/challenges/daily")
+        );
+        
+        const responses = await Promise.all(challengePromises);
+        const challengeData = await Promise.all(
+          responses.map(res => res.json())
+        );
+        
+        const validChallenges = challengeData
+          .filter((data: any) => data.success && data.data && data.data.challenge)
+          .map((data: any) => data.data.challenge)
+          .slice(0, 3); // Ensure we only get 3 challenges
+        
+        setChallenges(validChallenges);
       } catch (error) {
-        console.error("Failed to fetch daily challenge", error);
+        console.error("Failed to fetch daily challenges", error);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchChallenge();
+    fetchChallenges();
   }, []);
 
-  // Check if today's challenge is already completed
+  // Check if today's challenges are already completed
   useEffect(() => {
     const checkCompleted = async () => {
-      if (!challenge || checkedCompletion) return;
+      if (challenges.length === 0 || checkedCompletion) return;
       try {
         const today = new Date();
         const yyyy = today.getFullYear();
@@ -100,10 +110,13 @@ export default function Page() {
         if (!res.ok) return;
         const data = await res.json() as { activities?: CalendarActivity[] };
         if (data && data.activities) {
-          const found = (data.activities as CalendarActivity[]).some(
-            (a) => a.type === 'challenge' && String(a.activity_id) === String(challenge.id)
-          );
-          if (found) setCompleted(true);
+          const completedIds = new Set<number>();
+          (data.activities as CalendarActivity[]).forEach((a) => {
+            if (a.type === 'challenge') {
+              completedIds.add(Number(a.activity_id));
+            }
+          });
+          setCompletedChallenges(completedIds);
         }
       } catch {
         // ignore
@@ -112,27 +125,26 @@ export default function Page() {
       }
     };
     checkCompleted();
-  }, [challenge, checkedCompletion]);
+  }, [challenges, checkedCompletion]);
 
-  const handleToggle = async () => {
-    if (!challenge || completed || posting) return;
+  const handleToggle = async (challengeId: number) => {
+    if (completedChallenges.has(challengeId) || posting) return;
     setPosting(true);
     setPostError("");
     try {
-      // challenge.id is already a number, send as is
       const res = await fetch(`/api/challenges`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ challenge_id: challenge.id }),
+        body: JSON.stringify({ challenge_id: challengeId }),
         credentials: "include",
       });
       const data = await res.json() as { success?: boolean; message?: string };
       if (!res.ok || !data.success) {
         throw new Error(data.message || "Failed to record challenge completion");
       }
-      setCompleted(true);
+      setCompletedChallenges(prev => new Set([...prev, challengeId]));
     } catch (err) {
       setPostError(err instanceof Error ? err.message : "Failed to record challenge completion");
     } finally {
@@ -140,7 +152,7 @@ export default function Page() {
     }
   };
 
-
+  const allCompleted = challenges.length > 0 && completedChallenges.size === challenges.length;
 
   return (
     <motion.div 
@@ -184,22 +196,22 @@ export default function Page() {
       </motion.div>
 
       {/* Main Content */}
-      <div className="relative z-10 flex flex-col justify-center items-center gap-8 w-full max-w-2xl px-6">
+      <div className="relative z-10 flex flex-col justify-center items-center gap-8 w-full max-w-6xl px-6">
         <motion.div 
           className="text-center space-y-2"
           {...animationVariants.titleContainer}
         >
           <h1 className={`${rethinkSans.className} antialiased text-orange-600 font-extrabold text-[52px] leading-[1] drop-shadow-sm`}>
-            Daily Challenge
+            Daily Challenges
           </h1>
           <p className="text-gray-600 text-lg font-medium">
             Push yourself to be better today
           </p>
         </motion.div>
 
-        {challenge && (
+        {challenges.length > 0 && (
           <motion.div 
-            className="w-full max-w-md space-y-6"
+            className="w-full"
             {...animationVariants.challengeCard}
           >
             {(isLoading || posting) ? (
@@ -212,25 +224,42 @@ export default function Page() {
               </div>
             ) : (
               <>
-                <ChallengeBox
-                  category={`${challenge.theme}`}
-                  description={challenge.description}
-                  isCompleted={completed}
-                  onToggle={handleToggle}
-                  allChallengesAccomplished={completed}
-                />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+                  {challenges.map((challenge, index) => (
+                    <motion.div
+                      key={challenge.id}
+                      initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ 
+                        duration: 0.8, 
+                        delay: 0.4 + (index * 0.1), 
+                        type: "spring", 
+                        stiffness: 100, 
+                        damping: 15 
+                      }}
+                    >
+                      <ChallengeBox
+                        category={`${challenge.theme}`}
+                        description={challenge.description}
+                        isCompleted={completedChallenges.has(challenge.id)}
+                        onToggle={() => handleToggle(challenge.id)}
+                        allChallengesAccomplished={allCompleted}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
                 {postError && (
-                  <div className="text-center text-red-500 text-sm mt-2">{postError}</div>
+                  <div className="text-center text-red-500 text-sm mt-4">{postError}</div>
                 )}
-                {completed && (
+                {allCompleted && (
                   <motion.div 
-                    className="text-center space-y-2"
+                    className="text-center space-y-2 mt-8"
                     {...animationVariants.completionMessage}
                   >
                     <div className="flex items-center justify-center gap-2">
                       <TrophyIcon className="w-6 h-6 text-yellow-500" />
                       <h2 className={`${rethinkSans.className} antialiased text-2xl text-orange-600 font-extrabold`}>
-                        Challenge Complete!
+                        All Challenges Complete!
                       </h2>
                       <SparklesIcon className="w-6 h-6 text-yellow-500" />
                     </div>

@@ -14,15 +14,15 @@ const getCategoryIcon = (category: string): React.ReactElement => {
   const lowerCategory = category.toLowerCase();
   
   if (lowerCategory.includes('mindfulness') || lowerCategory.includes('meditation')) {
-    return <SunIcon className="w-8 h-8" />;
+    return <SunIcon className="w-6 h-6" />;
   } else if (lowerCategory.includes('fitness') || lowerCategory.includes('exercise')) {
-    return <BoltIcon className="w-8 h-8" />;
+    return <BoltIcon className="w-6 h-6" />;
   } else if (lowerCategory.includes('social') || lowerCategory.includes('connection')) {
-    return <HeartIcon className="w-8 h-8" />;
+    return <HeartIcon className="w-6 h-6" />;
   } else if (lowerCategory.includes('creativity') || lowerCategory.includes('art')) {
-    return <SparklesIcon className="w-8 h-8" />;
+    return <SparklesIcon className="w-6 h-6" />;
   } else {
-    return <PlayCircleIcon className="w-8 h-8" />;
+    return <PlayCircleIcon className="w-6 h-6" />;
   }
 };
 
@@ -48,7 +48,7 @@ export default function ChallengeBox({ category, description, isCompleted, allCh
 
    return (
        <motion.button
-            className={`relative group w-full min-h-[280px] p-6 rounded-2xl transition-all duration-300 transform z-10 hover:scale-105 ${!isCompleted ? 'bg-white border-2 border-orange-200 text-gray-700 shadow-lg hover:shadow-xl' : 'bg-gradient-to-br from-orange-500 to-yellow-500 text-white shadow-xl hover:shadow-2xl'}`}
+            className={`relative group w-full h-full p-4 rounded-2xl transition-all duration-300 transform z-10 hover:scale-105 ${!isCompleted ? 'bg-white/50 border-2 border-orange-200 text-gray-700 shadow-lg hover:shadow-xl' : 'bg-gradient-to-br from-orange-500 to-yellow-500 text-white shadow-xl hover:shadow-2xl'}`}
             onClick={onToggle}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -72,15 +72,15 @@ export default function ChallengeBox({ category, description, isCompleted, allCh
             
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-5">
-                <div className="absolute top-4 right-4 w-16 h-16 rounded-full bg-current opacity-10" />
-                <div className="absolute bottom-4 left-4 w-12 h-12 rounded-full bg-current opacity-10" />
+                <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-current opacity-10" />
+                <div className="absolute bottom-2 left-2 w-6 h-6 rounded-full bg-current opacity-10" />
             </div>
             
             {/* Content */}
-            <div className="relative z-10 flex flex-col items-center justify-center gap-4 h-full">
+            <div className="relative z-10 flex flex-col items-center justify-center gap-3 h-full">
                 {/* Category Icon */}
                 <motion.div 
-                    className={`flex items-center justify-center w-16 h-16 rounded-full ${!isCompleted ? `bg-gradient-to-br ${gradientColor} text-white` : 'bg-white/20 text-white'} shadow-lg`}
+                    className={`flex items-center justify-center w-12 h-12 rounded-full ${!isCompleted ? `bg-gradient-to-br ${gradientColor} text-white` : 'bg-white/20 text-white'} shadow-lg`}
                     whileHover={{ rotate: 360 }}
                     transition={{ duration: 0.6 }}
                 >
@@ -88,33 +88,33 @@ export default function ChallengeBox({ category, description, isCompleted, allCh
                 </motion.div>
                 
                 {/* Category Title */}
-                <h1 className={`${rethinkSans.className} text-xl font-extrabold text-center leading-tight`}>
+                <h1 className={`${rethinkSans.className} text-lg font-extrabold text-center leading-tight`}>
                     {category}
                 </h1>
                 
                 {/* Description */}
-                <div className="px-4 text-center">
-                    <p className={`${inter.className} antialiased text-sm font-medium leading-relaxed opacity-90`}>
+                <div className="px-3 text-center flex-1 flex items-center">
+                    <p className={`${inter.className} antialiased text-xs font-medium leading-relaxed opacity-90 line-clamp-4`}>
                         {description}
                     </p>
                 </div>
                 
                 {/* Status Indicator */}
                 <motion.div 
-                    className="flex items-center justify-center gap-2 mt-2"
+                    className="flex items-center justify-center gap-1 mt-1"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2 }}
                 >
                     {isCompleted ? (
                         <>
-                            <CheckCircleIcon className="w-5 h-5 text-white" />
-                            <span className="text-sm font-semibold">Completed!</span>
+                            <CheckCircleIcon className="w-4 h-4 text-white" />
+                            <span className="text-xs font-semibold">Done!</span>
                         </>
                     ) : (
                         <>
-                            <div className="w-4 h-4 rounded-full border-2 border-current opacity-60" />
-                            <span className="text-sm font-medium opacity-70">Tap to complete</span>
+                            <div className="w-3 h-3 rounded-full border-2 border-current opacity-60" />
+                            <span className="text-xs font-medium opacity-70">Tap to complete</span>
                         </>
                     )}
                 </motion.div>

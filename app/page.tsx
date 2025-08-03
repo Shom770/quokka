@@ -178,7 +178,7 @@ export default function Page() {
       >
         <motion.div
           ref={activityCardsRef}
-          className="flex items-center justify-center relative w-[50%] h-[80%] activity-cards"
+          className="flex items-center justify-center relative w-[40%] h-[80%] activity-cards"
           {...animationVariants.leftSection}
         >
           <Cards 
@@ -188,11 +188,11 @@ export default function Page() {
           />
         </motion.div>
         <motion.div
-          className="relative flex flex-col justify-center w-2/5 h-2/5 gap-8"
+          className="relative flex flex-col justify-center w-2/5 h-3/5 gap-8"
           {...animationVariants.rightSection}
         >
           <motion.div
-            className="absolute inset-2 bg-gradient-to-r from-[#F66B6B]/90 to-[#F5C114]/90 blur-[150px] rounded-xl z-0"
+            className="absolute inset-2 bg-gradient-to-r from-[#F66B6B]/75 to-[#F5C114]/75 blur-[75px] rounded-xl z-0"
             {...animationVariants.gradientBackground}
           />
           {(isLoading || Object.values(posting).some(Boolean)) ? (
@@ -213,22 +213,17 @@ export default function Page() {
                   Push yourself to be better today
                 </p>
               </div>
-              {/* Vertically stacked Challenge Cards */}
+              {/* Vertically Stacked Challenge Cards */}
               <div
                 ref={challengeBoxRef}
-                className="relative w-full"
-                style={{ height: `${challenges.length * 90 + 40}px` }} // adjust height as needed
+                className="flex flex-col gap-4 w-full h-full"
               >
                 {challenges.map((challenge, idx) => (
                   <div
                     key={challenge.id}
-                    className={`
-                      absolute left-0 right-0 transition-all duration-300
-                      group cursor-pointer
-                    `}
+                    className="flex-1 transition-all duration-300 group cursor-pointer"
                     style={{
-                      top: `${idx * 60}px`, // vertical offset
-                      zIndex: hoveredIdx === idx ? 50 : 10 + idx,
+                      zIndex: hoveredIdx === idx ? 50 : 10,
                       transform: hoveredIdx === idx
                         ? "scale(1.06) translateY(-12px)"
                         : "scale(1) translateY(0)",
