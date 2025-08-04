@@ -72,14 +72,16 @@ export default function ChallengeBox({
   isCompleted,
   allChallengesAccomplished,
   onToggle,
-  loading, // <-- add loading prop
+  loading,
+  points, // <-- add points prop
 }: {
   category: string;
   description: string;
   isCompleted: boolean;
   allChallengesAccomplished: boolean;
   onToggle: () => void;
-  loading?: boolean; // <-- add loading prop
+  loading?: boolean;
+  points?: number; // <-- add points prop
 }) {
   const gradientColor = getCategoryColor(category);
   const categoryIcon = getCategoryIcon(category);
@@ -195,7 +197,7 @@ export default function ChallengeBox({
             <>
               <div className="w-3 h-3 rounded-full border-2 border-current opacity-60" />
               <span className="text-xs font-medium opacity-70">
-                Tap to complete
+                Complete for {points} points!
               </span>
             </>
           )}

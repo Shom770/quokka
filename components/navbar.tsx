@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Cog6ToothIcon, FireIcon } from "@heroicons/react/24/solid";
+import { Cog6ToothIcon, FireIcon, StarIcon } from "@heroicons/react/24/solid";
 import { useSession, signOut } from "next-auth/react";
 import { rethinkSans } from "@/components/fonts";
 import { useEffect, useRef, useState } from "react";
@@ -11,14 +11,17 @@ import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 
 export default function Navbar() {
-  const t = useTranslations('navbar');
+  const t = useTranslations("navbar");
   const { data: session } = useSession();
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [streakCount, setStreakCount] = useState(0);
-  const [isLoadingStreak, setIsLoadingStreak] = useState(true);
+  const [pointsCount, setPointsCount] = useState(0);
+  // new display states for count-up
+  const [displayedStreak, setDisplayedStreak] = useState(0);
+  const [displayedPoints, setDisplayedPoints] = useState(0);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-  
+
   const isLoginPage = pathname === "/login";
 
   // Helper to refetch streak
@@ -28,48 +31,72 @@ export default function Navbar() {
         credentials: "include",
       });
       if (res.ok) {
-        const data = await res.json() as { streak_count: number };
+        const data = (await res.json()) as { streak_count: number };
         setStreakCount(data.streak_count || 0);
       }
     } catch (error) {
       console.error("Failed to fetch streak", error);
-    } finally {
-      setIsLoadingStreak(false);
     }
   };
 
-  // Fetch streak on session change
-  useEffect(() => {
-    if (session) {
-      fetchStreak();
+  // Fetch points helper
+  const fetchPoints = async () => {
+    try {
+      const res = await fetch("/api/points", { credentials: "include" });
+      if (res.ok) {
+        const data = (await res.json()) as { points: number };
+        setPointsCount(data.points);
+      }
+    } catch (err) {
+      console.error("Failed to fetch points", err);
     }
+  };
+
+  // fetch on session change
+  useEffect(() => {
+    if (!session) return;
+
+    // initial load
+    fetchStreak();
+    fetchPoints();
+
+    // handle your custom event
+    const handleStatsUpdate = () => {
+      fetchStreak();
+      fetchPoints();
+    };
+
+    window.addEventListener("statsUpdate", handleStatsUpdate);
+    return () => {
+      window.removeEventListener("statsUpdate", handleStatsUpdate);
+    };
   }, [session]);
 
-  // Listen for custom event to refetch streak
+  // animate points count-up
   useEffect(() => {
-    const handleStreakUpdate = () => {
-      if (streakCount === 0) {
-        setIsLoadingStreak(true);
-        fetchStreak();
-      }
-    };
-    window.addEventListener("streakUpdate", handleStreakUpdate);
-    return () => window.removeEventListener("streakUpdate", handleStreakUpdate);
+    const duration = 800;
+    const startTime = performance.now();
+    function tick(now: number) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      setDisplayedPoints(Math.floor(progress * pointsCount));
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }, [pointsCount]);
+
+  // animate streak count-up
+  useEffect(() => {
+    const duration = 800;
+    const startTime = performance.now();
+    function tick(now: number) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      setDisplayedStreak(Math.floor(progress * streakCount));
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
   }, [streakCount]);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -80,7 +107,7 @@ export default function Navbar() {
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="flex flex-row items-center justify-between w-full pt-8 px-20 h-[10vh]"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -93,43 +120,50 @@ export default function Navbar() {
       >
         <Link href="/">
           <div className="-space-y-3 hover:opacity-80 transition-opacity duration-200">
-            <h1 className={`${rethinkSans.className} antialiased font-extrabold text-[40px] text-orange-600`}>
+            <h1
+              className={`${rethinkSans.className} antialiased font-extrabold text-[40px] text-orange-600`}
+            >
               quokka
             </h1>
-            <h1 className="font-medium text-orange-600">
-              {t('subtitle')}
-            </h1>
+            <h1 className="font-medium text-orange-600">{t("subtitle")}</h1>
           </div>
         </Link>
       </motion.div>
 
-      <motion.div 
+      <motion.div
         className="flex items-center space-x-6"
         initial={{ opacity: 0, x: 30 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6, delay: 3.7, ease: "easeOut" }}
       >
-        {/* Streak Counter */}
         {session && !isLoginPage && (
-          <Link href="/stats" tabIndex={0} aria-label="View your stats">
-            <motion.div 
-              className="flex items-center bg-gradient-to-r from-orange-100 to-yellow-100 px-4 py-2 rounded-full shadow-sm cursor-pointer hover:shadow-md transition"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.6, ease: "easeOut" }}
-            >
-              <FireIcon className="w-5 h-5 text-orange-600 mr-2" />
-              {isLoadingStreak ? (
-                <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin mr-2"></div>
-              ) : (
-                <span className={`${rethinkSans.className} text-orange-600 font-medium text-sm ml-0.5`}>
-                  {t('streak', { count: streakCount })}
+          <>
+            {/* Points Badge */}
+            <Link href="/stats" aria-label="View your points">
+              <motion.div className="flex items-center bg-gradient-to-r from-yellow-100 to-yellow-200 px-4 py-2 rounded-full shadow-sm hover:shadow-md transition">
+                <StarIcon className="w-5 h-5 text-yellow-500 mr-2" />
+                <span
+                  className={`${rethinkSans.className} text-yellow-600 font-medium text-sm`}
+                >
+                  {displayedPoints}
                 </span>
-              )}
-            </motion.div>
-          </Link>
+              </motion.div>
+            </Link>
+
+            {/* Streak Badge */}
+            <Link href="/stats" aria-label="View your streak">
+              <motion.div className="flex items-center bg-gradient-to-r from-orange-100 to-yellow-100 px-4 py-2 rounded-full shadow-sm hover:shadow-md transition">
+                <FireIcon className="w-5 h-5 text-orange-600 mr-2" />
+                <span
+                  className={`${rethinkSans.className} text-orange-600 font-medium text-sm`}
+                >
+                  {t("streak", { count: displayedStreak })}
+                </span>
+              </motion.div>
+            </Link>
+          </>
         )}
-        
+
         <div className="relative" ref={dropdownRef}>
           {session?.user?.image ? (
             <div>
@@ -141,41 +175,43 @@ export default function Navbar() {
                 className="rounded-full cursor-pointer hover:opacity-80 hover:scale-110 transition-[transform, opacity] duration-500"
                 onClick={toggleDropdown}
               />
-              
-              <div 
+
+              <div
                 className={`
                   absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10
                   transform transition-all duration-300 ease-in-out origin-top-right
-                  ${isDropdownOpen 
-                    ? 'opacity-100 scale-100' 
-                    : 'opacity-0 scale-95 pointer-events-none'}
+                  ${
+                    isDropdownOpen
+                      ? "opacity-100 scale-100"
+                      : "opacity-0 scale-95 pointer-events-none"
+                  }
                 `}
               >
                 <div className="py-1">
                   <h1 className="px-4 py-2 text-sm font-semibold text-gray-700">
                     {session?.user?.name}
                   </h1>
-                  <Link 
+                  <Link
                     href="/stats"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-300"
                     onClick={() => setIsDropdownOpen(false)}
                   >
-                    {t('stats')}
+                    {t("stats")}
                   </Link>
                   {!isLoginPage && (
-                    <Link 
+                    <Link
                       href="/settings"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-300"
                       onClick={() => setIsDropdownOpen(false)}
                     >
-                      {t('settings')}
+                      {t("settings")}
                     </Link>
                   )}
-                  <button 
+                  <button
                     onClick={handleSignOut}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-300"
                   >
-                    {t('logout')}
+                    {t("logout")}
                   </button>
                 </div>
               </div>

@@ -184,7 +184,10 @@ export default function Page() {
         );
       }
       setCompleted((prev) => ({ ...prev, [challengeId]: true }));
-      window.dispatchEvent(new Event("streakUpdate"));
+      // Wait for state update to finish, then update stats
+      setTimeout(() => {
+        window.dispatchEvent(new Event("statsUpdate"));
+      }, 0);
     } catch (err) {
       setPostError((prev) => ({
         ...prev,
@@ -298,6 +301,7 @@ export default function Page() {
                       onToggle={() => handleToggle(challenge.id)}
                       allChallengesAccomplished={!!completed[challenge.id]}
                       loading={!!posting[challenge.id]}
+                      points={challenge.points}
                     />
                   </div>
                 ))}
