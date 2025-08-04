@@ -106,7 +106,9 @@
     "wednesday": "Mié",
     "thursday": "Jue",
     "friday": "Vie",
-    "saturday": "Sáb"
+    "saturday": "Sáb",
+    "milestonesTitle": "Hitos",
+    "currentLevel": "Nivel"
   },
   "activities": {
     "title": "Actividades hechas para ti.",
@@ -281,5 +283,31 @@
     "Hold": "Sostén",
     "Breathe Out": "Exhala",
     "secondsCounter": "{count}s"
+  },
+  "month": {
+    "january": "Enero",
+    "february": "Febrero",
+    "march": "Marzo",
+    "april": "Abril",
+    "may": "Mayo",
+    "june": "Junio",
+    "july": "Julio",
+    "august": "Agosto",
+    "september": "Septiembre",
+    "october": "Octubre",
+    "november": "Noviembre",
+    "december": "Diciembre"
+  },
+  "date": {
+    "format": "{weekday}, {day} de {month} de {year}",
+    "weekdays": {
+      "0": "Domingo",
+      "1": "Lunes",
+      "2": "Martes",
+      "3": "Miércoles",
+      "4": "Jueves",
+      "5": "Viernes",
+      "6": "Sábado"
+    }
   }
 }

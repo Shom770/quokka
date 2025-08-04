@@ -74,17 +74,21 @@ export default function Navbar() {
 
   // animate points count-up
   useEffect(() => {
-    if (pointsCount === displayedPoints) return;
-
     const start = prevPointsRef.current;
     const end = pointsCount;
-    const duration = 800;
+    const duration = 1000;
     const startTime = performance.now();
+
+    // Ease-out function: easeOutCubic
+    function easeOutCubic(t: number) {
+      return 1 - Math.pow(1 - t, 3);
+    }
 
     function tick(now: number) {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      const value = Math.floor(start + (end - start) * progress);
+      const eased = easeOutCubic(progress);
+      const value = Math.floor(start + (end - start) * eased);
       setDisplayedPoints(value);
       if (progress < 1) {
         requestAnimationFrame(tick);
@@ -93,7 +97,7 @@ export default function Navbar() {
     requestAnimationFrame(tick);
 
     prevPointsRef.current = pointsCount;
-  }, [pointsCount, displayedPoints]);
+  }, [pointsCount]);
 
   // animate streak count-up
   useEffect(() => {
@@ -121,12 +125,12 @@ export default function Navbar() {
       className="flex flex-row items-center justify-between w-full pt-8 px-20 h-[10vh]"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: "easeOut", delay: 3.3 }}
+      transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }} // <-- reduced delay
     >
       <motion.div
         initial={{ opacity: 0, x: -30 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.6, delay: 3.5, ease: "easeOut" }}
+        transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }} // <-- reduced delay
       >
         <Link href="/">
           <div className="-space-y-3 hover:opacity-80 transition-opacity duration-200">
@@ -144,7 +148,7 @@ export default function Navbar() {
         className="flex items-center space-x-6"
         initial={{ opacity: 0, x: 30 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.6, delay: 3.7, ease: "easeOut" }}
+        transition={{ duration: 0.6, delay: 0.7, ease: "easeOut" }} // <-- reduced delay
       >
         {session && !isLoginPage && (
           <>

@@ -106,7 +106,9 @@
     "wednesday": "Wed",
     "thursday": "Thu",
     "friday": "Fri",
-    "saturday": "Sat"
+    "saturday": "Sat",
+    "milestonesTitle": "Milestones",
+    "currentLevel": "Level"
   },
   "activities": {
     "title": "Activities made for you.",
@@ -281,5 +283,31 @@
     "Hold": "Hold",
     "Breathe Out": "Breathe Out",
     "secondsCounter": "{count}s"
+  },
+  "month": {
+    "january": "January",
+    "february": "February",
+    "march": "March",
+    "april": "April",
+    "may": "May",
+    "june": "June",
+    "july": "July",
+    "august": "August",
+    "september": "September",
+    "october": "October",
+    "november": "November",
+    "december": "December"
+  },
+  "date": {
+    "format": "{weekday}, {month} {day}, {year}",
+    "weekdays": {
+      "0": "Sunday",
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday"
+    }
   }
 }

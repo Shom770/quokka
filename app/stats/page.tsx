@@ -14,6 +14,11 @@ import {
 import { rethinkSans } from "@/components/fonts";
 import { useTranslations } from "next-intl";
 
+const MONTHS = [
+  "january", "february", "march", "april", "may", "june",
+  "july", "august", "september", "october", "november", "december"
+];
+
 export const runtime = "edge";
 
 function getMonthDays(year: number, month: number) {
@@ -69,11 +74,6 @@ const itemVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } },
 };
-const listItemVariants = {
-  hidden: { opacity: 0, x: -20 },
-  visible: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: 20 },
-};
 
 // --- Reusable Animated Counter Component ---
 function AnimatedCounter({ to }: { to: number }) {
@@ -90,9 +90,40 @@ function AnimatedCounter({ to }: { to: number }) {
   return <motion.span>{rounded}</motion.span>;
 }
 
+// Helper to get milestone thresholds for any level
+function getMilestoneThreshold(level: number) {
+  if (level === 1) return 100;
+  if (level === 2) return 250;
+  if (level === 3) return 500;
+  if (level === 4) return 1000;
+  // Level 5+: 2000, 3000, 4000, ...
+  return 1000 + 1000 * (level - 4);
+}
+
+function getMilestones(points: number) {
+  // Find current level and thresholds
+  let level = 1;
+  let prevThreshold = 0;
+  let nextThreshold = getMilestoneThreshold(1);
+
+  while (points >= nextThreshold) {
+    level++;
+    prevThreshold = nextThreshold;
+    nextThreshold = getMilestoneThreshold(level);
+  }
+
+  const progress = Math.min(
+    1,
+    (points - prevThreshold) / (nextThreshold - prevThreshold)
+  );
+
+  return { level, prevThreshold, nextThreshold, progress };
+}
+
 export default function StatsPage() {
   useSession({ required: true });
-  const t = useTranslations("stats"); // Use "stats" namespace
+  const t = useTranslations("stats");
+  const tMonth = useTranslations("month"); // <-- add this
 
   const [isLoading, setIsLoading] = useState(true);
   const [counts, setCounts] = useState<ActivityCount | null>(null);
@@ -198,13 +229,18 @@ export default function StatsPage() {
     const [year, month, day] = dateString.split("-").map(Number);
     return new Date(year, month - 1, day);
   };
-  const formatDate = (dateString: string) =>
-    parseLocalDate(dateString).toLocaleDateString(undefined, {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+  // Localized date formatting
+  const tDate = useTranslations("date");
+  const formatDate = (dateString: string) => {
+    const date = parseLocalDate(dateString);
+    // Use next-intl translation for date format (now under date.format and date.weekdays)
+    return tDate("format", {
+      weekday: tDate(`weekdays.${date.getDay()}`),
+      day: date.getDate(),
+      month: tMonth(MONTHS[date.getMonth()]),
+      year: date.getFullYear(),
     });
+  };
   const formatTimeFromISO = (isoString: string) =>
     new Date(isoString).toLocaleTimeString(undefined, {
       hour: "2-digit",
@@ -276,6 +312,22 @@ export default function StatsPage() {
     );
   }
 
+  const { level, nextThreshold, progress } = getMilestones(points);
+  // Prepare the five levels to display
+  const displayedLevels = Array.from({ length: 5 }).map((_, i) =>
+    Math.max(1, level - 2) + i
+  );
+  // Find the index of the last *completed* level to correctly render the progress bar
+  const lastCompletedIdx = displayedLevels.findIndex((l) => l === level - 1);
+  const totalSegments = displayedLevels.length - 1;
+  const completedProgress =
+    (lastCompletedIdx + (progress > 0 ? progress : 0)) / totalSegments;
+  const totalProgressPercentage = Math.max(0, completedProgress * 100);
+
+  // Get localized month and year
+  const localizedMonth = tMonth(MONTHS[calendarMonth]);
+  const localizedYear = calendarYear;
+
   return (
     <motion.div
       variants={pageVariants}
@@ -285,24 +337,89 @@ export default function StatsPage() {
     >
       <motion.h1
         variants={itemVariants}
-        className={`${rethinkSans.className} antialiased font-extrabold text-[46px] leading-[1] text-orange-600 mb-8`}
+        className={`${rethinkSans.className} antialiased font-extrabold text-[46px] leading-[1] text-orange-600 mb-12`} // mb-12 for more space below main title
       >
         {t("title")}
       </motion.h1>
 
-      <motion.div
-        variants={itemVariants}
-        className="w-full max-w-4xl space-y-8"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <motion.div variants={itemVariants} className="w-full max-w-4xl space-y-14"> {/* space-y-14 for more vertical spacing between sections */}
+        {/* Milestones Section */}
+        <motion.div
+          variants={itemVariants}
+          className="w-full max-w-4xl flex flex-col items-center mb-14" // mb-14 for more space below milestones
+        >
+          <h2 className="text-2xl font-bold text-orange-700 mb-7"> {/* mb-7 for more space below section title */}
+            {t("milestonesTitle", { defaultValue: "Milestones" })}
+          </h2>
+
+          <div className="relative w-full max-w-2xl mx-auto flex items-center" style={{ minHeight: 88 }}>
+            {/* Single continuous connecting bar */}
+            <div className="absolute left-8 right-8 h-2 z-0" style={{ top: "50%", transform: "translateY(-50%)" }}>
+              {/* Grey background bar */}
+              <div className="w-full h-full bg-gray-200 rounded-full absolute inset-0" />
+              {/* Orange progress bar */}
+              <motion.div
+                className="h-full bg-orange-400 rounded-full absolute inset-0"
+                initial={{ width: 0 }}
+                animate={{ width: `${totalProgressPercentage}%` }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                style={{ zIndex: 1 }}
+              />
+            </div>
+
+            {/* Milestone circles */}
+            <div className="relative z-10 flex items-center justify-between w-full">
+              {displayedLevels.map((milestoneLevel) => {
+                const threshold = getMilestoneThreshold(milestoneLevel);
+                // A level is highlighted if the user has enough points for it.
+                const shouldHighlight = points >= threshold;
+
+                const border = shouldHighlight
+                  ? "border-orange-400"
+                  : "border-gray-300";
+                const bg = shouldHighlight
+                  ? "bg-orange-100"
+                  : "bg-white";
+                const text = shouldHighlight
+                  ? "text-orange-600"
+                  : "text-gray-400";
+
+                return (
+                  <div
+                    key={milestoneLevel}
+                    className="flex flex-col items-center"
+                  >
+                    <div
+                      className={`flex items-center justify-center w-16 h-16 rounded-full border-4 ${border} ${bg}`}
+                    >
+                      <span className={`text-3xl font-bold ${text}`}>
+                        {milestoneLevel}
+                      </span>
+                    </div>
+                    <span className="mt-2 text-xs text-gray-500 font-semibold">
+                      {threshold} pts
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-4 text-orange-700 font-semibold text-lg">
+            {t("currentLevel", { defaultValue: "Level" })} {level} —{" "}
+            <AnimatedCounter to={points} /> / {nextThreshold} pts
+          </div>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10"> {/* gap-10 for more space between cards */}
           {/* Activities Card */}
           <motion.div
             variants={itemVariants}
             whileHover={{ y: -5 }}
-            className="bg-orange-50 border border-orange-200 p-6 rounded-lg shadow-sm"
+            className="bg-orange-50 border border-orange-200 p-8 rounded-lg shadow-sm" // p-8 for more padding
           >
-            <div className="flex items-center mb-4">
-              <TrophyIcon className="h-8 w-8 text-orange-500 mr-3" />
+            <div className="flex items-center mb-6"> {/* mb-6 for more space below card header */}
+              <TrophyIcon className="h-8 w-8 text-orange-500 mr-4" /> {/* mr-4 for more space between icon and text */}
               <h2 className="text-xl font-bold text-orange-800">
                 {t("activities")}
               </h2>
@@ -353,10 +470,10 @@ export default function StatsPage() {
           {/* Calendar Card */}
           <motion.div
             variants={itemVariants}
-            className="bg-white border border-orange-200 rounded-lg p-6 shadow-sm"
+            className="bg-white border border-orange-200 rounded-lg p-8 shadow-sm" // p-8 for more padding
           >
             <div className="flex flex-col items-center">
-              <div className="flex items-center justify-between w-full mb-4">
+              <div className="flex items-center justify-between w-full mb-6"> {/* mb-6 for more space below calendar nav */}
                 <button
                   onClick={() => {
                     setCalendarMonth((m) => (m === 0 ? 11 : m - 1));
@@ -367,10 +484,7 @@ export default function StatsPage() {
                   &lt;
                 </button>
                 <span className="font-bold text-orange-700 text-lg">
-                  {new Date(calendarYear, calendarMonth).toLocaleString(
-                    undefined,
-                    { month: "long", year: "numeric" }
-                  )}
+                  {localizedMonth} {localizedYear}
                 </span>
                 {/* Prevent going past the current month */}
                 <button
@@ -516,13 +630,13 @@ export default function StatsPage() {
 
         <motion.div
           variants={itemVariants}
-          className="bg-white border border-orange-200 rounded-lg p-6 shadow-sm"
+          className="bg-white border border-orange-200 rounded-lg p-8 shadow-sm mt-12" // p-8 for more padding, mt-12 for more space above
           layout
           transition={{ type: "ease", duration: 0.5 }}
         >
-          <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
+          <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-6"> {/* mb-8 and gap-6 for more space */}
             <h2 className="text-xl font-bold text-orange-800 flex items-center">
-              <CalendarIcon className="h-6 w-6 mr-2 text-orange-600" />
+              <CalendarIcon className="h-6 w-6 mr-3 text-orange-600" /> {/* mr-3 for more space */}
               {t("dailyActivities")}
             </h2>
           </div>
@@ -540,66 +654,113 @@ export default function StatsPage() {
               </motion.span>
             </AnimatePresence>
           </div>
-          <ul className="space-y-3">
+          <ul className="space-y-3 min-h-[60px]">
             {calendarLoading ? (
               <div className="flex justify-center items-center py-8">
                 <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-orange-400"></div>
               </div>
             ) : (
-              <AnimatePresence>
+              <AnimatePresence mode="wait" initial={false}>
                 {calendarCache[selectedDate]?.activities &&
                 calendarCache[selectedDate].activities.length > 0 ? (
-                  calendarCache[selectedDate].activities.map(
-                    (activity, index) => (
-                      <motion.li
-                        key={activity.id}
-                        variants={listItemVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                        transition={{ delay: index * 0.05 }}
-                        className="p-3 rounded-md bg-orange-50 border border-orange-100"
-                      >
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <span className="text-sm font-medium text-gray-600 flex items-center">
-                              <span className="mr-2">
-                                {getCategoryEmoji(activity)}
+                  <motion.div
+                    key={selectedDate}
+                    initial={{
+                      opacity: 0,
+                      y: dateDirection === "left" ? 30 : -30,
+                      scale: 0.98,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                      scale: 1,
+                      transition: {
+                        opacity: { duration: 0.25 },
+                        y: { type: "spring", stiffness: 120, damping: 18 },
+                        scale: { duration: 0.2 },
+                        when: "beforeChildren",
+                        staggerChildren: 0.04,
+                      },
+                    }}
+                    exit={{
+                      opacity: 0,
+                      y: dateDirection === "left" ? -30 : 30,
+                      scale: 0.98,
+                      transition: { duration: 0.18 },
+                    }}
+                  >
+                    {calendarCache[selectedDate].activities.map(
+                      (activity) => (
+                        <motion.li
+                          key={activity.id}
+                          variants={{
+                            hidden: { opacity: 0, y: 20 },
+                            visible: {
+                              opacity: 1,
+                              y: 0,
+                              transition: { type: "spring", stiffness: 120, damping: 18 },
+                            },
+                            exit: { opacity: 0, y: 20, transition: { duration: 0.12 } },
+                          }}
+                          initial="hidden"
+                          animate="visible"
+                          exit="exit"
+                          className="p-3 rounded-md bg-orange-50 border border-orange-100"
+                        >
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <span className="text-sm font-medium text-gray-600 flex items-center">
+                                <span className="mr-2">
+                                  {getCategoryEmoji(activity)}
+                                </span>
+                                {getActivityName(activity)}
                               </span>
-                              {getActivityName(activity)}
-                            </span>
-                            {/* Show challenge description if type is challenge */}
-                            {activity.type === "challenge" &&
-                              activity.challenge_description && (
+                              {/* Show challenge description if type is challenge */}
+                              {activity.type === "challenge" &&
+                                activity.challenge_description && (
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    {activity.challenge_description}
+                                  </p>
+                                )}
+                              {activity.notes && (
                                 <p className="text-xs text-gray-500 mt-1">
-                                  {activity.challenge_description}
+                                  {activity.notes}
                                 </p>
                               )}
-                            {activity.notes && (
+                            </div>
+                            <div className="text-right">
+                              <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">
+                                {t("completed")}
+                              </span>
                               <p className="text-xs text-gray-500 mt-1">
-                                {activity.notes}
+                                {formatTimeFromISO(activity.completed_at)}
                               </p>
-                            )}
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">
-                              {t("completed")}
-                            </span>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {formatTimeFromISO(activity.completed_at)}
-                            </p>
-                          </div>
-                        </div>
-                      </motion.li>
-                    )
-                  )
+                        </motion.li>
+                      )
+                    )}
+                  </motion.div>
                 ) : (
                   <motion.div
                     key="no-activity"
-                    variants={listItemVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
+                    initial={{
+                      opacity: 0,
+                      y: dateDirection === "left" ? 30 : -30,
+                      scale: 0.98,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                      scale: 1,
+                      transition: { duration: 0.25 },
+                    }}
+                    exit={{
+                      opacity: 0,
+                      y: dateDirection === "left" ? -30 : 30,
+                      scale: 0.98,
+                      transition: { duration: 0.18 },
+                    }}
                     className="text-center py-6 text-gray-500"
                   >
                     {t("noActivity")}
