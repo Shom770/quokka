@@ -48,12 +48,14 @@ export default function Navbar() {
   // Listen for custom event to refetch streak
   useEffect(() => {
     const handleStreakUpdate = () => {
-      setIsLoadingStreak(true);
-      fetchStreak();
+      if (streakCount === 0) {
+        setIsLoadingStreak(true);
+        fetchStreak();
+      }
     };
     window.addEventListener("streakUpdate", handleStreakUpdate);
     return () => window.removeEventListener("streakUpdate", handleStreakUpdate);
-  }, []);
+  }, [streakCount]);
 
   // Close dropdown when clicking outside
   useEffect(() => {

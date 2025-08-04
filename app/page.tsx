@@ -133,7 +133,7 @@ export default function Page() {
       }
     };
     fetchChallenges();
-  }, []);
+  }, [locale]);
 
   // Check completion for all challenges
   useEffect(() => {

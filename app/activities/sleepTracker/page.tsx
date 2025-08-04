@@ -193,6 +193,7 @@ export default function Page() {
       if (!res.ok) throw new Error(await res.text());
       setLogSuccess(true);
     } catch (e) {
+      console.error("Error logging sleep data:", e);
       setLogSuccess(false);
     } finally {
       setIsLogging(false);
