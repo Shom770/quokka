@@ -5,7 +5,7 @@ import SurveyModal from "./survey-modal";
 import { Context } from "@/app/layout-client";
 import { usePathname } from "next/navigation";
 
-let PROBABILITY = 0.15;
+let PROBABILITY = 0.4;
 if (process.env.NODE_ENV === "development") {
   PROBABILITY = 1;
 }
