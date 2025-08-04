@@ -93,7 +93,7 @@ export default function Navbar() {
     requestAnimationFrame(tick);
 
     setPrevPoints(pointsCount);
-  }, [pointsCount]);
+  }, [pointsCount, displayedPoints, prevPoints]);
 
   // animate streak count-up
   useEffect(() => {
