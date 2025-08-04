@@ -46,8 +46,7 @@ export default function LoginPage() {
   const { status } = useSession();
   const router = useRouter();
 
-  const t = useTranslations('test');
-  console.log(t('test_key'));
+  const t = useTranslations('login');
 
   // Redirect to home if already authenticated
   useEffect(() => {
@@ -85,7 +84,7 @@ export default function LoginPage() {
             className={`${libreBodoni.className} text-4xl font-bold text-gray-900`}
             {...animationVariants.title}
           >
-            Welcome to Quokka
+            {t('subtitle')}
           </motion.h1>
         </div>
 

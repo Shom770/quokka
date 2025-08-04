@@ -12,53 +12,46 @@ import lhicImage from "@/public/resources/HCLHIC.png";
 import { rethinkSans } from "@/components/fonts";
 import { motion } from "framer-motion";
 import { HeartIcon, ShieldCheckIcon, ChatBubbleLeftEllipsisIcon } from "@heroicons/react/24/solid";
+import { useTranslations } from "next-intl";
 
 const resources = [
   {
-    title: "988 Suicide & Crisis Lifeline",
-    description: "The 988 Lifeline is a nationwide network of local crisis centers offering free and confidential emotional support to individuals experiencing suicidal crises or emotional distress, available 24/7 across the U.S.",
+    key: "988",
     image: lifeline988Image,
     link: "https://988lifeline.org"
   },
   {
-    title: "Depression and Bipolar Support Alliance (DBSA)",
-    description: "DBSA offers support, education, and advocacy for individuals with mood disorders. They aim to create inclusive spaces and equitable access to mental health resources for everyone.",
+    key: "dbsa",
     image: dbsaImage,
     link: "https://www.dbsalliance.org"
   },
   {
-    title: "The Trevor Project (1-866-488-7386)",
-    description: "The Trevor Project is a nonprofit focused on preventing suicide among LGBTQ+ youth and providing education and research on LGBTQ studies. Calling their number will connect with a counselor!",
+    key: "trevor",
     image: trevorImage,
     link: "https://www.thetrevorproject.org"
   },
   {
-    title: "Our Minds Matter",
-    description: "Our Minds Matter aims to prevent teen suicide by providing mental health education, resources, and support. They are dedicated to empowering teens to take charge of their mental well-being and creating a supportive community.",
+    key: "omm",
     image: ommImage,
     link: "https://ourmindsmatter.org"
   },
   {
-    title: "National Alliance on Mental Illness, NAMI Maryland (800-950-6264)",
-    description: "NAMI is the largest grassroots mental health organization in the United States. It offers education, support and advocacy for individuals and families affected by mental illness.",
+    key: "nami",
     image: namiImage,
     link: "https://www.nami.org"
   },
   {
-    title: "National Human Trafficking Hotline (1-888-373-7888)",
-    description: "The National Human Trafficking Hotline is a confidential, 24/7 service that provides critical support to victims and survivors of human trafficking. It can also be used to report trafficking situations.",
+    key: "hotline",
     image: hotlineImage,
     link: "https://humantraffickinghotline.org"
   },
   {
-    title: "SAFE Center for Human Trafficking Survivors",
-    description: "University of Maryland SAFE Center provides trauma-informed services to empower survivors of human trafficking, while also conducting research and advocating for policy changes.",
+    key: "safe",
     image: safeImage,
     link: "https://umdsafecenter.org"
   },
   {
-    title: "Howard County LHIC",
-    description: "The Local Health Improvement Coalition (LHIC) works to achieve health equity in Howard County. Participation is sought from individuals and organizations working to achieve optimal health and wellness for all Howard County residents.",
+    key: "lhic",
     image: lhicImage,
     link: "https://www.hclhic.org/healthy/mental-health"
   }
@@ -103,6 +96,8 @@ const animationVariants = {
 };
 
 export default function Page() {
+  const t = useTranslations("resources");
+
   return (
     <motion.div 
       className="relative flex flex-col justify-center gap-8 w-full max-w-4xl mx-auto h-[75vh] overflow-hidden"
@@ -151,13 +146,13 @@ export default function Page() {
             className={`text-orange-600 font-extrabold text-[46px] leading-[1] ${rethinkSans.className}`}
             {...animationVariants.titleLine1}
           >
-            Mental health resources,
+            {t("titleLine1")}
           </motion.div>
           <motion.div 
             className={`text-orange-600 font-extrabold text-[46px] leading-[1] ${rethinkSans.className}`}
             {...animationVariants.titleLine2}
           >
-            curated for you.
+            {t("titleLine2")}
           </motion.div>
           <motion.p 
             className="text-gray-600 text-lg font-medium mt-4"
@@ -165,7 +160,7 @@ export default function Page() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8, duration: 0.6 }}
           >
-            Professional support and resources for your mental health journey
+            {t("subtitle")}
           </motion.p>
         </div>
 
@@ -176,7 +171,7 @@ export default function Page() {
         >
           {resources.map((resource, index) => (
             <motion.div
-              key={index}
+              key={resource.key}
               {...animationVariants.resourceCard}
               initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50, scale: 0.9 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -189,8 +184,8 @@ export default function Page() {
               }}
             >
               <Resource 
-                title={resource.title} 
-                description={resource.description} 
+                title={t(`${resource.key}.title`)} 
+                description={t(`${resource.key}.description`)} 
                 pathToImage={resource.image} 
                 link={resource.link} 
               />

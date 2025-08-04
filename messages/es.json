@@ -1,5 +1,167 @@
 {
-  "test": {
-    "test_key": "Hola Espanol!"
+  "login": {
+    "title": "Bienvenido a Quokka"
+  },
+  "navbar": {
+    "subtitle": "Sé la mejor versión de ti mismo",
+    "stats": "Mis estadísticas",
+    "settings": "Configuraciones",
+    "logout": "Cerrar sesión",
+    "streak": "{count} días de racha"
+  },
+  "settings": {
+    "title": "Configuraciones",
+    "allowFeedback": "Permitir preguntas de retroalimentación de la aplicación",
+    "language": "Idioma",
+    "english": "Inglés",
+    "spanish": "Español"
+  },
+  "home": {
+    "dailyChallengesTitle": "Tus desafíos diarios",
+    "dailyChallengesSubtitle": "Esfuérzate por ser mejor hoy",
+    "allComplete": "¡Todos los desafíos completados!",
+    "progressMessage": "¡Estás progresando mucho en tu camino de bienestar!",
+    "error": "{message}"
+  },
+  "cards": {
+    "journalingTitle": "reflexión sobre la salud mental",
+    "journalingText": "Reflexiona sobre tu <bold1>salud mental</bold1> para <bold2>entenderte mejor.</bold2>",
+    "resourcesTitle": "recursos de salud mental",
+    "resourcesText": "Cuando necesites ayuda, estos recursos están <bold>al alcance de tu mano.</bold>",
+    "activitiesTitle": "actividades",
+    "activitiesText": "Algunas actividades que te animan a <bold1>desestresarte</bold1> y <bold2>ponerte a ti primero.</bold2>"
+  },
+  "tutorial": {
+    "challengeTitle": "Desafío diario",
+    "challengeDescription": "Completa desafíos diarios para crear hábitos saludables y seguir tu progreso.",
+    "reflectionTitle": "Reflexión sobre la salud mental",
+    "reflectionDescription": "Reflexiona sobre tu salud mental y entiéndete mejor.",
+    "resourcesTitle": "Recursos",
+    "resourcesDescription": "Encuentra recursos y apoyo de salud mental cuando lo necesites.",
+    "activitiesTitle": "Actividades",
+    "activitiesDescription": "Accede a meditación, ejercicios de respiración, yoga y otras actividades de bienestar.",
+    "progress": "{current} de {total}",
+    "skip": "Saltar",
+    "next": "Siguiente",
+    "getStarted": "Comenzar"
+  },
+  "resources": {
+    "titleLine1": "Recursos de salud mental,",
+    "titleLine2": "seleccionados para ti.",
+    "subtitle": "Apoyo profesional y recursos para tu bienestar mental",
+    "988": {
+      "title": "Línea de vida 988 de suicidio y crisis",
+      "description": "La línea 988 es una red nacional de centros de crisis que ofrece apoyo emocional gratuito y confidencial a personas en crisis suicida o angustia emocional, disponible 24/7 en EE.UU."
+    },
+    "dbsa": {
+      "title": "Alianza de Apoyo para la Depresión y el Trastorno Bipolar (DBSA)",
+      "description": "DBSA ofrece apoyo, educación y defensa para personas con trastornos del estado de ánimo. Su objetivo es crear espacios inclusivos y acceso equitativo a recursos de salud mental para todos."
+    },
+    "trevor": {
+      "title": "The Trevor Project (1-866-488-7386)",
+      "description": "The Trevor Project es una organización sin fines de lucro enfocada en prevenir el suicidio entre jóvenes LGBTQ+ y proporcionar educación e investigación sobre estudios LGBTQ. ¡Llamar a su número te conectará con un consejero!"
+    },
+    "omm": {
+      "title": "Our Minds Matter",
+      "description": "Our Minds Matter busca prevenir el suicidio adolescente proporcionando educación, recursos y apoyo en salud mental. Se dedican a empoderar a los adolescentes para que cuiden su bienestar mental y crean una comunidad de apoyo."
+    },
+    "nami": {
+      "title": "Alianza Nacional de Enfermedades Mentales, NAMI Maryland (800-950-6264)",
+      "description": "NAMI es la organización de salud mental de base más grande de los Estados Unidos. Ofrece educación, apoyo y defensa para personas y familias afectadas por enfermedades mentales."
+    },
+    "hotline": {
+      "title": "Línea Nacional contra la Trata de Personas (1-888-373-7888)",
+      "description": "La Línea Nacional contra la Trata de Personas es un servicio confidencial 24/7 que brinda apoyo crítico a víctimas y sobrevivientes de la trata. También se puede usar para reportar situaciones de trata."
+    },
+    "safe": {
+      "title": "SAFE Center para sobrevivientes de trata de personas",
+      "description": "El SAFE Center de la Universidad de Maryland brinda servicios informados sobre el trauma para empoderar a los sobrevivientes de la trata, además de realizar investigaciones y abogar por cambios en las políticas."
+    },
+    "lhic": {
+      "title": "Howard County LHIC",
+      "description": "La Coalición Local de Mejora de la Salud (LHIC) trabaja para lograr la equidad en la salud en el condado de Howard. Se busca la participación de individuos y organizaciones que trabajen para lograr la salud y el bienestar óptimos para todos los residentes del condado de Howard."
+    }
+  },
+  "resource": {
+    "externalLink": "Enlace externo",
+    "aboutToVisit": "Estás a punto de visitar:",
+    "newTabConfirm": "Esto se abrirá en una nueva pestaña. ¿Seguro que deseas continuar?",
+    "cancel": "Cancelar",
+    "continue": "Continuar"
+  },
+  "stats": {
+    "title": "Tus estadísticas",
+    "activities": "Actividades",
+    "total": "Total:",
+    "activitiesCount": "Actividades:",
+    "challengesCount": "Desafíos:",
+    "points": "puntos",
+    "dailyActivities": "Actividades diarias",
+    "completed": "Completado",
+    "noActivity": "Sin actividad 😔",
+    "sunday": "Dom",
+    "monday": "Lun",
+    "tuesday": "Mar",
+    "wednesday": "Mié",
+    "thursday": "Jue",
+    "friday": "Vie",
+    "saturday": "Sáb"
+  },
+  "activities": {
+    "title": "Actividades hechas para ti.",
+    "sleepTracker": "Seguimiento del sueño",
+    "sleepTrackerDesc": "¡Una herramienta para registrar tu sueño!",
+    "moodJournaling": "Diario de ánimo",
+    "moodJournalingDesc": "¡Escribe sobre tu estado de ánimo!",
+    "gratitudeJournaling": "Diario de gratitud",
+    "gratitudeJournalingDesc": "Escribe por qué te sientes agradecido",
+    "meditation": "Meditación",
+    "meditationDesc": "Tómate un momento para meditar.",
+    "yogaVideos": "Videos de yoga",
+    "yogaVideosDesc": "Haz yoga con instrucciones en video.",
+    "bookReading": "Lectura de libros",
+    "bookReadingDesc": "Lee un libro",
+    "mindfulnessVideos": "Videos de mindfulness",
+    "mindfulnessVideosDesc": "Aprende mindfulness con un video",
+    "squareBreathing": "Respiración cuadrada",
+    "squareBreathingDesc": "Practica técnicas de respiración calmada"
+  },
+  "reflection": {
+    "title": "Reflexiona sobre tu salud mental",
+    "subtitle": "Responde estas preguntas para obtener recomendaciones personalizadas de bienestar.",
+    "start": "Comenzar reflexión",
+    "viewPast": "Ver reflexiones anteriores",
+    "pastTitle": "Tus reflexiones anteriores",
+    "noPast": "No se encontraron reflexiones anteriores.",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "finish": "Finalizar",
+    "recommendation": "Tu recomendación",
+    "try": "Prueba",
+    "explore": "Explorar actividades",
+    "savePrompt": "¿Te gustaría guardar tu reflexión?",
+    "saveYes": "Sí, guárdala",
+    "saveNo": "No, omitir",
+    "saving": "Guardando tu reflexión...",
+    "saveSuccess": "¡Reflexión guardada!",
+    "saveFail": "No se pudo guardar la reflexión.",
+    "done": "Listo",
+    "tryAgain": "Intentar de nuevo",
+    "skip": "Omitir"
+  },
+  "sleepTracker": {
+    "title": "Seguimiento del sueño",
+    "subtitle": "Registra la duración y calidad de tu sueño.",
+    "selectDate": "Seleccionar fecha",
+    "hoursSlept": "Horas dormidas",
+    "hoursPlaceholder": "Ingresa las horas",
+    "quality": "Calidad (1-5)",
+    "notes": "Notas",
+    "notesPlaceholder": "Notas opcionales",
+    "save": "Guardar sueño",
+    "saving": "Guardando...",
+    "saveSuccess": "¡Datos de sueño guardados!",
+    "saveFail": "No se pudo guardar el sueño.",
+    "noData": "No hay datos de sueño disponibles para el período seleccionado."
   }
 }

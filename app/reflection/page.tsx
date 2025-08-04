@@ -11,6 +11,7 @@ import {
 } from "@heroicons/react/24/solid";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 type Reflection = {
   id: number;
@@ -54,6 +55,8 @@ const animationVariants = {
 };
 
 export default function Page() {
+  const t = useTranslations("reflection");
+
   const [stage, setStage] = React.useState<"intro" | "quiz" | "result" | "save">(
     "intro"
   );
@@ -187,7 +190,7 @@ export default function Page() {
               animate="animate"
               variants={animationVariants.titleContainer}
             >
-              Reflect on your mental health
+              {t("title")}
             </motion.h1>
             <motion.p
               className="mt-2 text-gray-700"
@@ -195,8 +198,7 @@ export default function Page() {
               animate="animate"
               variants={animationVariants.titleContainer}
             >
-              Answer these questions to get personalized wellness
-              recommendations.
+              {t("subtitle")}
             </motion.p>
             <div className="flex flex-col gap-4 mt-6">
               <motion.button
@@ -207,7 +209,7 @@ export default function Page() {
                 variants={animationVariants.navButton}
                 whileHover="hover"
               >
-                Start Reflection
+                {t("start")}
                 <ArrowRightIcon className="w-5 h-5 ml-2" />
               </motion.button>
               <motion.button
@@ -218,7 +220,7 @@ export default function Page() {
                 variants={animationVariants.navButton}
                 whileHover="hover"
               >
-                View Past Reflections
+                {t("viewPast")}
               </motion.button>
             </div>
           </motion.div>
@@ -234,14 +236,14 @@ export default function Page() {
             variants={animationVariants.card}
           >
             <h2 className="text-3xl font-extrabold text-orange-700 mb-8 text-center">
-              Your Past Reflections
+              {t("pastTitle")}
             </h2>
             {loadingPast ? (
               <div className="flex justify-center items-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-400"></div>
               </div>
             ) : pastReflections.length === 0 ? (
-              <p className="text-gray-500 text-center">No past reflections found.</p>
+              <p className="text-gray-500 text-center">{t("noPast")}</p>
             ) : (
               <div className="grid grid-cols-1 gap-6 max-h-[32rem] overflow-y-auto">
                 {pastReflections.map((reflection) => (
@@ -275,7 +277,7 @@ export default function Page() {
                 className="px-6 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 shadow transition"
                 onClick={() => setShowPast(false)}
               >
-                Back
+                {t("back")}
               </button>
             </div>
           </motion.div>
@@ -331,7 +333,7 @@ export default function Page() {
                 variants={animationVariants.navButton}
                 whileHover="hover"
               >
-                <ArrowLeftIcon className="w-5 h-5 mr-1" /> Back
+                <ArrowLeftIcon className="w-5 h-5 mr-1" /> {t("back")}
               </motion.button>
               <motion.button
                 className={`flex items-center ${
@@ -346,7 +348,7 @@ export default function Page() {
                 variants={animationVariants.navButton}
                 whileHover="hover"
               >
-                {current < questions.length - 1 ? "Next" : "Finish"}
+                {current < questions.length - 1 ? t("next") : t("finish")}
                 <ArrowRightIcon className="w-5 h-5 ml-1" />
               </motion.button>
             </div>
@@ -371,21 +373,21 @@ export default function Page() {
               <CheckCircleIcon className="w-8 h-8 text-green-500" />
             </motion.div>
             <h3 className="text-2xl font-bold text-gray-900">
-              Your Recommendation
+              {t("recommendation")}
             </h3>
             <p className="mt-2 text-gray-800">
-              Try{" "}
+              {t("try")}{" "}
               <span className="text-orange-600 font-bold">{goal}</span>.
             </p>
             <Link
               href="/activities"
               className="mt-4 inline-block text-orange-600 hover:underline"
             >
-              Explore activities
+              {t("explore")}
             </Link>
             <div className="mt-8">
               <p className="mb-2 text-gray-700 font-medium">
-                Would you like to save your reflection?
+                {t("savePrompt")}
               </p>
               <div className="flex justify-center gap-4">
                 <button
@@ -393,14 +395,14 @@ export default function Page() {
                   onClick={() => setStage("save")}
                   disabled={isSaving}
                 >
-                  Yes, save it
+                  {t("saveYes")}
                 </button>
                 <button
                   className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition"
                   onClick={() => router.push("/")}
                   disabled={isSaving}
                 >
-                  No, skip
+                  {t("saveNo")}
                 </button>
               </div>
             </div>
@@ -417,7 +419,7 @@ export default function Page() {
             variants={animationVariants.card}
           >
             <h3 className="text-xl font-bold text-gray-900 mb-4">
-              Saving your reflection...
+              {t("saving")}
             </h3>
             {isSaving ? (
               <div className="flex justify-center items-center">
@@ -426,31 +428,31 @@ export default function Page() {
             ) : saveSuccess === true ? (
               <div>
                 <p className="text-green-600 font-semibold mb-2">
-                  Reflection saved!
+                  {t("saveSuccess")}
                 </p>
                 <button
                   className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition"
                   onClick={() => router.push("/")}
                 >
-                  Done
+                  {t("done")}
                 </button>
               </div>
             ) : (
               <div>
                 <p className="text-red-600 font-semibold mb-2">
-                  Failed to save reflection.
+                  {t("saveFail")}
                 </p>
                 <button
                   className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition"
                   onClick={handleSaveReflection}
                 >
-                  Try Again
+                  {t("tryAgain")}
                 </button>
                 <button
                   className="mt-4 ml-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition"
                   onClick={() => router.push("/")}
                 >
-                  Skip
+                  {t("skip")}
                 </button>
               </div>
             )}

@@ -10,6 +10,7 @@ import { SparklesIcon, TrophyIcon } from "@heroicons/react/24/solid";
 import TutorialOverlay from "@/components/tutorial-overlay";
 import WelcomeAnimation from "@/components/welcome-animation";
 import { useTutorial } from "@/hooks/use-tutorial";
+import { useTranslations } from "next-intl"; // <-- Add this import
 
 const animationVariants = {
   pageContainer: {
@@ -84,6 +85,9 @@ export default function Page() {
   useSession({ required: true });
   const { showTutorial, completeTutorial, skipTutorial } = useTutorial();
   const [showWelcome, setShowWelcome] = useState(true);
+
+  // Add translations
+  const t = useTranslations("home");
 
   // Create refs for tutorial
   const activityCardsRef = useRef<HTMLDivElement>(null);
@@ -235,10 +239,10 @@ export default function Page() {
                 <h1
                   className={`${rethinkSans.className} antialiased text-orange-600 font-extrabold text-4xl leading-none drop-shadow-sm`}
                 >
-                  Your Daily Challenges
+                  {t("dailyChallengesTitle")}
                 </h1>
                 <p className="text-gray-600 text-lg font-medium 4">
-                  Push yourself to be better today
+                  {t("dailyChallengesSubtitle")}
                 </p>
               </div>
               {allCompleted && (
@@ -251,12 +255,12 @@ export default function Page() {
                     <h2
                       className={`${rethinkSans.className} antialiased text-2xl text-orange-600 font-extrabold`}
                     >
-                      All Challenges Complete!
+                      {t("allComplete")}
                     </h2>
                     <SparklesIcon className="w-6 h-6 text-yellow-500" />
                   </div>
                   <p className="text-gray-600 font-medium">
-                    You&apos;re making great progress on your wellness journey!
+                    {t("progressMessage")}
                   </p>
                 </motion.div>
               )}
@@ -289,14 +293,14 @@ export default function Page() {
                       isCompleted={!!completed[challenge.id]}
                       onToggle={() => handleToggle(challenge.id)}
                       allChallengesAccomplished={!!completed[challenge.id]}
-                      loading={!!posting[challenge.id]} // <-- add this line
+                      loading={!!posting[challenge.id]}
                     />
                   </div>
                 ))}
               </div>
               {Object.values(postError).some(Boolean) && (
                 <div className="text-center text-red-500 text-sm mt-2 z-10">
-                  {Object.values(postError).filter(Boolean).join(", ")}
+                  {t("error", { message: Object.values(postError).filter(Boolean).join(", ") })}
                 </div>
               )}
             </>

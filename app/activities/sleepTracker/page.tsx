@@ -5,6 +5,7 @@ import { rethinkSans } from "@/components/fonts";
 import React, { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 // --- Types ---
 type DailySleepData = {
@@ -60,6 +61,7 @@ const SleepHistory = () => {
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
     endDate: new Date().toISOString().split("T")[0],
   });
+  const t = useTranslations("sleepTracker");
 
   const fetchSleepStats = useCallback(async () => {
     setLoading(true);
@@ -154,7 +156,11 @@ const SleepHistory = () => {
           )}
         </>
       ) : (
-        !loading && !error && (<motion.div variants={variants.card} className="py-8 text-center text-gray-500">No sleep data available for the selected period.</motion.div>)
+        !loading && !error && (
+          <motion.div variants={variants.card} className="py-8 text-center text-gray-500">
+            {t("noData")}
+          </motion.div>
+        )
       )}
     </motion.div>
   );
@@ -162,12 +168,13 @@ const SleepHistory = () => {
 
 export default function Page() {
   useSession({ required: true });
+  const t = useTranslations("sleepTracker");
+
   const [additionalSleepHours, setAdditionalSleepHours] = useState("");
   const [sleepQuality, setSleepQuality] = useState<number | null>(null);
   const [sleepNotes, setSleepNotes] = useState("");
   const [isLogging, setIsLogging] = useState(false);
   const [logSuccess, setLogSuccess] = useState<boolean | null>(null);
-  const [logMessage, setLogMessage] = useState("");
 
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -185,10 +192,8 @@ export default function Page() {
       });
       if (!res.ok) throw new Error(await res.text());
       setLogSuccess(true);
-      setLogMessage("Sleep data saved!");
     } catch (e) {
       setLogSuccess(false);
-      setLogMessage(e instanceof Error ? e.message : "Error");
     } finally {
       setIsLogging(false);
       setTimeout(() => setLogSuccess(null), 5000);
@@ -211,21 +216,25 @@ export default function Page() {
 
   return (
     <motion.div initial="initial" animate="animate" variants={variants.page} className="flex flex-col items-center w-full md:w-3/4 lg:w-1/2 gap-8 overflow-y-auto p-8">
-      <motion.h1 variants={variants.header} className={`${rethinkSans.className} text-[46px] font-extrabold text-orange-600`}>Sleep Tracker</motion.h1>
-      <motion.p variants={variants.header} className="text-lg font-bold text-orange-600 text-center">Track your sleep duration and quality.</motion.p>
+      <motion.h1 variants={variants.header} className={`${rethinkSans.className} text-[46px] font-extrabold text-orange-600`}>
+        {t("title")}
+      </motion.h1>
+      <motion.p variants={variants.header} className="text-lg font-bold text-orange-600 text-center">
+        {t("subtitle")}
+      </motion.p>
       <motion.div variants={variants.formSection} className="flex flex-col w-full md:w-3/4 p-6 space-y-4">
         <motion.div variants={variants.card} className="space-y-2">
-          <h3 className="text-md font-medium text-orange-600">Select Date</h3>
+          <h3 className="text-md font-medium text-orange-600">{t("selectDate")}</h3>
           <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} max={new Date().toISOString().split("T")[0]} className="w-full border text-gray-700 border-orange-400 px-2 py-1 rounded-md focus:ring-2 focus:ring-orange-400"/>
         </motion.div>
 
         <motion.div variants={variants.card}>
-          <h2 className="text-xl font-bold text-orange-600">Hours Slept</h2>
-          <input type="number" min="0" step="0.1" value={additionalSleepHours} onChange={(e) => setAdditionalSleepHours(e.target.value)} placeholder="Enter hours" className="w-full border text-gray-700 border-orange-400 px-2 py-1 rounded-md text-center focus:ring-2 focus:ring-orange-400"/>
+          <h2 className="text-xl font-bold text-orange-600">{t("hoursSlept")}</h2>
+          <input type="number" min="0" step="0.1" value={additionalSleepHours} onChange={(e) => setAdditionalSleepHours(e.target.value)} placeholder={t("hoursPlaceholder")} className="w-full border text-gray-700 border-orange-400 px-2 py-1 rounded-md text-center focus:ring-2 focus:ring-orange-400"/>
         </motion.div>
 
         <motion.div variants={variants.card} className="space-y-2">
-          <h3 className="text-md font-medium text-orange-600">Quality (1-5)</h3>
+          <h3 className="text-md font-medium text-orange-600">{t("quality")}</h3>
           <div className="flex justify-between">
             {[1, 2, 3, 4, 5].map((r) => (
               <button key={r} onClick={() => setSleepQuality(r)} className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-150 focus:outline-none ${sleepQuality === r ? "" : "bg-orange-100"}`}>
@@ -237,16 +246,16 @@ export default function Page() {
         </motion.div>
 
         <motion.div variants={variants.card} className="space-y-2">
-          <h3 className="text-md font-medium text-orange-600">Notes</h3>
-          <textarea rows={2} value={sleepNotes} onChange={(e) => setSleepNotes(e.target.value)} placeholder="Optional notes" className="w-full border text-gray-700 border-orange-400 px-2 py-1 rounded-md focus:ring-2 focus:ring-orange-400"/>
+          <h3 className="text-md font-medium text-orange-600">{t("notes")}</h3>
+          <textarea rows={2} value={sleepNotes} onChange={(e) => setSleepNotes(e.target.value)} placeholder={t("notesPlaceholder")} className="w-full border text-gray-700 border-orange-400 px-2 py-1 rounded-md focus:ring-2 focus:ring-orange-400"/>
         </motion.div>
 
         <motion.button variants={variants.button} whileHover="hover" onClick={handleSave} disabled={isLogging} className={`${isLogging ? "bg-gray-300 text-gray-500" : "bg-orange-500/25 hover:bg-orange-600/25 text-orange-600"} px-4 py-2 rounded-lg border border-orange-600 duration-50`}>
-          {isLogging ? "Saving..." : "Save Sleep Data"}
+          {isLogging ? t("saving") : t("save")}
         </motion.button>
 
-        {logSuccess === true && (<motion.div variants={variants.card} className="py-2 px-4 bg-green-100 text-green-800 rounded-md text-center">✓ {logMessage}</motion.div>)}
-        {logSuccess === false && (<motion.div variants={variants.card} className="py-2 px-4 bg-red-100 text-red-800 rounded-md text-center">✗ {logMessage}</motion.div>)}
+        {logSuccess === true && (<motion.div variants={variants.card} className="py-2 px-4 bg-green-100 text-green-800 rounded-md text-center">✓ {t("saveSuccess")}</motion.div>)}
+        {logSuccess === false && (<motion.div variants={variants.card} className="py-2 px-4 bg-red-100 text-red-800 rounded-md text-center">✗ {t("saveFail")}</motion.div>)}
       </motion.div>
 
       <SleepHistory />

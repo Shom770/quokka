@@ -8,6 +8,7 @@ import {
   SparklesIcon,
 } from "@heroicons/react/24/solid";
 import { rethinkSans } from "@/components/fonts";
+import { useTranslations } from "next-intl"; // Add this import
 
 interface TutorialStep {
   id: string;
@@ -37,38 +38,37 @@ export default function TutorialOverlay({
 }: TutorialOverlayProps) {
   const [currentStep, setCurrentStep] = useState(0);
 
+  const t = useTranslations("tutorial");
+
   const tutorialSteps: TutorialStep[] = useMemo(
     () => [
       {
         id: "challenge",
         ref: refs.challengeBox,
-        title: "Daily Challenge",
-        description:
-          "Complete daily challenges to build healthy habits and track your progress.",
+        title: t("challengeTitle"),
+        description: t("challengeDescription"),
       },
       {
         id: "reflection",
         ref: refs.journalingCard,
-        title: "Mental Health Reflection",
-        description:
-          "Reflect on your mental health and understand yourself better.",
+        title: t("reflectionTitle"),
+        description: t("reflectionDescription"),
       },
       {
         id: "resources",
         ref: refs.resourcesCard,
-        title: "Resources",
-        description:
-          "Find mental health resources and support when you need help.",
+        title: t("resourcesTitle"),
+        description: t("resourcesDescription"),
       },
       {
         id: "activities",
         ref: refs.meditationCard,
-        title: "Activities",
-        description:
-          "Access meditation, breathing exercises, yoga, and other wellness activities.",
+        title: t("activitiesTitle"),
+        description: t("activitiesDescription"),
       },
     ],
     [
+      t,
       refs.challengeBox,
       refs.journalingCard,
       refs.resourcesCard,
@@ -217,7 +217,10 @@ export default function TutorialOverlay({
                 ))}
               </div>
               <span className="text-xs text-gray-500 font-medium">
-                {currentStep + 1} of {tutorialSteps.length}
+                {t("progress", {
+                  current: currentStep + 1,
+                  total: tutorialSteps.length,
+                })}
               </span>
             </div>
 
@@ -243,7 +246,7 @@ export default function TutorialOverlay({
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  Skip
+                  {t("skip")}
                 </motion.button>
                 <motion.button
                   onClick={nextStep}
@@ -252,8 +255,8 @@ export default function TutorialOverlay({
                   whileTap={{ scale: 0.95 }}
                 >
                   {currentStep === tutorialSteps.length - 1
-                    ? "Get Started"
-                    : "Next"}
+                    ? t("getStarted")
+                    : t("next")}
                 </motion.button>
               </div>
             </div>

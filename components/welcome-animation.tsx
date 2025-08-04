@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { rethinkSans } from "@/components/fonts";
+import { useTranslations } from "next-intl"; // Add this import
 
 interface WelcomeAnimationProps {
   onComplete: () => void;
@@ -13,6 +14,8 @@ export default function WelcomeAnimation({ onComplete }: WelcomeAnimationProps) 
     const timer = setTimeout(onComplete, 2500);
     return () => clearTimeout(timer);
   }, [onComplete]);
+
+  const t = useTranslations("navbar"); // Use navbar namespace
 
   return (
     <motion.div
@@ -208,7 +211,7 @@ export default function WelcomeAnimation({ onComplete }: WelcomeAnimationProps) 
             ease: "easeOut"
           }}
         >
-          Be the best version of yourself
+          {t("subtitle")}
         </motion.p>
 
         {/* Progress indicator */}
@@ -236,4 +239,4 @@ export default function WelcomeAnimation({ onComplete }: WelcomeAnimationProps) 
       </motion.div>
     </motion.div>
   );
-} 
+}

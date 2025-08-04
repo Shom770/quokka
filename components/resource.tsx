@@ -5,6 +5,7 @@ import { inter } from './fonts';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowTopRightOnSquareIcon, ExclamationTriangleIcon } from '@heroicons/react/24/solid';
 import { useState } from 'react';
+import { useTranslations } from "next-intl"; // Add this import
 
 interface ResourceProps {
   title: string;
@@ -15,6 +16,8 @@ interface ResourceProps {
 
 export default function Resource({ title, description, pathToImage, link }: ResourceProps) {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+  const t = useTranslations("resource"); // Use "resource" namespace
 
   const handleLinkClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -115,16 +118,16 @@ export default function Resource({ title, description, pathToImage, link }: Reso
           >
             <div className="flex items-center gap-3 mb-4">
               <ExclamationTriangleIcon className="w-6 h-6 text-orange-600" />
-              <h3 className="text-xl font-bold text-gray-900">External Link</h3>
+              <h3 className="text-xl font-bold text-gray-900">{t("externalLink")}</h3>
             </div>
             <p className="text-gray-600 mb-2">
-              You are about to visit:
+              {t("aboutToVisit")}
             </p>
             <p className="text-sm font-semibold text-orange-600 mb-4 break-all">
               {link}
             </p>
             <p className="text-sm text-gray-500 mb-6">
-              This will open in a new tab. Are you sure you want to continue?
+              {t("newTabConfirm")}
             </p>
             <div className="flex justify-end gap-3">
               <motion.button
@@ -133,7 +136,7 @@ export default function Resource({ title, description, pathToImage, link }: Reso
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                Cancel
+                {t("cancel")}
               </motion.button>
               <motion.button
                 onClick={handleConfirm}
@@ -141,7 +144,7 @@ export default function Resource({ title, description, pathToImage, link }: Reso
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                Continue
+                {t("continue")}
               </motion.button>
             </div>
           </motion.div>

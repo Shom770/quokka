@@ -8,8 +8,10 @@ import { rethinkSans } from "@/components/fonts";
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 export default function Navbar() {
+  const t = useTranslations('navbar');
   const { data: session } = useSession();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [streakCount, setStreakCount] = useState(0);
@@ -82,7 +84,7 @@ export default function Navbar() {
               quokka
             </h1>
             <h1 className="font-medium text-orange-600">
-              Be the best version of yourself
+              {t('subtitle')}
             </h1>
           </div>
         </Link>
@@ -107,11 +109,10 @@ export default function Navbar() {
               {isLoadingStreak ? (
                 <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin mr-2"></div>
               ) : (
-                <span className={`${rethinkSans.className} font-bold text-orange-600 text-lg mr-1`}>
-                  {streakCount}
+                <span className={`${rethinkSans.className} text-orange-600 font-medium text-sm ml-0.5`}>
+                  {t('streak', { count: streakCount })}
                 </span>
               )}
-              <span className="text-orange-600 font-medium text-sm ml-0.5">day streak</span>
             </motion.div>
           </Link>
         )}
@@ -146,7 +147,7 @@ export default function Navbar() {
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-300"
                     onClick={() => setIsDropdownOpen(false)}
                   >
-                    My Stats
+                    {t('stats')}
                   </Link>
                   {!isLoginPage && (
                     <Link 
@@ -154,14 +155,14 @@ export default function Navbar() {
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-300"
                       onClick={() => setIsDropdownOpen(false)}
                     >
-                      Settings
+                      {t('settings')}
                     </Link>
                   )}
                   <button 
                     onClick={handleSignOut}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-300"
                   >
-                    Log out
+                    {t('logout')}
                   </button>
                 </div>
               </div>

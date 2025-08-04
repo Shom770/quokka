@@ -1,5 +1,167 @@
 {
-  "test": {
-    "test_key": "Hello english!"
+  "login": {
+    "title": "Welcome to Quokka"
+  },
+  "navbar": {
+    "subtitle": "Be the best version of yourself",
+    "stats": "My Stats",
+    "settings": "Settings",
+    "logout": "Log out",
+    "streak": "{count} day streak"
+  },
+  "settings": {
+    "title": "Settings",
+    "allowFeedback": "Allow App Feedback Questions",
+    "language": "Language",
+    "english": "English",
+    "spanish": "Spanish"
+  },
+  "home": {
+    "dailyChallengesTitle": "Your Daily Challenges",
+    "dailyChallengesSubtitle": "Push yourself to be better today",
+    "allComplete": "All Challenges Complete!",
+    "progressMessage": "You're making great progress on your wellness journey!",
+    "error": "{message}"
+  },
+  "cards": {
+    "journalingTitle": "mental health reflection",
+    "journalingText": "Reflect on your <bold1>mental health</bold1> to <bold2>understand yourself better.</bold2>",
+    "resourcesTitle": "mental health resources",
+    "resourcesText": "When you need help, these resources are <bold>right at your fingertips.</bold>",
+    "activitiesTitle": "activities",
+    "activitiesText": "A few activities that encourage you to <bold1>destress</bold1> and <bold2>put yourself first.</bold2>"
+  },
+  "tutorial": {
+    "challengeTitle": "Daily Challenge",
+    "challengeDescription": "Complete daily challenges to build healthy habits and track your progress.",
+    "reflectionTitle": "Mental Health Reflection",
+    "reflectionDescription": "Reflect on your mental health and understand yourself better.",
+    "resourcesTitle": "Resources",
+    "resourcesDescription": "Find mental health resources and support when you need help.",
+    "activitiesTitle": "Activities",
+    "activitiesDescription": "Access meditation, breathing exercises, yoga, and other wellness activities.",
+    "progress": "{current} of {total}",
+    "skip": "Skip",
+    "next": "Next",
+    "getStarted": "Get Started"
+  },
+  "resources": {
+    "titleLine1": "Mental health resources,",
+    "titleLine2": "curated for you.",
+    "subtitle": "Professional support and resources for your mental health journey",
+    "988": {
+      "title": "988 Suicide & Crisis Lifeline",
+      "description": "The 988 Lifeline is a nationwide network of local crisis centers offering free and confidential emotional support to individuals experiencing suicidal crises or emotional distress, available 24/7 across the U.S."
+    },
+    "dbsa": {
+      "title": "Depression and Bipolar Support Alliance (DBSA)",
+      "description": "DBSA offers support, education, and advocacy for individuals with mood disorders. They aim to create inclusive spaces and equitable access to mental health resources for everyone."
+    },
+    "trevor": {
+      "title": "The Trevor Project (1-866-488-7386)",
+      "description": "The Trevor Project is a nonprofit focused on preventing suicide among LGBTQ+ youth and providing education and research on LGBTQ studies. Calling their number will connect with a counselor!"
+    },
+    "omm": {
+      "title": "Our Minds Matter",
+      "description": "Our Minds Matter aims to prevent teen suicide by providing mental health education, resources, and support. They are dedicated to empowering teens to take charge of their mental well-being and creating a supportive community."
+    },
+    "nami": {
+      "title": "National Alliance on Mental Illness, NAMI Maryland (800-950-6264)",
+      "description": "NAMI is the largest grassroots mental health organization in the United States. It offers education, support and advocacy for individuals and families affected by mental illness."
+    },
+    "hotline": {
+      "title": "National Human Trafficking Hotline (1-888-373-7888)",
+      "description": "The National Human Trafficking Hotline is a confidential, 24/7 service that provides critical support to victims and survivors of human trafficking. It can also be used to report trafficking situations."
+    },
+    "safe": {
+      "title": "SAFE Center for Human Trafficking Survivors",
+      "description": "University of Maryland SAFE Center provides trauma-informed services to empower survivors of human trafficking, while also conducting research and advocating for policy changes."
+    },
+    "lhic": {
+      "title": "Howard County LHIC",
+      "description": "The Local Health Improvement Coalition (LHIC) works to achieve health equity in Howard County. Participation is sought from individuals and organizations working to achieve optimal health and wellness for all Howard County residents."
+    }
+  },
+  "resource": {
+    "externalLink": "External Link",
+    "aboutToVisit": "You are about to visit:",
+    "newTabConfirm": "This will open in a new tab. Are you sure you want to continue?",
+    "cancel": "Cancel",
+    "continue": "Continue"
+  },
+  "stats": {
+    "title": "Your Statistics",
+    "activities": "Activities",
+    "total": "Total:",
+    "activitiesCount": "Activities:",
+    "challengesCount": "Challenges:",
+    "points": "points",
+    "dailyActivities": "Daily Activities",
+    "completed": "Completed",
+    "noActivity": "No activity 😔",
+    "sunday": "Sun",
+    "monday": "Mon",
+    "tuesday": "Tue",
+    "wednesday": "Wed",
+    "thursday": "Thu",
+    "friday": "Fri",
+    "saturday": "Sat"
+  },
+  "activities": {
+    "title": "Activities made for you.",
+    "sleepTracker": "Sleep Tracker",
+    "sleepTrackerDesc": "A tool to track your sleep!",
+    "moodJournaling": "Mood Journaling",
+    "moodJournalingDesc": "Journal about your mood!",
+    "gratitudeJournaling": "Gratitude Journaling",
+    "gratitudeJournalingDesc": "Journal what you feel gratitude towards",
+    "meditation": "Meditation",
+    "meditationDesc": "Take it slow and meditate.",
+    "yogaVideos": "Yoga Videos",
+    "yogaVideosDesc": "Do some yoga with video instruction.",
+    "bookReading": "Book Reading",
+    "bookReadingDesc": "Read a book",
+    "mindfulnessVideos": "Mindfulness Videos",
+    "mindfulnessVideosDesc": "Learn mindfulness through a video",
+    "squareBreathing": "Square Breathing",
+    "squareBreathingDesc": "Practice calm breathing techniques"
+  },
+  "reflection": {
+    "title": "Reflect on your mental health",
+    "subtitle": "Answer these questions to get personalized wellness recommendations.",
+    "start": "Start Reflection",
+    "viewPast": "View Past Reflections",
+    "pastTitle": "Your Past Reflections",
+    "noPast": "No past reflections found.",
+    "back": "Back",
+    "next": "Next",
+    "finish": "Finish",
+    "recommendation": "Your Recommendation",
+    "try": "Try",
+    "explore": "Explore activities",
+    "savePrompt": "Would you like to save your reflection?",
+    "saveYes": "Yes, save it",
+    "saveNo": "No, skip",
+    "saving": "Saving your reflection...",
+    "saveSuccess": "Reflection saved!",
+    "saveFail": "Failed to save reflection.",
+    "done": "Done",
+    "tryAgain": "Try Again",
+    "skip": "Skip"
+  },
+  "sleepTracker": {
+    "title": "Sleep Tracker",
+    "subtitle": "Track your sleep duration and quality.",
+    "selectDate": "Select Date",
+    "hoursSlept": "Hours Slept",
+    "hoursPlaceholder": "Enter hours",
+    "quality": "Quality (1-5)",
+    "notes": "Notes",
+    "notesPlaceholder": "Optional notes",
+    "save": "Save Sleep Data",
+    "saving": "Saving...",
+    "saveSuccess": "Sleep data saved!",
+    "saveFail": "Failed to save sleep data.",
+    "noData": "No sleep data available for the selected period."
   }
 }

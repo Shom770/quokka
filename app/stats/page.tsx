@@ -12,6 +12,7 @@ import {
   type AnimationPlaybackControls,
 } from "framer-motion";
 import { rethinkSans } from "@/components/fonts";
+import { useTranslations } from "next-intl"; // Add this import
 
 function getMonthDays(year: number, month: number) {
   // month is 0-indexed
@@ -89,6 +90,8 @@ function AnimatedCounter({ to }: { to: number }) {
 
 export default function StatsPage() {
   useSession({ required: true });
+  const t = useTranslations("stats"); // Use "stats" namespace
+
   const [isLoading, setIsLoading] = useState(true);
   const [counts, setCounts] = useState<ActivityCount | null>(null);
   const [streak, setStreak] = useState<Streak | null>(null);
@@ -282,7 +285,7 @@ export default function StatsPage() {
         variants={itemVariants}
         className={`${rethinkSans.className} antialiased font-extrabold text-[46px] leading-[1] text-orange-600 mb-8`}
       >
-        Your Statistics
+        {t("title")}
       </motion.h1>
 
       <motion.div
@@ -298,23 +301,25 @@ export default function StatsPage() {
           >
             <div className="flex items-center mb-4">
               <TrophyIcon className="h-8 w-8 text-orange-500 mr-3" />
-              <h2 className="text-xl font-bold text-orange-800">Activities</h2>
+              <h2 className="text-xl font-bold text-orange-800">
+                {t("activities")}
+              </h2>
             </div>
             <p className="text-sm text-gray-600">
-              Total:{" "}
+              {t("total")}{" "}
               <span className="font-bold text-lg">
                 <AnimatedCounter to={counts?.total_count || 0} />
               </span>
             </p>
             <div className="flex justify-between mt-2">
               <p className="text-sm text-gray-600">
-                Activities:{" "}
+                {t("activitiesCount")}{" "}
                 <span className="font-bold text-lg">
                   <AnimatedCounter to={counts?.activity_count || 0} />
                 </span>
               </p>
               <p className="text-sm text-gray-600">
-                Challenges:{" "}
+                {t("challengesCount")}{" "}
                 <span className="font-bold text-lg">
                   <AnimatedCounter to={counts?.challenge_count || 0} />
                 </span>
@@ -338,7 +343,7 @@ export default function StatsPage() {
             <div className="flex items-center mt-4 text-orange-700 font-bold text-lg gap-2">
               <StarIcon className="w-6 h-6 text-yellow-400" />
               <span>
-                <AnimatedCounter to={points} /> points
+                <AnimatedCounter to={points} /> {t("points")}
               </span>
             </div>
           </motion.div>
@@ -396,29 +401,35 @@ export default function StatsPage() {
                 </button>
               </div>
               <div className="grid grid-cols-7 gap-1 w-full mb-2">
-                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-                  <div
-                    key={d}
-                    className="text-xs text-center font-semibold text-orange-600"
-                  >
-                    {d}
-                  </div>
-                ))}
+                <div className="text-xs text-center font-semibold text-orange-600">{t("sunday")}</div>
+                <div className="text-xs text-center font-semibold text-orange-600">{t("monday")}</div>
+                <div className="text-xs text-center font-semibold text-orange-600">{t("tuesday")}</div>
+                <div className="text-xs text-center font-semibold text-orange-600">{t("wednesday")}</div>
+                <div className="text-xs text-center font-semibold text-orange-600">{t("thursday")}</div>
+                <div className="text-xs text-center font-semibold text-orange-600">{t("friday")}</div>
+                <div className="text-xs text-center font-semibold text-orange-600">{t("saturday")}</div>
               </div>
               <div className="grid grid-cols-7 gap-1 w-full relative">
                 {(() => {
                   const days = getMonthDays(calendarYear, calendarMonth);
                   const firstDay = days[0].getDay();
                   const blanks = Array(firstDay).fill(null);
-                  const streakDates = (streak?.streak_dates || []).map(d => parseLocalDate(d));
-                  const streakSet = new Set(streakDates.map(d => d.toDateString()));
+                  const streakDates = (streak?.streak_dates || []).map((d) =>
+                    parseLocalDate(d)
+                  );
+                  const streakSet = new Set(
+                    streakDates.map((d) => d.toDateString())
+                  );
 
                   // Find streak groups (consecutive days)
                   const streakGroups: number[][] = [];
                   let group: number[] = [];
                   for (let i = 0; i < days.length; i++) {
                     if (streakSet.has(days[i].toDateString())) {
-                      if (group.length === 0 || days[i].getDate() === days[i-1]?.getDate() + 1) {
+                      if (
+                        group.length === 0 ||
+                        days[i].getDate() === days[i - 1]?.getDate() + 1
+                      ) {
                         group.push(i);
                       } else {
                         streakGroups.push([...group]);
@@ -432,7 +443,9 @@ export default function StatsPage() {
                   if (group.length) streakGroups.push([...group]);
 
                   // Render blanks
-                  const blankEls = blanks.map((_, i) => <div key={"blank-" + i} />);
+                  const blankEls = blanks.map((_, i) => (
+                    <div key={"blank-" + i} />
+                  ));
 
                   // Render streak backgrounds (pills)
                   const pillEls = streakGroups.map((group, idx) => {
@@ -442,7 +455,7 @@ export default function StatsPage() {
                         key={"pill-" + idx}
                         style={{
                           gridColumnStart: group[0] + 1 + firstDay,
-                          gridColumnEnd: group[group.length-1] + 2 + firstDay,
+                          gridColumnEnd: group[group.length - 1] + 2 + firstDay,
                           zIndex: 0,
                         }}
                         className="absolute h-8 bg-orange-100"
@@ -453,14 +466,17 @@ export default function StatsPage() {
                   // Render day buttons (streak group: first/last rounded+border, middle no border/radius)
                   const dayEls = days.map((day, i) => {
                     const isStreak = streakSet.has(day.toDateString());
-                    const isSelected = isSameDay(day, parseLocalDate(selectedDate));
+                    const isSelected = isSameDay(
+                      day,
+                      parseLocalDate(selectedDate)
+                    );
                     let pillClass = "rounded-full border border-orange-200";
                     let isMiddleStreak = false;
                     for (const group of streakGroups) {
                       if (group.length > 1 && group.includes(i)) {
                         if (i === group[0]) {
                           pillClass = "rounded-l-full border border-orange-200";
-                        } else if (i === group[group.length-1]) {
+                        } else if (i === group[group.length - 1]) {
                           pillClass = "rounded-r-full border border-orange-200";
                         } else {
                           pillClass = "border-none rounded-none";
@@ -472,7 +488,9 @@ export default function StatsPage() {
                     return (
                       <button
                         key={day.toISOString()}
-                        onClick={() => setSelectedDate(day.toISOString().split("T")[0])}
+                        onClick={() =>
+                          setSelectedDate(day.toISOString().split("T")[0])
+                        }
                         className={`aspect-square w-8 flex items-center justify-center mx-auto text-sm font-bold transition relative z-10 ${
                           isSelected
                             ? `bg-orange-200 border-orange-500 text-orange-900 border ${pillClass}`
@@ -480,18 +498,14 @@ export default function StatsPage() {
                             ? `bg-orange-100 text-orange-800 hover:bg-orange-100 ${pillClass}`
                             : "bg-orange-50/50 border border-orange-100 text-orange-700 hover:bg-orange-100 rounded-full"
                         }`}
-                        style={isMiddleStreak ? { boxShadow: 'none' } : {}}
+                        style={isMiddleStreak ? { boxShadow: "none" } : {}}
                       >
                         {isStreak ? <span>🔥</span> : day.getDate()}
                       </button>
                     );
                   });
 
-                  return [
-                    ...blankEls,
-                    ...pillEls,
-                    ...dayEls,
-                  ];
+                  return [...blankEls, ...pillEls, ...dayEls];
                 })()}
               </div>
             </div>
@@ -507,7 +521,7 @@ export default function StatsPage() {
           <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
             <h2 className="text-xl font-bold text-orange-800 flex items-center">
               <CalendarIcon className="h-6 w-6 mr-2 text-orange-600" />
-              Daily Activities
+              {t("dailyActivities")}
             </h2>
           </div>
           <div className="text-gray-600 mb-4 min-h-[28px]">
@@ -567,7 +581,7 @@ export default function StatsPage() {
                           </div>
                           <div className="text-right">
                             <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">
-                              Completed
+                              {t("completed")}
                             </span>
                             <p className="text-xs text-gray-500 mt-1">
                               {formatTimeFromISO(activity.completed_at)}
@@ -586,7 +600,7 @@ export default function StatsPage() {
                     exit="exit"
                     className="text-center py-6 text-gray-500"
                   >
-                    No activity 😔
+                    {t("noActivity")}
                   </motion.div>
                 )}
               </AnimatePresence>

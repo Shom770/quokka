@@ -8,6 +8,7 @@ import {
 import Link from "next/link";
 import Card from "./card";
 import { RefObject } from "react";
+import { useTranslations } from "next-intl";
 
 interface CardsProps {
   meditationCardRef: RefObject<HTMLDivElement | null>;
@@ -16,19 +17,20 @@ interface CardsProps {
 }
 
 export default function Cards({ meditationCardRef, journalingCardRef, resourcesCardRef }: CardsProps) {
+  const t = useTranslations("cards");
+
   return (
     <>
       <Link href="/reflection" className="journaling-card">
         <Card
           ref={journalingCardRef}
-          title="mental health reflection"
+          title={t("journalingTitle")}
           text={
             <p>
-              Reflect on your{" "}
-              <span className="font-extrabold">mental health</span> to{" "}
-              <span className="font-extrabold">
-                understand yourself better.
-              </span>
+              {t.rich("journalingText", {
+                bold1: (chunks) => <span className="font-extrabold">{chunks}</span>,
+                bold2: (chunks) => <span className="font-extrabold">{chunks}</span>,
+              })}
             </p>
           }
           icon={PencilIcon}
@@ -43,11 +45,12 @@ export default function Cards({ meditationCardRef, journalingCardRef, resourcesC
       <Link href="/resources" className="resources-card">
         <Card
           ref={resourcesCardRef}
-          title="mental health resources"
+          title={t("resourcesTitle")}
           text={
             <p>
-              When you need help, these resources are{" "}
-              <span className="font-extrabold">right at your fingertips.</span>
+              {t.rich("resourcesText", {
+                bold: (chunks) => <span className="font-extrabold">{chunks}</span>,
+              })}
             </p>
           }
           icon={BookmarkIcon}
@@ -62,12 +65,13 @@ export default function Cards({ meditationCardRef, journalingCardRef, resourcesC
       <Link href="/activities" className="meditation-card">
         <Card
           ref={meditationCardRef}
-          title="activities"
+          title={t("activitiesTitle")}
           text={
             <p>
-              A few activities that encourage you to{" "}
-              <span className="font-extrabold">destress</span> and{" "}
-              <span className="font-extrabold">put yourself first.</span>
+              {t.rich("activitiesText", {
+                bold1: (chunks) => <span className="font-extrabold">{chunks}</span>,
+                bold2: (chunks) => <span className="font-extrabold">{chunks}</span>,
+              })}
             </p>
           }
           icon={BookOpenIcon}
