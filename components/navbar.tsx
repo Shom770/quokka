@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Cog6ToothIcon, FireIcon } from "@heroicons/react/24/solid";
 import { useSession, signOut } from "next-auth/react";
 import { rethinkSans } from "@/components/fonts";
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
@@ -21,28 +21,39 @@ export default function Navbar() {
   
   const isLoginPage = pathname === "/login";
 
-  // Fetch streak count
-  useEffect(() => {
-    const fetchStreak = async () => {
-      try {
-        const res = await fetch("/api/streak", {
-          credentials: "include",
-        });
-        if (res.ok) {
-          const data = await res.json() as { streak_count: number };
-          setStreakCount(data.streak_count || 0);
-        }
-      } catch (error) {
-        console.error("Failed to fetch streak", error);
-      } finally {
-        setIsLoadingStreak(false);
+  // Helper to refetch streak
+  const fetchStreak = async () => {
+    try {
+      const res = await fetch("/api/streak", {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json() as { streak_count: number };
+        setStreakCount(data.streak_count || 0);
       }
-    };
+    } catch (error) {
+      console.error("Failed to fetch streak", error);
+    } finally {
+      setIsLoadingStreak(false);
+    }
+  };
 
+  // Fetch streak on session change
+  useEffect(() => {
     if (session) {
       fetchStreak();
     }
   }, [session]);
+
+  // Listen for custom event to refetch streak
+  useEffect(() => {
+    const handleStreakUpdate = () => {
+      setIsLoadingStreak(true);
+      fetchStreak();
+    };
+    window.addEventListener("streakUpdate", handleStreakUpdate);
+    return () => window.removeEventListener("streakUpdate", handleStreakUpdate);
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {

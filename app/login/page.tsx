@@ -84,7 +84,7 @@ export default function LoginPage() {
             className={`${libreBodoni.className} text-4xl font-bold text-gray-900`}
             {...animationVariants.title}
           >
-            {t('subtitle')}
+            {t('title')}
           </motion.h1>
         </div>
 
@@ -132,7 +132,7 @@ export default function LoginPage() {
                 />
               </g>
             </motion.svg>
-            Sign in with Google
+            {t('google')}
           </motion.button>
         </div>
       </motion.div>

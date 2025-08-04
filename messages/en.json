@@ -1,6 +1,7 @@
 {
   "login": {
-    "title": "Welcome to Quokka"
+    "title": "Welcome to Quokka",
+    "google": "Sign in with Google"
   },
   "navbar": {
     "subtitle": "Be the best version of yourself",

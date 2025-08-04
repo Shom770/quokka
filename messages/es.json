@@ -1,6 +1,7 @@
 {
   "login": {
-    "title": "Bienvenido a Quokka"
+    "title": "Bienvenido a Quokka",
+    "google": "Iniciar sesión con Google"
   },
   "navbar": {
     "subtitle": "Sé la mejor versión de ti mismo",

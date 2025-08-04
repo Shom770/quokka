@@ -10,7 +10,8 @@ import { SparklesIcon, TrophyIcon } from "@heroicons/react/24/solid";
 import TutorialOverlay from "@/components/tutorial-overlay";
 import WelcomeAnimation from "@/components/welcome-animation";
 import { useTutorial } from "@/hooks/use-tutorial";
-import { useTranslations } from "next-intl"; // <-- Add this import
+import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 
 const animationVariants = {
   pageContainer: {
@@ -105,6 +106,7 @@ export default function Page() {
 
   // Track which challenge is hovered for z-index pop
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const locale = useLocale();
 
   const handleWelcomeComplete = () => {
     setShowWelcome(false);
@@ -115,7 +117,7 @@ export default function Page() {
     const fetchChallenges = async () => {
       try {
         const res = await fetch(
-          "https://data.quokka.school/api/challenges/daily"
+          `https://data.quokka.school/api/challenges/daily?locale=${locale}`
         );
         const data = (await res.json()) as {
           success: boolean;
@@ -147,8 +149,7 @@ export default function Page() {
         if (data.completed) {
           for (const challenge of challenges) {
             completedMap[challenge.id] = data.completed.some(
-              (a) =>
-                String(a.challenge_id) === String(challenge.id)
+              (a) => String(a.challenge_id) === String(challenge.id)
             );
           }
         }
@@ -181,6 +182,7 @@ export default function Page() {
         );
       }
       setCompleted((prev) => ({ ...prev, [challengeId]: true }));
+      window.dispatchEvent(new Event("streakUpdate"));
     } catch (err) {
       setPostError((prev) => ({
         ...prev,
@@ -300,7 +302,11 @@ export default function Page() {
               </div>
               {Object.values(postError).some(Boolean) && (
                 <div className="text-center text-red-500 text-sm mt-2 z-10">
-                  {t("error", { message: Object.values(postError).filter(Boolean).join(", ") })}
+                  {t("error", {
+                    message: Object.values(postError)
+                      .filter(Boolean)
+                      .join(", "),
+                  })}
                 </div>
               )}
             </>
