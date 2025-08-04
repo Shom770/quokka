@@ -75,6 +75,11 @@ export default function BookReadingActivity() {
         body: JSON.stringify({ activity_id: "book-reading", notes: `Reading session for ${selectedTime} minutes` }),
       });
       setLogSuccess(response.ok);
+
+      // Dispatch stats update event after logging activity
+      if (response.ok) {
+        window.dispatchEvent(new Event("statsUpdate"));
+      }
     } catch (error) {
       console.error("Error logging book reading activity:", error);
       setLogSuccess(false);

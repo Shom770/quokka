@@ -21,9 +21,9 @@ const itemVariants = {
 };
 
 const feedbackVariants = {
-    initial: { opacity: 0, y: 10, scale: 0.95 },
-    animate: { opacity: 1, y: 0, scale: 1 },
-    exit: { opacity: 0, y: -10, scale: 0.95 },
+  initial: { opacity: 0, y: 10, scale: 0.95 },
+  animate: { opacity: 1, y: 0, scale: 1 },
+  exit: { opacity: 0, y: -10, scale: 0.95 },
 };
 
 /**
@@ -35,7 +35,7 @@ export default function Page() {
   const [timer, setTimer] = useState<number>(0);
   const [isMeditating, setIsMeditating] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  
+
   const [sessionDuration, setSessionDuration] = useState<number>(0);
   const [isLogging, setIsLogging] = useState(false);
   const [logSuccess, setLogSuccess] = useState<boolean | null>(null);
@@ -67,7 +67,9 @@ export default function Page() {
     if (selectedSong) {
       audioRef.current = new Audio(selectedSong);
       if (!isMuted) {
-        audioRef.current.play().catch((err) => console.error("Audio play error:", err));
+        audioRef.current
+          .play()
+          .catch((err) => console.error("Audio play error:", err));
       }
     }
   };
@@ -79,9 +81,15 @@ export default function Page() {
       const response = await fetch("/api/activities", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ activity_id: "meditation", notes: `Completed ${minutes} minute meditation` }),
+        body: JSON.stringify({
+          activity_id: "meditation",
+          notes: `Completed ${minutes} minute meditation`,
+        }),
       });
       setLogSuccess(response.ok);
+      if (response.ok) {
+        window.dispatchEvent(new Event("statsUpdate"));
+      }
     } catch (error) {
       console.error("Error logging meditation activity:", error);
       setLogSuccess(false);
@@ -99,8 +107,8 @@ export default function Page() {
       audioRef.current = null;
     }
     if (finished) {
-        playAlarm();
-        logMeditationActivity(sessionDuration);
+      playAlarm();
+      logMeditationActivity(sessionDuration);
     }
   };
 
@@ -126,7 +134,10 @@ export default function Page() {
         return prev - 1;
       });
     }, 1000);
-    if (!isMuted) audioRef.current?.play().catch((err) => console.error("Resume error:", err));
+    if (!isMuted)
+      audioRef.current
+        ?.play()
+        .catch((err) => console.error("Resume error:", err));
   };
 
   const toggleMute = () => {
@@ -146,7 +157,7 @@ export default function Page() {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, []);
-  
+
   useEffect(() => {
     if (logSuccess !== null) {
       const timeout = setTimeout(() => setLogSuccess(null), 4000);
@@ -166,10 +177,17 @@ export default function Page() {
       animate="visible"
       className="flex flex-col items-center text-orange-600 justify-center min-h-screen gap-6 p-6"
     >
-      <motion.h1 variants={itemVariants} className="text-4xl font-bold">Mindful Meditation</motion.h1>
-      <motion.p variants={itemVariants} className="font-medium text-lg">Select a duration to begin your session.</motion.p>
-      
-      <motion.div variants={itemVariants} className="flex items-center justify-between w-full max-w-xs">
+      <motion.h1 variants={itemVariants} className="text-4xl font-bold">
+        Mindful Meditation
+      </motion.h1>
+      <motion.p variants={itemVariants} className="font-medium text-lg">
+        Select a duration to begin your session.
+      </motion.p>
+
+      <motion.div
+        variants={itemVariants}
+        className="flex items-center justify-between w-full max-w-xs"
+      >
         <label className="font-semibold">Select Background Sound</label>
         <select
           className="border border-orange-300 text-gray-700 rounded px-2 py-1 focus:ring-2 focus:ring-orange-400"
@@ -180,76 +198,152 @@ export default function Page() {
           <option value="/sounds/song1.mp3">Gentle Rain</option>
         </select>
       </motion.div>
-      
+
       <motion.div variants={itemVariants} className="flex gap-4">
-        {[2, 5, 10].map(min => (
-            <motion.button
-                key={min}
-                onClick={() => startMeditation(min * 60)}
-                className="bg-orange-500/25 text-orange-600 font-semibold px-5 py-2 rounded-lg border border-orange-500"
-                whileHover={{ scale: 1.05, backgroundColor: "rgba(249, 115, 22, 0.35)" }}
-                whileTap={{ scale: 0.95 }}
-            >
-                {min} minutes
-            </motion.button>
+        {[2, 5, 10].map((min) => (
+          <motion.button
+            key={min}
+            onClick={() => startMeditation(min * 60)}
+            className="bg-orange-500/25 text-orange-600 font-semibold px-5 py-2 rounded-lg border border-orange-500"
+            whileHover={{
+              scale: 1.05,
+              backgroundColor: "rgba(249, 115, 22, 0.35)",
+            }}
+            whileTap={{ scale: 0.95 }}
+          >
+            {min} minutes
+          </motion.button>
         ))}
       </motion.div>
-      
+
       <motion.div
         className="relative w-52 h-52 flex items-center justify-center mt-4"
-        animate={{ scale: isMeditating ? 1 : 0.9, opacity: isMeditating ? 1 : 0.7 }}
+        animate={{
+          scale: isMeditating ? 1 : 0.9,
+          opacity: isMeditating ? 1 : 0.7,
+        }}
         transition={{ type: "spring", stiffness: 200, damping: 20 }}
       >
-        <motion.svg className="absolute w-full h-full transform -rotate-90" viewBox="0 0 200 200">
-            <circle cx="100" cy="100" r={radius} stroke="#FDBA74" strokeWidth="10" fill="none" />
-            <motion.circle
-                cx="100" cy="100" r={radius}
-                stroke="#F97316" strokeWidth="10" fill="none"
-                strokeLinecap="round"
-                strokeDasharray={circumference}
-                initial={{ strokeDashoffset: circumference }}
-                animate={{ strokeDashoffset }}
-                transition={{ duration: 1, ease: "linear" }}
-            />
+        <motion.svg
+          className="absolute w-full h-full transform -rotate-90"
+          viewBox="0 0 200 200"
+        >
+          <circle
+            cx="100"
+            cy="100"
+            r={radius}
+            stroke="#FDBA74"
+            strokeWidth="10"
+            fill="none"
+          />
+          <motion.circle
+            cx="100"
+            cy="100"
+            r={radius}
+            stroke="#F97316"
+            strokeWidth="10"
+            fill="none"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset }}
+            transition={{ duration: 1, ease: "linear" }}
+          />
         </motion.svg>
-        <span className="text-5xl font-mono text-orange-700">{formatTime(timer)}</span>
+        <span className="text-5xl font-mono text-orange-700">
+          {formatTime(timer)}
+        </span>
         <AnimatePresence>
-            {isMeditating && !isPaused && (
-                <motion.div
-                    className="absolute w-full h-full border-4 border-orange-200 rounded-full"
-                    animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0, 0.5] }}
-                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                />
-            )}
+          {isMeditating && !isPaused && (
+            <motion.div
+              className="absolute w-full h-full border-4 border-orange-200 rounded-full"
+              animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0, 0.5] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            />
+          )}
         </AnimatePresence>
       </motion.div>
-      
+
       <div className="h-12">
         <AnimatePresence>
-            {isMeditating && (
-                <motion.div
-                    variants={containerVariants} initial="hidden" animate="visible" exit="hidden"
-                    className="flex gap-4"
-                >
-                    <motion.button variants={itemVariants} onClick={isPaused ? resumeMeditation : pauseMeditation} className="bg-yellow-500/80 text-white px-4 py-2 rounded-lg" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                        {isPaused ? "Resume" : "Pause"}
-                    </motion.button>
-                    <motion.button variants={itemVariants} onClick={toggleMute} className="bg-yellow-500/80 text-white px-4 py-2 rounded-lg" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                        {isMuted ? "Unmute" : "Mute"}
-                    </motion.button>
-                    <motion.button variants={itemVariants} onClick={() => stopMeditation(false)} className="bg-red-500/80 text-white px-4 py-2 rounded-lg" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                        Stop
-                    </motion.button>
-                </motion.div>
-            )}
+          {isMeditating && (
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+              className="flex gap-4"
+            >
+              <motion.button
+                variants={itemVariants}
+                onClick={isPaused ? resumeMeditation : pauseMeditation}
+                className="bg-yellow-500/80 text-white px-4 py-2 rounded-lg"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {isPaused ? "Resume" : "Pause"}
+              </motion.button>
+              <motion.button
+                variants={itemVariants}
+                onClick={toggleMute}
+                className="bg-yellow-500/80 text-white px-4 py-2 rounded-lg"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {isMuted ? "Unmute" : "Mute"}
+              </motion.button>
+              <motion.button
+                variants={itemVariants}
+                onClick={() => stopMeditation(false)}
+                className="bg-red-500/80 text-white px-4 py-2 rounded-lg"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Stop
+              </motion.button>
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
-      
+
       <div className="h-12 mt-4">
         <AnimatePresence mode="wait">
-            {isLogging && <motion.div key="logging" variants={feedbackVariants} initial="initial" animate="animate" exit="exit" className="py-2 px-4 bg-yellow-100 text-yellow-800 rounded-md">Logging your meditation...</motion.div>}
-            {logSuccess === true && <motion.div key="success" variants={feedbackVariants} initial="initial" animate="animate" exit="exit" className="py-2 px-4 bg-green-100 text-green-800 rounded-md">✓ Meditation logged successfully!</motion.div>}
-            {logSuccess === false && <motion.div key="error" variants={feedbackVariants} initial="initial" animate="animate" exit="exit" className="py-2 px-4 bg-red-100 text-red-800 rounded-md">Failed to log meditation.</motion.div>}
+          {isLogging && (
+            <motion.div
+              key="logging"
+              variants={feedbackVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="py-2 px-4 bg-yellow-100 text-yellow-800 rounded-md"
+            >
+              Logging your meditation...
+            </motion.div>
+          )}
+          {logSuccess === true && (
+            <motion.div
+              key="success"
+              variants={feedbackVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="py-2 px-4 bg-green-100 text-green-800 rounded-md"
+            >
+              ✓ Meditation logged successfully!
+            </motion.div>
+          )}
+          {logSuccess === false && (
+            <motion.div
+              key="error"
+              variants={feedbackVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="py-2 px-4 bg-red-100 text-red-800 rounded-md"
+            >
+              Failed to log meditation.
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
     </motion.div>

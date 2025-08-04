@@ -20,6 +20,7 @@ export default function Navbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const prevPointsRef = useRef(0);
 
   const isLoginPage = pathname === "/login";
 
@@ -75,7 +76,7 @@ export default function Navbar() {
   useEffect(() => {
     if (pointsCount === displayedPoints) return;
 
-    const start = displayedPoints; // Start from the currently displayed value
+    const start = prevPointsRef.current;
     const end = pointsCount;
     const duration = 800;
     const startTime = performance.now();
@@ -90,7 +91,9 @@ export default function Navbar() {
       }
     }
     requestAnimationFrame(tick);
-  }, [pointsCount]);
+
+    prevPointsRef.current = pointsCount;
+  }, [pointsCount, displayedPoints]);
 
   // animate streak count-up
   useEffect(() => {

@@ -43,31 +43,31 @@ export default function MindfulnessVideos() {
 
   const videoHeight = 300;
 
-  const logVideoActivity = useCallback(
-    async (videoTitle: string) => {
-      setIsLogging(true);
-      try {
-        const response = await fetch("/api/activities", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            activity_id: "mindfulness-video",
-            notes: `Watched ${videoTitle}`,
-          }),
-        });
-        setLogSuccess(response.ok);
-      } catch (error) {
-        console.error("Error logging video activity:", error);
-        setLogSuccess(false);
+  const logVideoActivity = useCallback(async (videoTitle: string) => {
+    setIsLogging(true);
+    try {
+      const response = await fetch("/api/activities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          activity_id: "mindfulness-video",
+          notes: `Watched ${videoTitle}`,
+        }),
+      });
+      setLogSuccess(response.ok);
+      if (response.ok) {
+        window.dispatchEvent(new Event("statsUpdate"));
       }
-      setIsLogging(false);
-      setTimeout(() => {
-        setLogSuccess(null);
-        setVideoWatched(null);
-      }, 5000);
-    },
-    []
-  );
+    } catch (error) {
+      console.error("Error logging video activity:", error);
+      setLogSuccess(false);
+    }
+    setIsLogging(false);
+    setTimeout(() => {
+      setLogSuccess(null);
+      setVideoWatched(null);
+    }, 5000);
+  }, []);
 
   const handleVideoStateChange = useCallback(
     (event: YTPlayerEvent, videoTitle: string) => {
@@ -107,11 +107,7 @@ export default function MindfulnessVideos() {
         },
       });
     }
-  }, [
-    showMindfulnessVideo1,
-    showMindfulnessVideo2,
-    handleVideoStateChange,
-  ]);
+  }, [showMindfulnessVideo1, showMindfulnessVideo2, handleVideoStateChange]);
 
   useEffect(() => {
     if (window.YT && window.YT.Player) {
@@ -139,11 +135,7 @@ export default function MindfulnessVideos() {
 
   useEffect(() => {
     if (apiReadyRef.current) initializePlayers();
-  }, [
-    showMindfulnessVideo1,
-    showMindfulnessVideo2,
-    initializePlayers,
-  ]);
+  }, [showMindfulnessVideo1, showMindfulnessVideo2, initializePlayers]);
 
   const createToggle =
     (

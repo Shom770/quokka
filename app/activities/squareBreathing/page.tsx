@@ -9,8 +9,18 @@ export const runtime = "edge";
 // Animation Variants
 const viewVariants = {
   hidden: { opacity: 0, y: 20, scale: 0.98 },
-  visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: "easeInOut" } },
-  exit: { opacity: 0, y: -20, scale: 0.98, transition: { duration: 0.3, ease: "easeInOut" } },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.5, ease: "easeInOut" },
+  },
+  exit: {
+    opacity: 0,
+    y: -20,
+    scale: 0.98,
+    transition: { duration: 0.3, ease: "easeInOut" },
+  },
 };
 
 const itemVariants = {
@@ -58,7 +68,6 @@ export default function SquareBreathing() {
     }
   }, [counter, started]);
 
-
   // Effect to control the circle's scale based on the current phase
   useEffect(() => {
     if (phase === "Breathe In") {
@@ -84,9 +93,17 @@ export default function SquareBreathing() {
       const response = await fetch("/api/activities", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ activity_id: "square-breathing", notes: `Completed ${minutes} minute${minutes !== 1 ? 's' : ''} of square breathing` }),
+        body: JSON.stringify({
+          activity_id: "square-breathing",
+          notes: `Completed ${minutes} minute${
+            minutes !== 1 ? "s" : ""
+          } of square breathing`,
+        }),
       });
       setLogSuccess(response.ok);
+      if (response.ok) {
+        window.dispatchEvent(new Event("statsUpdate"));
+      }
     } catch (error) {
       // Log the caught error to the console for debugging
       console.error("Error logging breathing activity:", error);
@@ -120,7 +137,9 @@ export default function SquareBreathing() {
       className="flex flex-col items-center text-orange-600 justify-center w-full min-h-[90%] p-8"
     >
       <div className="text-center w-full max-w-md">
-        <motion.h1 variants={itemVariants} className="text-4xl font-bold mb-4">Square Breathing</motion.h1>
+        <motion.h1 variants={itemVariants} className="text-4xl font-bold mb-4">
+          Square Breathing
+        </motion.h1>
         <motion.p variants={itemVariants} className="text-lg mb-8">
           Follow the guided breathing exercise to relax and focus your mind.
         </motion.p>
@@ -145,11 +164,44 @@ export default function SquareBreathing() {
               Begin Exercise
             </motion.button>
             <div className="h-20 mt-4">
-                <AnimatePresence>
-                    {isLogging && <motion.div key="logging" variants={feedbackVariants} initial="initial" animate="animate" exit="exit" className="py-2 px-4 bg-yellow-100 text-yellow-800 rounded-md">Logging your session...</motion.div>}
-                    {logSuccess === true && <motion.div key="success" variants={feedbackVariants} initial="initial" animate="animate" exit="exit" className="py-2 px-4 bg-green-100 text-green-800 rounded-md">✓ Session logged successfully!</motion.div>}
-                    {logSuccess === false && <motion.div key="error" variants={feedbackVariants} initial="initial" animate="animate" exit="exit" className="py-2 px-4 bg-red-100 text-red-800 rounded-md">Failed to log your session.</motion.div>}
-                </AnimatePresence>
+              <AnimatePresence>
+                {isLogging && (
+                  <motion.div
+                    key="logging"
+                    variants={feedbackVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    className="py-2 px-4 bg-yellow-100 text-yellow-800 rounded-md"
+                  >
+                    Logging your session...
+                  </motion.div>
+                )}
+                {logSuccess === true && (
+                  <motion.div
+                    key="success"
+                    variants={feedbackVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    className="py-2 px-4 bg-green-100 text-green-800 rounded-md"
+                  >
+                    ✓ Session logged successfully!
+                  </motion.div>
+                )}
+                {logSuccess === false && (
+                  <motion.div
+                    key="error"
+                    variants={feedbackVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    className="py-2 px-4 bg-red-100 text-red-800 rounded-md"
+                  >
+                    Failed to log your session.
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         ) : (

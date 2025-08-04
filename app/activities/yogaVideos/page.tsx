@@ -46,31 +46,31 @@ export default function Page() {
 
   const videoHeight = 300;
 
-  const logYogaActivity = useCallback(
-    async (videoTitle: string) => {
-      setIsLogging(true);
-      try {
-        const response = await fetch("/api/activities", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            activity_id: "yoga-video",
-            notes: `Completed ${videoTitle}`,
-          }),
-        });
-        setLogSuccess(response.ok);
-      } catch (error) {
-        console.error("Error logging yoga activity:", error);
-        setLogSuccess(false);
+  const logYogaActivity = useCallback(async (videoTitle: string) => {
+    setIsLogging(true);
+    try {
+      const response = await fetch("/api/activities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          activity_id: "yoga-video",
+          notes: `Completed ${videoTitle}`,
+        }),
+      });
+      setLogSuccess(response.ok);
+      if (response.ok) {
+        window.dispatchEvent(new Event("statsUpdate"));
       }
-      setIsLogging(false);
-      setTimeout(() => {
-        setLogSuccess(null);
-        setVideoWatched(null);
-      }, 5000);
-    },
-    []
-  );
+    } catch (error) {
+      console.error("Error logging yoga activity:", error);
+      setLogSuccess(false);
+    }
+    setIsLogging(false);
+    setTimeout(() => {
+      setLogSuccess(null);
+      setVideoWatched(null);
+    }, 5000);
+  }, []);
 
   const handleVideoStateChange = useCallback(
     (event: YTPlayerEvent, videoTitle: string) => {

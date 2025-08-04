@@ -150,6 +150,9 @@ export default function Page() {
             }),
           });
           setLogSuccess(response.ok);
+          if (response.ok) {
+            window.dispatchEvent(new Event("statsUpdate"));
+          }
         } catch (error) {
           console.error("Error logging gratitude activity:", error);
           setLogSuccess(false);

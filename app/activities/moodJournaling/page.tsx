@@ -24,11 +24,20 @@ const itemVariants = {
 };
 
 const viewVariants = {
-    initial: { opacity: 0, scale: 0.95, y: 20 },
-    animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
-    exit: { opacity: 0, scale: 0.95, y: -20, transition: { duration: 0.3, ease: "easeIn" } },
+  initial: { opacity: 0, scale: 0.95, y: 20 },
+  animate: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.95,
+    y: -20,
+    transition: { duration: 0.3, ease: "easeIn" },
+  },
 };
-
 
 export default function Page() {
   useSession({ required: true });
@@ -52,6 +61,9 @@ export default function Page() {
         }),
       });
       setLogSuccess(response.ok);
+      if (response.ok) {
+        window.dispatchEvent(new Event("statsUpdate"));
+      }
     } catch (error) {
       console.error("Error logging journaling activity:", error);
       setLogSuccess(false);
@@ -94,7 +106,8 @@ export default function Page() {
   const radius = 60;
   const circumference = 2 * Math.PI * radius;
   // Correctly handle cases where time or originalDuration might be null
-  const progress = (originalDuration && time !== null) ? (time / originalDuration) : 0;
+  const progress =
+    originalDuration && time !== null ? time / originalDuration : 0;
   const strokeDashoffset = circumference * (1 - progress);
 
   return (
@@ -167,7 +180,10 @@ export default function Page() {
                     key={min}
                     className="bg-orange-500/15 px-4 py-3 rounded-lg border-2 border-orange-500 text-orange-600 font-medium text-lg"
                     onClick={() => startTimer(min)}
-                    whileHover={{ scale: 1.05, backgroundColor: "rgba(249, 115, 22, 0.25)" }}
+                    whileHover={{
+                      scale: 1.05,
+                      backgroundColor: "rgba(249, 115, 22, 0.25)",
+                    }}
                     whileTap={{ scale: 0.95 }}
                   >
                     {min} minutes
@@ -187,28 +203,46 @@ export default function Page() {
               className="text-center flex flex-col items-center"
             >
               <div className="relative w-40 h-40 flex items-center justify-center">
-                  <svg className="absolute w-full h-full transform -rotate-90" viewBox="0 0 140 140">
-                      <circle cx="70" cy="70" r={radius} stroke="#FDBA74" strokeWidth="8" fill="none" />
-                      <motion.circle
-                          cx="70" cy="70" r={radius}
-                          stroke="#F97316" strokeWidth="8" fill="none"
-                          strokeLinecap="round"
-                          strokeDasharray={circumference}
-                          animate={{ strokeDashoffset }}
-                          transition={{ duration: 1, ease: "linear" }}
-                      />
-                  </svg>
-                  <span className="text-4xl font-bold text-orange-700 z-10">
-                      {Math.floor(time / 60).toString().padStart(2, "0")}:
-                      {(time % 60).toString().padStart(2, "0")}
-                  </span>
+                <svg
+                  className="absolute w-full h-full transform -rotate-90"
+                  viewBox="0 0 140 140"
+                >
+                  <circle
+                    cx="70"
+                    cy="70"
+                    r={radius}
+                    stroke="#FDBA74"
+                    strokeWidth="8"
+                    fill="none"
+                  />
+                  <motion.circle
+                    cx="70"
+                    cy="70"
+                    r={radius}
+                    stroke="#F97316"
+                    strokeWidth="8"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeDasharray={circumference}
+                    animate={{ strokeDashoffset }}
+                    transition={{ duration: 1, ease: "linear" }}
+                  />
+                </svg>
+                <span className="text-4xl font-bold text-orange-700 z-10">
+                  {Math.floor(time / 60)
+                    .toString()
+                    .padStart(2, "0")}
+                  :{(time % 60).toString().padStart(2, "0")}
+                </span>
               </div>
-              <p className="text-orange-600 mt-4">Time remaining for your journaling</p>
+              <p className="text-orange-600 mt-4">
+                Time remaining for your journaling
+              </p>
               <motion.button
-                  className="mt-4 bg-orange-500 px-7 py-2 rounded-lg text-white font-semibold"
-                  onClick={resetSession}
-                  whileHover={{ scale: 1.05, backgroundColor: "#EA580C" }}
-                  whileTap={{ scale: 0.95 }}
+                className="mt-4 bg-orange-500 px-7 py-2 rounded-lg text-white font-semibold"
+                onClick={resetSession}
+                whileHover={{ scale: 1.05, backgroundColor: "#EA580C" }}
+                whileTap={{ scale: 0.95 }}
               >
                 Cancel
               </motion.button>
@@ -230,20 +264,29 @@ export default function Page() {
 
               <AnimatePresence>
                 {isLogging ? (
-                  <motion.div variants={itemVariants} className="mt-4 py-2 px-4 bg-yellow-100 text-yellow-800 rounded-md">
+                  <motion.div
+                    variants={itemVariants}
+                    className="mt-4 py-2 px-4 bg-yellow-100 text-yellow-800 rounded-md"
+                  >
                     Logging your session...
                   </motion.div>
                 ) : logSuccess === true ? (
-                  <motion.div variants={itemVariants} className="mt-4 py-2 px-4 bg-green-100 text-green-800 rounded-md">
+                  <motion.div
+                    variants={itemVariants}
+                    className="mt-4 py-2 px-4 bg-green-100 text-green-800 rounded-md"
+                  >
                     ✓ Your session has been logged!
                   </motion.div>
                 ) : logSuccess === false ? (
-                  <motion.div variants={itemVariants} className="mt-4 py-2 px-4 bg-red-100 text-red-800 rounded-md">
+                  <motion.div
+                    variants={itemVariants}
+                    className="mt-4 py-2 px-4 bg-red-100 text-red-800 rounded-md"
+                  >
                     ✗ Could not log your session.
                   </motion.div>
                 ) : null}
               </AnimatePresence>
-              
+
               <motion.button
                 className="mt-6 bg-orange-500 px-7 py-2 rounded-lg text-white font-semibold"
                 onClick={resetSession}
