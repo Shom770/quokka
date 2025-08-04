@@ -15,6 +15,7 @@ export default function Navbar() {
   const { data: session } = useSession();
   const [streakCount, setStreakCount] = useState(0);
   const [pointsCount, setPointsCount] = useState(0);
+  const [prevPoints, setPrevPoints] = useState(0);
   // new display states for count-up
   const [displayedStreak, setDisplayedStreak] = useState(0);
   const [displayedPoints, setDisplayedPoints] = useState(0);
@@ -74,15 +75,24 @@ export default function Navbar() {
 
   // animate points count-up
   useEffect(() => {
+    // Only animate if pointsCount actually changed
+    if (pointsCount === displayedPoints) return;
+
+    const start = prevPoints;
+    const end = pointsCount;
     const duration = 800;
     const startTime = performance.now();
+
     function tick(now: number) {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      setDisplayedPoints(Math.floor(progress * pointsCount));
+      const value = Math.floor(start + (end - start) * progress);
+      setDisplayedPoints(value);
       if (progress < 1) requestAnimationFrame(tick);
     }
     requestAnimationFrame(tick);
+
+    setPrevPoints(pointsCount);
   }, [pointsCount]);
 
   // animate streak count-up

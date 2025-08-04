@@ -73,7 +73,7 @@ export default function ChallengeBox({
   allChallengesAccomplished,
   onToggle,
   loading,
-  points, // <-- add points prop
+  points,
 }: {
   category: string;
   description: string;
@@ -81,10 +81,15 @@ export default function ChallengeBox({
   allChallengesAccomplished: boolean;
   onToggle: () => void;
   loading?: boolean;
-  points?: number; // <-- add points prop
+  points?: number;
 }) {
   const gradientColor = getCategoryColor(category);
   const categoryIcon = getCategoryIcon(category);
+
+  // Choose badge color based on points value
+  let badgeColor = "bg-yellow-400 text-yellow-900";
+  if (points && points >= 100) badgeColor = "bg-orange-500 text-white";
+  else if (points && points >= 50) badgeColor = "bg-amber-500 text-white";
 
   return (
     <motion.button
@@ -99,6 +104,17 @@ export default function ChallengeBox({
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
       disabled={loading}
     >
+      {/* Points Badge */}
+      {!isCompleted && points && (
+        <div className={`absolute top-3 left-3 z-20`}>
+          <span
+            className={`flex items-center justify-center w-12 h-9 rounded-2xl font-bold text-sm shadow-md border-2 border-white ${badgeColor}`}
+          >
+            +{points}
+          </span>
+        </div>
+      )}
+
       {/* Completion Glow Effect */}
       {allChallengesAccomplished && (
         <motion.div
@@ -195,9 +211,10 @@ export default function ChallengeBox({
             </>
           ) : (
             <>
-              <div className="w-3 h-3 rounded-full border-2 border-current opacity-60" />
+              <div className="w-3 h-3 rounded-xl border-2 border-current opacity-60" />
               <span className="text-xs font-medium opacity-70">
-                Complete for {points} points!
+                {/* No points here, badge shows it */}
+                Complete this challenge for {points} points!
               </span>
             </>
           )}
