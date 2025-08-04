@@ -221,6 +221,13 @@ export default function Navbar() {
                       {t("settings")}
                     </Link>
                   )}
+                  <Link
+                    href="https://data.quokka.school/feedback"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-300"
+                    onClick={() => setIsDropdownOpen(false)}
+                  >
+                    {t("feedback")}
+                  </Link>
                   <button
                     onClick={handleSignOut}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-300"
