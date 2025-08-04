@@ -4,6 +4,7 @@ import { rethinkSans } from "@/components/fonts";
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 export const runtime = "edge";
 
@@ -46,6 +47,8 @@ export default function Page() {
   const [isLogging, setIsLogging] = useState(false);
   const [logSuccess, setLogSuccess] = useState<boolean | null>(null);
   const [journalCompleted, setJournalCompleted] = useState(false);
+
+  const t = useTranslations("moodJournaling");
 
   const logJournalingActivity = useCallback(async () => {
     if (!originalDuration) return;
@@ -121,14 +124,13 @@ export default function Page() {
         variants={itemVariants}
         className={`${rethinkSans.className} font-extrabold text-[46px] leading-[1] text-orange-500 text-center`}
       >
-        Mood Journaling
+        {t("moodJournalingTitle")}
       </motion.h1>
       <motion.span
         variants={itemVariants}
         className="font-bold text-lg leading-tight text-orange-600 text-center"
       >
-        Choose a time duration and use it to journal about your emotions. Below
-        are some suggestions to help you identify what you&apos;re feeling.
+        {t("moodJournalingSubtitle")}
       </motion.span>
 
       <motion.div
@@ -137,24 +139,24 @@ export default function Page() {
       >
         <div className="flex justify-center">
           <ul className="text-orange-600 list-disc list-inside">
-            <li>Anxious</li>
-            <li>Overwhelmed</li>
-            <li>Excited</li>
-            <li>Frustrated</li>
-            <li>Content</li>
-            <li>Lonely</li>
-            <li>Grateful</li>
+            <li>{t("feelingAnxious")}</li>
+            <li>{t("feelingOverwhelmed")}</li>
+            <li>{t("feelingExcited")}</li>
+            <li>{t("feelingFrustrated")}</li>
+            <li>{t("feelingContent")}</li>
+            <li>{t("feelingLonely")}</li>
+            <li>{t("feelingGrateful")}</li>
           </ul>
         </div>
         <div className="flex justify-center">
           <ul className="text-orange-600 list-disc list-inside">
-            <li>Confused</li>
-            <li>Hopeful</li>
-            <li>Nervous</li>
-            <li>Angry</li>
-            <li>Sad</li>
-            <li>Joyful</li>
-            <li>Embarrassed</li>
+            <li>{t("feelingConfused")}</li>
+            <li>{t("feelingHopeful")}</li>
+            <li>{t("feelingNervous")}</li>
+            <li>{t("feelingAngry")}</li>
+            <li>{t("feelingSad")}</li>
+            <li>{t("feelingJoyful")}</li>
+            <li>{t("feelingEmbarrassed")}</li>
           </ul>
         </div>
       </motion.div>
@@ -172,7 +174,7 @@ export default function Page() {
               className="text-center"
             >
               <span className="block mt-2 text-lg font-bold text-orange-600 mb-4">
-                Choose a duration to begin:
+                {t("chooseDuration")}
               </span>
               <div className="w-full grid grid-cols-2 gap-4">
                 {[5, 10, 15, 25].map((min) => (
@@ -186,7 +188,7 @@ export default function Page() {
                     }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    {min} minutes
+                    {t("minutes", { count: min })}
                   </motion.button>
                 ))}
               </div>
@@ -235,16 +237,14 @@ export default function Page() {
                   :{(time % 60).toString().padStart(2, "0")}
                 </span>
               </div>
-              <p className="text-orange-600 mt-4">
-                Time remaining for your journaling
-              </p>
+              <p className="text-orange-600 mt-4">{t("timeRemaining")}</p>
               <motion.button
                 className="mt-4 bg-orange-500 px-7 py-2 rounded-lg text-white font-semibold"
                 onClick={resetSession}
                 whileHover={{ scale: 1.05, backgroundColor: "#EA580C" }}
                 whileTap={{ scale: 0.95 }}
               >
-                Cancel
+                {t("cancel")}
               </motion.button>
             </motion.div>
           )}
@@ -259,7 +259,7 @@ export default function Page() {
               className="text-center mt-4"
             >
               <h2 className="text-2xl font-bold text-orange-600">
-                Journaling Session Complete ✨
+                {t("sessionComplete")}
               </h2>
 
               <AnimatePresence>
@@ -268,21 +268,21 @@ export default function Page() {
                     variants={itemVariants}
                     className="mt-4 py-2 px-4 bg-yellow-100 text-yellow-800 rounded-md"
                   >
-                    Logging your session...
+                    {t("loggingSession")}
                   </motion.div>
                 ) : logSuccess === true ? (
                   <motion.div
                     variants={itemVariants}
                     className="mt-4 py-2 px-4 bg-green-100 text-green-800 rounded-md"
                   >
-                    ✓ Your session has been logged!
+                    {t("logSuccess")}
                   </motion.div>
                 ) : logSuccess === false ? (
                   <motion.div
                     variants={itemVariants}
                     className="mt-4 py-2 px-4 bg-red-100 text-red-800 rounded-md"
                   >
-                    ✗ Could not log your session.
+                    {t("logError")}
                   </motion.div>
                 ) : null}
               </AnimatePresence>
@@ -293,7 +293,7 @@ export default function Page() {
                 whileHover={{ scale: 1.05, backgroundColor: "#EA580C" }}
                 whileTap={{ scale: 0.95 }}
               >
-                Start New Session
+                {t("startNewSession")}
               </motion.button>
             </motion.div>
           )}

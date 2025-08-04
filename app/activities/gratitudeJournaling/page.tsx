@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 export const runtime = "edge";
 
@@ -121,6 +122,8 @@ export default function Page() {
     gratitude2: false,
     gratitude3: false,
   });
+
+  const t = useTranslations("gratitude");
   const [isLogging, setIsLogging] = useState(false);
   const [logSuccess, setLogSuccess] = useState<boolean | null>(null);
 
@@ -184,14 +187,13 @@ export default function Page() {
         variants={itemVariants}
         className="font-extrabold text-[46px] leading-[1] text-center text-orange-500"
       >
-        Gratitude Journaling
+        {t("gratitudeJournalingTitle")}
       </motion.h1>
       <motion.span
         variants={itemVariants}
         className="font-bold text-lg text-orange-600 text-center"
       >
-        Take a moment to reflect on three things you&apos;re grateful for. As
-        you complete each one, check the box.
+        {t("gratitudeJournalingSubtitle")}
       </motion.span>
 
       <motion.div
@@ -200,19 +202,19 @@ export default function Page() {
       >
         <GratitudeItem
           id="gratitude1"
-          label="Write your first gratitude."
+          label={t("firstGratitudeLabel")}
           checked={gratitudes.gratitude1}
           onChange={() => handleCheckboxChange("gratitude1")}
         />
         <GratitudeItem
           id="gratitude2"
-          label="Write your second gratitude."
+          label={t("secondGratitudeLabel")}
           checked={gratitudes.gratitude2}
           onChange={() => handleCheckboxChange("gratitude2")}
         />
         <GratitudeItem
           id="gratitude3"
-          label="Write your third gratitude."
+          label={t("thirdGratitudeLabel")}
           checked={gratitudes.gratitude3}
           onChange={() => handleCheckboxChange("gratitude3")}
         />
@@ -229,7 +231,7 @@ export default function Page() {
               exit="exit"
               className="p-3 bg-yellow-100 text-yellow-800 rounded-lg text-center font-semibold"
             >
-              Logging your gratitude practice...
+              {t("loggingMessage")}
             </motion.div>
           )}
           {logSuccess === true && (
@@ -241,7 +243,7 @@ export default function Page() {
               exit="exit"
               className="p-3 bg-green-100 text-green-800 rounded-lg text-center font-semibold"
             >
-              ✨ Practice logged successfully! Keep it up!
+              {t("successMessage")}
             </motion.div>
           )}
           {logSuccess === false && (
@@ -253,7 +255,7 @@ export default function Page() {
               exit="exit"
               className="p-3 bg-red-100 text-red-800 rounded-lg text-center font-semibold"
             >
-              Could not log your practice. Please try again.
+              {t("errorMessage")}
             </motion.div>
           )}
         </AnimatePresence>

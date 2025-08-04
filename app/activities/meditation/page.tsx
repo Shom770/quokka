@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 export const runtime = "edge";
 
@@ -45,6 +46,8 @@ export default function Page() {
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const t = useTranslations("meditation");
 
   const startMeditation = (duration: number) => {
     stopMeditation(false);
@@ -178,24 +181,24 @@ export default function Page() {
       className="flex flex-col items-center text-orange-600 justify-center min-h-screen gap-6 p-6"
     >
       <motion.h1 variants={itemVariants} className="text-4xl font-bold">
-        Mindful Meditation
+        {t("meditationTitle")}
       </motion.h1>
       <motion.p variants={itemVariants} className="font-medium text-lg">
-        Select a duration to begin your session.
+        {t("meditationSubtitle")}
       </motion.p>
 
       <motion.div
         variants={itemVariants}
         className="flex items-center justify-between w-full max-w-xs"
       >
-        <label className="font-semibold">Select Background Sound</label>
+        <label className="font-semibold">{t("selectSoundLabel")}</label>
         <select
           className="border border-orange-300 text-gray-700 rounded px-2 py-1 focus:ring-2 focus:ring-orange-400"
           value={selectedSong || ""}
           onChange={(e) => setSelectedSong(e.target.value || null)}
         >
-          <option value="">No Sound</option>
-          <option value="/sounds/song1.mp3">Gentle Rain</option>
+          <option value="">{t("noSoundOption")}</option>
+          <option value="/sounds/song1.mp3">{t("gentleRainOption")}</option>
         </select>
       </motion.div>
 
@@ -211,7 +214,7 @@ export default function Page() {
             }}
             whileTap={{ scale: 0.95 }}
           >
-            {min} minutes
+            {t("minutes", { count: min })}
           </motion.button>
         ))}
       </motion.div>
@@ -281,7 +284,7 @@ export default function Page() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                {isPaused ? "Resume" : "Pause"}
+                {isPaused ? t("resume") : t("pause")}
               </motion.button>
               <motion.button
                 variants={itemVariants}
@@ -290,7 +293,7 @@ export default function Page() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                {isMuted ? "Unmute" : "Mute"}
+                {isMuted ? t("unmute") : t("mute")}
               </motion.button>
               <motion.button
                 variants={itemVariants}
@@ -299,7 +302,7 @@ export default function Page() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                Stop
+                {t("stop")}
               </motion.button>
             </motion.div>
           )}
@@ -317,7 +320,7 @@ export default function Page() {
               exit="exit"
               className="py-2 px-4 bg-yellow-100 text-yellow-800 rounded-md"
             >
-              Logging your meditation...
+              {t("loggingMessage")}
             </motion.div>
           )}
           {logSuccess === true && (
@@ -329,7 +332,7 @@ export default function Page() {
               exit="exit"
               className="py-2 px-4 bg-green-100 text-green-800 rounded-md"
             >
-              ✓ Meditation logged successfully!
+              {t("logSuccess")}
             </motion.div>
           )}
           {logSuccess === false && (
@@ -341,7 +344,7 @@ export default function Page() {
               exit="exit"
               className="py-2 px-4 bg-red-100 text-red-800 rounded-md"
             >
-              Failed to log meditation.
+              {t("logError")}
             </motion.div>
           )}
         </AnimatePresence>

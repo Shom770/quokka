@@ -10,20 +10,34 @@ export const runtime = "edge";
 const animationVariants = {
   pageContainer: {
     initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+    animate: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: "easeOut" },
+    },
   },
   title: {
     initial: { opacity: 0, y: -30 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.8, delay: 0.2 } }
+    animate: { opacity: 1, y: 0, transition: { duration: 0.8, delay: 0.2 } },
   },
   gridContainer: {
     initial: { opacity: 0, y: 30 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.7, delay: 0.6 } }
+    animate: { opacity: 1, y: 0, transition: { duration: 0.7, delay: 0.6 } },
   },
   resourceCard: {
     initial: { opacity: 0, x: -50, scale: 0.9 },
-    animate: { opacity: 1, x: 0, scale: 1, transition: { duration: 0.6, type: "spring", stiffness: 100, damping: 15 } }
-  }
+    animate: {
+      opacity: 1,
+      x: 0,
+      scale: 1,
+      transition: {
+        duration: 0.6,
+        type: "spring",
+        stiffness: 100,
+        damping: 15,
+      },
+    },
+  },
 };
 
 export default function Page() {
@@ -33,59 +47,67 @@ export default function Page() {
     {
       title: t("sleepTracker"),
       icon: "💤",
-      backgroundColor: "bg-[#F66B6B]/50 hover:bg-[#F66B6B]/40 border-2 border-[#F66B6B]",
+      backgroundColor:
+        "bg-[#F66B6B]/50 hover:bg-[#F66B6B]/40 border-2 border-[#F66B6B]",
       link: "/activities/sleepTracker",
-      description: t("sleepTrackerDesc")
+      description: t("sleepTrackerDesc"),
     },
     {
       title: t("moodJournaling"),
       icon: "📒",
-      backgroundColor: "bg-rose-300/50 hover:bg-rose-300/40 border-2 border-rose-300",
+      backgroundColor:
+        "bg-rose-300/50 hover:bg-rose-300/40 border-2 border-rose-300",
       link: "/activities/moodJournaling",
-      description: t("moodJournalingDesc")
+      description: t("moodJournalingDesc"),
     },
     {
       title: t("gratitudeJournaling"),
       icon: "💖",
-      backgroundColor: "bg-orange-600/30 hover:bg-orange-600/20 border-2 border-orange-600/60",
+      backgroundColor:
+        "bg-orange-600/30 hover:bg-orange-600/20 border-2 border-orange-600/60",
       link: "/activities/gratitudeJournaling",
-      description: t("gratitudeJournalingDesc")
+      description: t("gratitudeJournalingDesc"),
     },
     {
       title: t("meditation"),
       icon: "🙏",
-      backgroundColor: "bg-orange-300/50 hover:bg-orange-300/40 border-2 border-orange-300",
+      backgroundColor:
+        "bg-orange-300/50 hover:bg-orange-300/40 border-2 border-orange-300",
       link: "/activities/meditation",
-      description: t("meditationDesc")
+      description: t("meditationDesc"),
     },
     {
       title: t("yogaVideos"),
       icon: "🧘",
-      backgroundColor: "bg-[#FD906C]/50 hover:bg-[#FD906C]/40 border-2 border-[#FD906C]",
+      backgroundColor:
+        "bg-[#FD906C]/50 hover:bg-[#FD906C]/40 border-2 border-[#FD906C]",
       link: "/activities/yogaVideos",
-      description: t("yogaVideosDesc")
+      description: t("yogaVideosDesc"),
     },
     {
       title: t("bookReading"),
       icon: "📖",
-      backgroundColor: "bg-[#FFB599]/50 hover:bg-[#FFB599]/40 border-2 border-[#FFB599]",
+      backgroundColor:
+        "bg-[#FFB599]/50 hover:bg-[#FFB599]/40 border-2 border-[#FFB599]",
       link: "/activities/bookReading",
-      description: t("bookReadingDesc")
+      description: t("bookReadingDesc"),
     },
     {
       title: t("mindfulnessVideos"),
       icon: "🎥",
-      backgroundColor: "bg-yellow-400/25 hover:bg-yellow-400/15 border-2 border-yellow-400",
+      backgroundColor:
+        "bg-yellow-400/25 hover:bg-yellow-400/15 border-2 border-yellow-400",
       link: "/activities/mindfulnessVideo",
-      description: t("mindfulnessVideosDesc")
+      description: t("mindfulnessVideosDesc"),
     },
     {
       title: t("squareBreathing"),
       icon: "🟦",
-      backgroundColor: "bg-yellow-200/30 hover:bg-yellow-200/20 border-2 border-yellow-400",
+      backgroundColor:
+        "bg-yellow-200/30 hover:bg-yellow-200/20 border-2 border-yellow-400",
       link: "/activities/squareBreathing",
-      description: t("squareBreathingDesc")
-    }
+      description: t("squareBreathingDesc"),
+    },
   ];
 
   return (
@@ -115,7 +137,7 @@ export default function Page() {
               delay: 0.8 + index * 0.1,
               type: "spring",
               stiffness: 100,
-              damping: 15
+              damping: 15,
             }}
           >
             <ActivityCard

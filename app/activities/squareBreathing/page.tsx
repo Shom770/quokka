@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 export const runtime = "edge";
 
@@ -47,6 +48,8 @@ export default function SquareBreathing() {
   const [circleScale, setCircleScale] = useState(1);
   const [isLogging, setIsLogging] = useState(false);
   const [logSuccess, setLogSuccess] = useState<boolean | null>(null);
+
+  const t = useTranslations("squareBreathing");
 
   const startTimeRef = useRef<number | null>(null);
   const phase = phases[phaseIndex];
@@ -138,10 +141,10 @@ export default function SquareBreathing() {
     >
       <div className="text-center w-full max-w-md">
         <motion.h1 variants={itemVariants} className="text-4xl font-bold mb-4">
-          Square Breathing
+          {t("breathingTitle")}
         </motion.h1>
         <motion.p variants={itemVariants} className="text-lg mb-8">
-          Follow the guided breathing exercise to relax and focus your mind.
+          {t("breathingSubtitle")}
         </motion.p>
       </div>
 
@@ -161,7 +164,7 @@ export default function SquareBreathing() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              Begin Exercise
+              {t("beginButton")}
             </motion.button>
             <div className="h-20 mt-4">
               <AnimatePresence>
@@ -174,7 +177,7 @@ export default function SquareBreathing() {
                     exit="exit"
                     className="py-2 px-4 bg-yellow-100 text-yellow-800 rounded-md"
                   >
-                    Logging your session...
+                    {t("loggingMessage")}
                   </motion.div>
                 )}
                 {logSuccess === true && (
@@ -186,7 +189,7 @@ export default function SquareBreathing() {
                     exit="exit"
                     className="py-2 px-4 bg-green-100 text-green-800 rounded-md"
                   >
-                    ✓ Session logged successfully!
+                    {t("logSuccess")}
                   </motion.div>
                 )}
                 {logSuccess === false && (
@@ -198,7 +201,7 @@ export default function SquareBreathing() {
                     exit="exit"
                     className="py-2 px-4 bg-red-100 text-red-800 rounded-md"
                   >
-                    Failed to log your session.
+                    {t("logError")}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -231,10 +234,12 @@ export default function SquareBreathing() {
                       transition={{ duration: 0.5 }}
                       className="text-3xl font-medium"
                     >
-                      {phase.trim()}
+                      {t(phase.trim())}
                     </motion.p>
                   </AnimatePresence>
-                  <p className="text-5xl font-bold">{counter}s</p>
+                  <p className="text-5xl font-bold">
+                    {t("secondsCounter", { count: counter })}
+                  </p>
                 </div>
               </div>
             </div>
@@ -244,7 +249,7 @@ export default function SquareBreathing() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              Finish Exercise
+              {t("finishButton")}
             </motion.button>
           </motion.div>
         )}

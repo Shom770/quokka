@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import type { YTPlayer, YTPlayerEvent } from "@/types/youtube";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 export const runtime = "edge";
 
@@ -36,6 +37,8 @@ export default function MindfulnessVideos() {
   const [isLogging, setIsLogging] = useState(false);
   const [logSuccess, setLogSuccess] = useState<boolean | null>(null);
   const [videoWatched, setVideoWatched] = useState<string | null>(null);
+
+  const t = useTranslations("mindfulness");
 
   const player1Ref = useRef<YTPlayer | null>(null);
   const player2Ref = useRef<YTPlayer | null>(null);
@@ -77,7 +80,7 @@ export default function MindfulnessVideos() {
         logVideoActivity(videoTitle);
       }
     },
-    [logVideoActivity]
+    [logVideoActivity],
   );
 
   const initializePlayers = useCallback(() => {
@@ -121,7 +124,7 @@ export default function MindfulnessVideos() {
     };
     if (
       !document.querySelector(
-        'script[src="https://www.youtube.com/iframe_api"]'
+        'script[src="https://www.youtube.com/iframe_api"]',
       )
     ) {
       const tag = document.createElement("script");
@@ -141,7 +144,7 @@ export default function MindfulnessVideos() {
     (
       isShowing: boolean,
       setter: React.Dispatch<React.SetStateAction<boolean>>,
-      playerRef: React.MutableRefObject<YTPlayer | null>
+      playerRef: React.MutableRefObject<YTPlayer | null>,
     ) =>
     () => {
       if (isShowing && playerRef.current) {
@@ -154,19 +157,19 @@ export default function MindfulnessVideos() {
   const toggleVideo1 = createToggle(
     showMindfulnessVideo1,
     setShowMindfulnessVideo1,
-    player1Ref
+    player1Ref,
   );
   const toggleVideo2 = createToggle(
     showMindfulnessVideo2,
     setShowMindfulnessVideo2,
-    player2Ref
+    player2Ref,
   );
 
   const renderVideoSection = (
     title: string,
     videoId: string,
     isShowing: boolean,
-    toggleFn: () => void
+    toggleFn: () => void,
   ) => (
     <motion.div
       variants={itemVariants}
@@ -180,7 +183,7 @@ export default function MindfulnessVideos() {
           whileHover={{ color: "#c2410c" }}
           whileTap={{ scale: 0.95 }}
         >
-          {isShowing ? "Hide" : "Show"}
+          {isShowing ? t("hide") : t("show")}
         </motion.button>
       </div>
       <AnimatePresence>
@@ -216,20 +219,20 @@ export default function MindfulnessVideos() {
         variants={itemVariants}
         className="text-4xl font-bold text-orange-600"
       >
-        Mindfulness Videos
+        {t("title")}
       </motion.h1>
 
       {renderVideoSection(
-        "Video With Commentary",
+        t("vc"),
         "video1",
         showMindfulnessVideo1,
-        toggleVideo1
+        toggleVideo1,
       )}
       {renderVideoSection(
-        "Video Without Commentary",
+        t("vwc"),
         "video2",
         showMindfulnessVideo2,
-        toggleVideo2
+        toggleVideo2,
       )}
 
       <div className="h-14">
@@ -243,7 +246,7 @@ export default function MindfulnessVideos() {
               exit="exit"
               className="py-2 px-4 bg-yellow-100 text-yellow-800 rounded-md"
             >
-              Logging your activity...
+              {t("logging")}
             </motion.div>
           )}
           {logSuccess === true && videoWatched && (
@@ -255,7 +258,7 @@ export default function MindfulnessVideos() {
               exit="exit"
               className="py-2 px-4 bg-green-100 text-green-800 rounded-md"
             >
-              ✓ “{videoWatched}” logged successfully!
+              {t("watched", { videoWatched })}
             </motion.div>
           )}
           {logSuccess === false && (
@@ -267,7 +270,7 @@ export default function MindfulnessVideos() {
               exit="exit"
               className="py-2 px-4 bg-red-100 text-red-800 rounded-md"
             >
-              Failed to log video completion.
+              {t("failed")}
             </motion.div>
           )}
         </AnimatePresence>

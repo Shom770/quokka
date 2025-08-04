@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import type { YTPlayer, YTPlayerEvent } from "@/types/youtube";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 export const runtime = "edge";
 
@@ -34,6 +35,8 @@ export default function Page() {
   const [showYogaVideo2, setShowYogaVideo2] = useState(false);
   const [showYogaVideo5, setShowYogaVideo5] = useState(false);
   const [showYogaVideo10, setShowYogaVideo10] = useState(false);
+
+  const t = useTranslations("yogaVideos");
 
   const [isLogging, setIsLogging] = useState(false);
   const [logSuccess, setLogSuccess] = useState<boolean | null>(null);
@@ -80,7 +83,7 @@ export default function Page() {
         logYogaActivity(videoTitle);
       }
     },
-    [logYogaActivity]
+    [logYogaActivity],
   );
 
   const initializePlayers = useCallback(() => {
@@ -134,7 +137,7 @@ export default function Page() {
     };
     if (
       !document.querySelector(
-        'script[src="https://www.youtube.com/iframe_api"]'
+        'script[src="https://www.youtube.com/iframe_api"]',
       )
     ) {
       const tag = document.createElement("script");
@@ -155,7 +158,7 @@ export default function Page() {
     (
       isShowing: boolean,
       setter: React.Dispatch<React.SetStateAction<boolean>>,
-      playerRef: React.MutableRefObject<YTPlayer | null>
+      playerRef: React.MutableRefObject<YTPlayer | null>,
     ) =>
     () => {
       if (isShowing && playerRef.current) {
@@ -168,24 +171,24 @@ export default function Page() {
   const toggleVideo2 = createToggle(
     showYogaVideo2,
     setShowYogaVideo2,
-    player2Ref
+    player2Ref,
   );
   const toggleVideo5 = createToggle(
     showYogaVideo5,
     setShowYogaVideo5,
-    player5Ref
+    player5Ref,
   );
   const toggleVideo10 = createToggle(
     showYogaVideo10,
     setShowYogaVideo10,
-    player10Ref
+    player10Ref,
   );
 
   const renderYogaSection = (
     title: string,
     videoId: string,
     isShowing: boolean,
-    toggleFn: () => void
+    toggleFn: () => void,
   ) => (
     <motion.div
       variants={itemVariants}
@@ -199,7 +202,7 @@ export default function Page() {
           whileHover={{ color: "#c2410c" }}
           whileTap={{ scale: 0.95 }}
         >
-          {isShowing ? "Hide" : "Show"}
+          {isShowing ? t("hide") : t("show")}
         </motion.button>
       </div>
       <AnimatePresence>
@@ -235,26 +238,16 @@ export default function Page() {
         variants={itemVariants}
         className="text-4xl font-bold text-orange-600"
       >
-        Yoga Sessions
+        {t("sessions")}
       </motion.h1>
 
+      {renderYogaSection(t("2m"), "yoga-video-2", showYogaVideo2, toggleVideo2)}
+      {renderYogaSection(t("5m"), "yoga-video-5", showYogaVideo5, toggleVideo5)}
       {renderYogaSection(
-        "2-Minute Yoga",
-        "yoga-video-2",
-        showYogaVideo2,
-        toggleVideo2
-      )}
-      {renderYogaSection(
-        "5-Minute Yoga",
-        "yoga-video-5",
-        showYogaVideo5,
-        toggleVideo5
-      )}
-      {renderYogaSection(
-        "10-Minute Yoga",
+        t("10m"),
         "yoga-video-10",
         showYogaVideo10,
-        toggleVideo10
+        toggleVideo10,
       )}
 
       <div className="h-14">
@@ -268,7 +261,7 @@ export default function Page() {
               exit="exit"
               className="py-2 px-4 bg-yellow-100 text-yellow-800 rounded-md"
             >
-              Logging your activity...
+              {t("logging")}
             </motion.div>
           )}
           {logSuccess === true && videoWatched && (
@@ -280,7 +273,7 @@ export default function Page() {
               exit="exit"
               className="py-2 px-4 bg-green-100 text-green-800 rounded-md"
             >
-              ✓ “{videoWatched}” logged successfully!
+              {t("watched", { videoWatched })}
             </motion.div>
           )}
           {logSuccess === false && (
@@ -292,7 +285,7 @@ export default function Page() {
               exit="exit"
               className="py-2 px-4 bg-red-100 text-red-800 rounded-md"
             >
-              Failed to log video completion.
+              {t("failed")}
             </motion.div>
           )}
         </AnimatePresence>
