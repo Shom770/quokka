@@ -7,6 +7,8 @@ import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 
+export const runtime = "edge";
+
 // --- Types ---
 type DailySleepData = {
   sleep_date: string;

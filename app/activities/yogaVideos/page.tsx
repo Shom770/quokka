@@ -5,6 +5,8 @@ import { useSession } from "next-auth/react";
 import type { YTPlayer, YTPlayerEvent } from "@/types/youtube";
 import { motion, AnimatePresence } from "framer-motion";
 
+export const runtime = "edge";
+
 // Animation Variants
 const pageVariants = {
   hidden: { opacity: 0 },

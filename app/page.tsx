@@ -13,6 +13,8 @@ import { useTutorial } from "@/hooks/use-tutorial";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
 
+export const runtime = "edge";
+
 const animationVariants = {
   pageContainer: {
     initial: { opacity: 0 },

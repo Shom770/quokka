@@ -12,7 +12,9 @@ import {
   type AnimationPlaybackControls,
 } from "framer-motion";
 import { rethinkSans } from "@/components/fonts";
-import { useTranslations } from "next-intl"; // Add this import
+import { useTranslations } from "next-intl";
+
+export const runtime = "edge";
 
 function getMonthDays(year: number, month: number) {
   // month is 0-indexed

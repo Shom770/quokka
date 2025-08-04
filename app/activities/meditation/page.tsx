@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 
+export const runtime = "edge";
+
 // Animation Variants
 const containerVariants = {
   hidden: { opacity: 0 },

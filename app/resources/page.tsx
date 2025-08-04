@@ -14,6 +14,8 @@ import { motion } from "framer-motion";
 import { HeartIcon, ShieldCheckIcon, ChatBubbleLeftEllipsisIcon } from "@heroicons/react/24/solid";
 import { useTranslations } from "next-intl";
 
+export const runtime = "edge";
+
 const resources = [
   {
     key: "988",

@@ -5,6 +5,8 @@ import { rethinkSans } from "@/components/fonts";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 
+export const runtime = "edge";
+
 const animationVariants = {
   pageContainer: {
     initial: { opacity: 0, y: 20 },

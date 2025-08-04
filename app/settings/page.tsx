@@ -8,6 +8,8 @@ import { motion } from "framer-motion";
 import { setUserLocale, getUserLocale } from "@/utils/locale";
 import { useTranslations } from "next-intl";
 
+export const runtime = "edge";
+
 // Animation Variants
 const containerVariants = {
   hidden: { opacity: 0 },

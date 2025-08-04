@@ -13,6 +13,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
+export const runtime = "edge";
+
 type Reflection = {
   id: number;
   responses: { question: string; answer: string }[];

@@ -8,6 +8,8 @@ import { motion } from "framer-motion";
 import { libreBodoni } from "@/components/fonts";
 import { useTranslations } from "next-intl";
 
+export const runtime = "edge";
+
 const animationVariants = {
   pageEntry: {
     initial: { opacity: 0, y: 50 },
