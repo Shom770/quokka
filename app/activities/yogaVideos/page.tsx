@@ -31,7 +31,16 @@ const feedbackVariants = {
 };
 
 export default function Page() {
-  useSession({ required: true });
+  useSession();
+  const [isGuest, setIsGuest] = useState(false);
+  useEffect(() => {
+    try {
+      const cookie = typeof document !== "undefined" ? document.cookie : "";
+      setIsGuest(cookie.split("; ").some((c) => c.startsWith("guest=1")));
+    } catch {
+      setIsGuest(false);
+    }
+  }, []);
   const [showYogaVideo2, setShowYogaVideo2] = useState(false);
   const [showYogaVideo5, setShowYogaVideo5] = useState(false);
   const [showYogaVideo10, setShowYogaVideo10] = useState(false);
@@ -50,6 +59,7 @@ export default function Page() {
   const videoHeight = 300;
 
   const logYogaActivity = useCallback(async (videoTitle: string) => {
+    if (isGuest) return;
     setIsLogging(true);
     try {
       const response = await fetch("/api/activities", {
@@ -73,7 +83,7 @@ export default function Page() {
       setLogSuccess(null);
       setVideoWatched(null);
     }, 5000);
-  }, []);
+  }, [isGuest]);
 
   const handleVideoStateChange = useCallback(
     (event: YTPlayerEvent, videoTitle: string) => {

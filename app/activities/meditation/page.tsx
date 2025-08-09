@@ -32,7 +32,16 @@ const feedbackVariants = {
  * Place any MP3 files into your public/ folder or fetch them dynamically.
  */
 export default function Page() {
-  useSession({ required: true });
+  useSession();
+  const [isGuest, setIsGuest] = useState(false);
+  useEffect(() => {
+    try {
+      const cookie = typeof document !== "undefined" ? document.cookie : "";
+      setIsGuest(cookie.split("; ").some((c) => c.startsWith("guest=1")));
+    } catch {
+      setIsGuest(false);
+    }
+  }, []);
   const [timer, setTimer] = useState<number>(0);
   const [isMeditating, setIsMeditating] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -78,6 +87,9 @@ export default function Page() {
   };
 
   const logMeditationActivity = async (duration: number) => {
+    if (isGuest) {
+      return;
+    }
     setIsLogging(true);
     try {
       const minutes = Math.floor(duration / 60);
@@ -267,47 +279,49 @@ export default function Page() {
         </AnimatePresence>
       </motion.div>
 
-      <div className="h-12">
-        <AnimatePresence>
-          {isMeditating && (
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-              className="flex gap-4"
-            >
-              <motion.button
-                variants={itemVariants}
-                onClick={isPaused ? resumeMeditation : pauseMeditation}
-                className="bg-yellow-500/80 text-white px-4 py-2 rounded-lg"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+      {!isGuest && (
+        <div className="h-12">
+          <AnimatePresence>
+            {isMeditating && (
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="hidden"
+                className="flex gap-4"
               >
-                {isPaused ? t("resume") : t("pause")}
-              </motion.button>
-              <motion.button
-                variants={itemVariants}
-                onClick={toggleMute}
-                className="bg-yellow-500/80 text-white px-4 py-2 rounded-lg"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {isMuted ? t("unmute") : t("mute")}
-              </motion.button>
-              <motion.button
-                variants={itemVariants}
-                onClick={() => stopMeditation(false)}
-                className="bg-red-500/80 text-white px-4 py-2 rounded-lg"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {t("stop")}
-              </motion.button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+                <motion.button
+                  variants={itemVariants}
+                  onClick={isPaused ? resumeMeditation : pauseMeditation}
+                  className="bg-yellow-500/80 text-white px-4 py-2 rounded-lg"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {isPaused ? t("resume") : t("pause")}
+                </motion.button>
+                <motion.button
+                  variants={itemVariants}
+                  onClick={toggleMute}
+                  className="bg-yellow-500/80 text-white px-4 py-2 rounded-lg"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {isMuted ? t("unmute") : t("mute")}
+                </motion.button>
+                <motion.button
+                  variants={itemVariants}
+                  onClick={() => stopMeditation(false)}
+                  className="bg-red-500/80 text-white px-4 py-2 rounded-lg"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {t("stop")}
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
 
       <div className="h-12 mt-4">
         <AnimatePresence mode="wait">

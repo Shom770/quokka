@@ -3,8 +3,9 @@
 import { signIn } from "next-auth/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 import { libreBodoni } from "@/components/fonts";
 import { useTranslations } from "next-intl";
 
@@ -44,11 +45,74 @@ const animationVariants = {
   }
 };
 
+function GuestModal({
+  isOpen,
+  onCancel,
+  onConfirm,
+  isLoading,
+}: {
+  isOpen: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+  isLoading: boolean;
+}) {
+  if (typeof window === "undefined") return null;
+
+  return createPortal(
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={onCancel}
+          />
+          <motion.div
+            className="relative z-10 w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl"
+            initial={{ y: 24, opacity: 0, scale: 0.98 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: 20, opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+          >
+            <h2 className="text-2xl font-semibold text-gray-900 mb-3">Use guest mode?</h2>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              We recommend signing in with Google to save and sync your progress across devices. You can continue as a guest, but your data won’t be saved.
+            </p>
+            <div className="flex items-center justify-end gap-3">
+              <button
+                className="px-4 py-2 rounded-md text-gray-700 hover:bg-gray-100"
+                onClick={onCancel}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 rounded-md bg-orange-600 text-white hover:bg-orange-500 disabled:opacity-60"
+                onClick={onConfirm}
+                disabled={isLoading}
+              >
+                {isLoading ? "Continuing..." : "Continue as Guest"}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
+    document.body
+  );
+}
+
 export default function LoginPage() {
   const { status } = useSession();
   const router = useRouter();
 
   const t = useTranslations('login');
+
+  const [isGuestModalOpen, setIsGuestModalOpen] = useState(false);
+  const [isSettingGuest, setIsSettingGuest] = useState(false);
 
   // Redirect to home if already authenticated
   useEffect(() => {
@@ -70,7 +134,7 @@ export default function LoginPage() {
 
   return (
     <motion.div 
-      className="flex flex-col items-center justify-center"
+      className="flex min-h-[90vh] w-full flex-col items-center justify-center"
       {...animationVariants.pageEntry}
     >
       <motion.div 
@@ -136,8 +200,38 @@ export default function LoginPage() {
             </motion.svg>
             {t('google')}
           </motion.button>
+
+          <div className="mt-4">
+            <motion.button
+              onClick={() => setIsGuestModalOpen(true)}
+              className="flex w-full items-center justify-center gap-3 rounded-md bg-orange-50 px-4 py-3 text-orange-700 shadow-sm hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+              {...animationVariants.button}
+              whileHover={{
+                scale: 1.03,
+                transition: { duration: 0.15 }
+              }}
+              whileTap={{ scale: 0.97 }}
+            >
+              Continue as Guest
+            </motion.button>
+          </div>
         </div>
       </motion.div>
+
+      <GuestModal
+        isOpen={isGuestModalOpen}
+        isLoading={isSettingGuest}
+        onCancel={() => setIsGuestModalOpen(false)}
+        onConfirm={() => {
+          setIsSettingGuest(true);
+          try {
+            document.cookie = `guest=1; Path=/; SameSite=Lax; Max-Age=${30 * 24 * 60 * 60}`;
+          } catch {}
+          setIsGuestModalOpen(false);
+          setIsSettingGuest(false);
+          router.push("/");
+        }}
+      />
     </motion.div>
   );
 }

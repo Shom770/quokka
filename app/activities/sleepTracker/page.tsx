@@ -78,7 +78,7 @@ const variants = {
   },
 };
 
-const SleepHistory = () => {
+const SleepHistory = ({ isGuest }: { isGuest: boolean }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<SleepStats | null>(null);
@@ -94,6 +94,46 @@ const SleepHistory = () => {
     setLoading(true);
     setError(null);
     try {
+      if (isGuest) {
+        // Guest: build stats from localStorage entries
+        const raw = localStorage.getItem("guest_sleep_entries") || "[]";
+        const entries = JSON.parse(raw) as Array<{
+          date: string;
+          hours: number;
+          quality: number;
+        }>;
+        const withinRange = entries.filter(
+          (e) => e.date >= dateRange.startDate && e.date <= dateRange.endDate,
+        );
+        const totalRecords = withinRange.length;
+        const avgHours =
+          totalRecords > 0
+            ? withinRange.reduce((s, e) => s + e.hours, 0) / totalRecords
+            : null;
+        const avgQuality =
+          totalRecords > 0
+            ? withinRange.reduce((s, e) => s + e.quality, 0) / totalRecords
+            : null;
+        const maxHours =
+          totalRecords > 0 ? Math.max(...withinRange.map((e) => e.hours)) : null;
+        const minHours =
+          totalRecords > 0 ? Math.min(...withinRange.map((e) => e.hours)) : null;
+        const daily_data = withinRange.map((e) => ({
+          sleep_date: e.date,
+          hours: e.hours,
+          quality: e.quality,
+        }));
+        const guestStats: SleepStats = {
+          total_records: totalRecords,
+          average_hours: avgHours,
+          average_quality: avgQuality,
+          max_hours: maxHours,
+          min_hours: minHours,
+          daily_data,
+        };
+        setStats(guestStats);
+        return;
+      }
       const url = new URL("/api/sleep/stats", window.location.origin);
       url.searchParams.append("start_date", dateRange.startDate);
       url.searchParams.append("end_date", dateRange.endDate);
@@ -106,7 +146,7 @@ const SleepHistory = () => {
     } finally {
       setLoading(false);
     }
-  }, [dateRange]);
+  }, [dateRange, isGuest]);
 
   useEffect(() => {
     fetchSleepStats();
@@ -324,8 +364,16 @@ const SleepHistory = () => {
 };
 
 export default function Page() {
-  useSession({ required: true });
+  useSession();
   const t = useTranslations("sleepTracker");
+  const [isGuest] = useState<boolean>(() => {
+    if (typeof document === "undefined") return false;
+    try {
+      return document.cookie.split("; ").some((c) => c.startsWith("guest=1"));
+    } catch {
+      return false;
+    }
+  });
 
   const [additionalSleepHours, setAdditionalSleepHours] = useState("");
   const [sleepQuality, setSleepQuality] = useState<number | null>(null);
@@ -342,6 +390,28 @@ export default function Page() {
   const logSleepData = async (hours: number) => {
     setIsLogging(true);
     try {
+      if (isGuest) {
+        // Save entry locally for guests
+        const raw = localStorage.getItem("guest_sleep_entries") || "[]";
+        const list = JSON.parse(raw) as Array<{
+          date: string;
+          hours: number;
+          quality: number;
+          notes?: string | null;
+        }>;
+        const existingIdx = list.findIndex((e) => e.date === selectedDate);
+        const entry = {
+          date: selectedDate,
+          hours,
+          quality: sleepQuality ?? 0,
+          notes: sleepNotes || undefined,
+        };
+        if (existingIdx >= 0) list[existingIdx] = entry;
+        else list.push(entry);
+        localStorage.setItem("guest_sleep_entries", JSON.stringify(list));
+        setLogSuccess(true);
+        return;
+      }
       const res = await fetch("/api/sleep", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -495,7 +565,7 @@ export default function Page() {
         )}
       </motion.div>
 
-      <SleepHistory />
+      <SleepHistory isGuest={isGuest} />
     </motion.div>
   );
 }

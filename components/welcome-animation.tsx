@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { rethinkSans } from "@/components/fonts";
-import { useTranslations } from "next-intl"; // Add this import
+import { useTranslations } from "next-intl";
 
 interface WelcomeAnimationProps {
   onComplete: () => void;
@@ -15,7 +15,7 @@ export default function WelcomeAnimation({ onComplete }: WelcomeAnimationProps) 
     return () => clearTimeout(timer);
   }, [onComplete]);
 
-  const t = useTranslations("navbar"); // Use navbar namespace
+  const t = useTranslations("navbar");
 
   return (
     <motion.div

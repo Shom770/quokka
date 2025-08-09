@@ -4,7 +4,6 @@ import Cards from "@/components/landing/cards";
 import { motion } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
 import ChallengeBox from "@/components/challenges/challenge-box";
-import { useSession } from "next-auth/react";
 import { rethinkSans } from "@/components/fonts";
 import { SparklesIcon, TrophyIcon } from "@heroicons/react/24/solid";
 import TutorialOverlay from "@/components/tutorial-overlay";
@@ -85,9 +84,9 @@ type Challenge = {
 };
 
 export default function Page() {
-  useSession({ required: true });
   const { showTutorial, completeTutorial, skipTutorial } = useTutorial();
   const [showWelcome, setShowWelcome] = useState(true);
+  const [isGuest, setIsGuest] = useState<boolean>(false);
 
   // Add translations
   const t = useTranslations("home");
@@ -114,6 +113,16 @@ export default function Page() {
     setShowWelcome(false);
   };
 
+  // Detect guest mode from cookie
+  useEffect(() => {
+    try {
+      const cookie = typeof document !== "undefined" ? document.cookie : "";
+      setIsGuest(cookie.split("; ").some((c) => c.startsWith("guest=1")));
+    } catch {
+      setIsGuest(false);
+    }
+  }, []);
+
   // Fetch all daily challenges
   useEffect(() => {
     const fetchChallenges = async () => {
@@ -137,10 +146,10 @@ export default function Page() {
     fetchChallenges();
   }, [locale]);
 
-  // Check completion for all challenges
+  // Check completion for all challenges (skip for guest)
   useEffect(() => {
     const checkCompleted = async () => {
-      if (!challenges.length || checkedCompletion) return;
+      if (isGuest || !challenges.length || checkedCompletion) return;
       try {
         const res = await fetch(`/api/challenges/completed`, {
           credentials: "include",
@@ -163,7 +172,7 @@ export default function Page() {
       }
     };
     checkCompleted();
-  }, [challenges, checkedCompletion]);
+  }, [challenges, checkedCompletion, isGuest]);
 
   // Handle marking a challenge as complete
   const handleToggle = async (challengeId: number) => {
@@ -171,6 +180,11 @@ export default function Page() {
     setPosting((prev) => ({ ...prev, [challengeId]: true }));
     setPostError((prev) => ({ ...prev, [challengeId]: "" }));
     try {
+      // Guest mode: do not call internal APIs; mark local completion only
+      if (isGuest) {
+        setCompleted((prev) => ({ ...prev, [challengeId]: true }));
+        return;
+      }
       const res = await fetch("/api/challenges", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

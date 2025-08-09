@@ -31,7 +31,16 @@ const feedbackVariants = {
 };
 
 export default function MindfulnessVideos() {
-  useSession({ required: true });
+  useSession();
+  const [isGuest, setIsGuest] = useState(false);
+  useEffect(() => {
+    try {
+      const cookie = typeof document !== "undefined" ? document.cookie : "";
+      setIsGuest(cookie.split("; ").some((c) => c.startsWith("guest=1")));
+    } catch {
+      setIsGuest(false);
+    }
+  }, []);
   const [showMindfulnessVideo1, setShowMindfulnessVideo1] = useState(false);
   const [showMindfulnessVideo2, setShowMindfulnessVideo2] = useState(false);
   const [isLogging, setIsLogging] = useState(false);
@@ -47,6 +56,7 @@ export default function MindfulnessVideos() {
   const videoHeight = 300;
 
   const logVideoActivity = useCallback(async (videoTitle: string) => {
+    if (isGuest) return;
     setIsLogging(true);
     try {
       const response = await fetch("/api/activities", {
@@ -70,7 +80,7 @@ export default function MindfulnessVideos() {
       setLogSuccess(null);
       setVideoWatched(null);
     }, 5000);
-  }, []);
+  }, [isGuest]);
 
   const handleVideoStateChange = useCallback(
     (event: YTPlayerEvent, videoTitle: string) => {

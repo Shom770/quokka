@@ -35,7 +35,16 @@ const viewVariants = {
 };
 
 export default function BookReadingActivity() {
-  useSession({ required: true });
+  useSession();
+  const [isGuest, setIsGuest] = useState(false);
+  useEffect(() => {
+    try {
+      const cookie = typeof document !== "undefined" ? document.cookie : "";
+      setIsGuest(cookie.split("; ").some((c) => c.startsWith("guest=1")));
+    } catch {
+      setIsGuest(false);
+    }
+  }, []);
   const t = useTranslations("book-reading");
   const [selectedTime, setSelectedTime] = useState<number | null>(null);
   const [timer, setTimer] = useState<number>(0);
@@ -81,6 +90,11 @@ export default function BookReadingActivity() {
 
   const handleCompletion = async () => {
     if (!selectedTime) return;
+    if (isGuest) {
+      setIsSessionComplete(false);
+      setSelectedTime(null);
+      return;
+    }
     setIsLogging(true);
     try {
       const response = await fetch("/api/activities", {

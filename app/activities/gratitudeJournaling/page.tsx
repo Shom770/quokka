@@ -116,7 +116,16 @@ const GratitudeItem = ({
 };
 
 export default function Page() {
-  const { data: session } = useSession({ required: true });
+  useSession();
+  const [isGuest, setIsGuest] = useState(false);
+  useEffect(() => {
+    try {
+      const cookie = typeof document !== "undefined" ? document.cookie : "";
+      setIsGuest(cookie.split("; ").some((c) => c.startsWith("guest=1")));
+    } catch {
+      setIsGuest(false);
+    }
+  }, []);
   const [gratitudes, setGratitudes] = useState({
     gratitude1: false,
     gratitude2: false,
@@ -142,6 +151,7 @@ export default function Page() {
       if (allCompleted && !isLogging && logSuccess === null) {
         setIsLogging(true);
         try {
+          if (isGuest) return;
           const response = await fetch("/api/activities", {
             method: "POST",
             headers: {
@@ -164,7 +174,7 @@ export default function Page() {
       }
     };
     logActivity();
-  }, [allCompleted, isLogging, logSuccess, session]);
+  }, [allCompleted, isLogging, logSuccess, isGuest]);
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;

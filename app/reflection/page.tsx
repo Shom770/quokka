@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import { questions } from "./questions";
 import { rethinkSans } from "@/components/fonts";
 import { motion, AnimatePresence } from "framer-motion";
@@ -59,22 +59,37 @@ const animationVariants = {
 export default function Page() {
   const t = useTranslations("reflection");
 
-  const [stage, setStage] = React.useState<"intro" | "quiz" | "result" | "save">(
+  const [stage, setStage] = useState<"intro" | "quiz" | "result" | "save">(
     "intro"
   );
-  const [current, setCurrent] = React.useState<number>(0);
-  const [selected, setSelected] = React.useState<string[]>(() =>
+  const [current, setCurrent] = useState<number>(0);
+  const [selected, setSelected] = useState<string[]>(() =>
     questions.map(() => "")
   );
-  const [goal, setGoal] = React.useState<string | null>(null);
-  const [isSaving, setIsSaving] = React.useState(false);
-  const [saveSuccess, setSaveSuccess] = React.useState<boolean | null>(null);
-  const [showPast, setShowPast] = React.useState(false);
-  const [pastReflections, setPastReflections] = React.useState<
-    { id: number; responses: { question: string; answer: string }[]; created_at: string }[]
+  const [goal, setGoal] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState<boolean | null>(null);
+  const [showPast, setShowPast] = useState(false);
+  const [pastReflections, setPastReflections] = useState<
+    {
+      id: number;
+      responses: { question: string; answer: string }[];
+      created_at: string;
+    }[]
   >([]);
-  const [loadingPast, setLoadingPast] = React.useState(false);
+  const [loadingPast, setLoadingPast] = useState(false);
   const router = useRouter();
+  const [isGuest, setIsGuest] = useState(false);
+
+  // Detect guest mode via cookie
+  useEffect(() => {
+    try {
+      const cookie = typeof document !== "undefined" ? document.cookie : "";
+      setIsGuest(cookie.split("; ").some((c) => c.startsWith("guest=1")));
+    } catch {
+      setIsGuest(false);
+    }
+  }, []);
 
   const handleOptionChange = (option: string) => {
     const copy = [...selected];
@@ -150,14 +165,14 @@ export default function Page() {
   }, [selected]);
 
   useEffect(() => {
-    if (stage === "save") {
+    if (stage === "save" && !isGuest) {
       handleSaveReflection();
     }
-  }, [stage, handleSaveReflection]);
+  }, [stage, handleSaveReflection, isGuest]);
 
   // Fetch past reflections when showPast is true
   useEffect(() => {
-    if (showPast) {
+    if (showPast && !isGuest) {
       setLoadingPast(true);
       fetch("/api/reflection")
         .then((res) => res.json())
@@ -167,7 +182,7 @@ export default function Page() {
         })
         .finally(() => setLoadingPast(false));
     }
-  }, [showPast]);
+  }, [showPast, isGuest]);
 
   return (
     <motion.div
@@ -214,21 +229,23 @@ export default function Page() {
                 {t("start")}
                 <ArrowRightIcon className="w-5 h-5 ml-2" />
               </motion.button>
-              <motion.button
-                className="px-4 py-2 bg-white border border-orange-400 text-orange-600 rounded-lg flex items-center mx-auto hover:bg-orange-50 transition"
-                onClick={() => setShowPast(true)}
-                initial="initial"
-                animate="animate"
-                variants={animationVariants.navButton}
-                whileHover="hover"
-              >
-                {t("viewPast")}
-              </motion.button>
+              {!isGuest && (
+                <motion.button
+                  className="px-4 py-2 bg-white border border-orange-400 text-orange-600 rounded-lg flex items-center mx-auto hover:bg-orange-50 transition"
+                  onClick={() => setShowPast(true)}
+                  initial="initial"
+                  animate="animate"
+                  variants={animationVariants.navButton}
+                  whileHover="hover"
+                >
+                  {t("viewPast")}
+                </motion.button>
+              )}
             </div>
           </motion.div>
         )}
 
-        {stage === "intro" && showPast && (
+        {stage === "intro" && showPast && !isGuest && (
           <motion.div
             key="past"
             className="p-6 bg-orange-50 rounded-xl shadow"
@@ -264,9 +281,16 @@ export default function Page() {
                     </div>
                     <ul className="list-none pl-0 flex flex-col gap-2">
                       {reflection.responses.map((r, idx) => (
-                        <li key={idx} className="flex flex-col bg-orange-50/80 rounded-lg px-3 py-2 border border-orange-100 group-hover:border-orange-300 transition">
-                          <span className="font-semibold text-gray-700 text-sm">{r.question}</span>
-                          <span className="text-orange-700 font-medium text-base mt-1">{r.answer}</span>
+                        <li
+                          key={idx}
+                          className="flex flex-col bg-orange-50/80 rounded-lg px-3 py-2 border border-orange-100 group-hover:border-orange-300 transition"
+                        >
+                          <span className="font-semibold text-gray-700 text-sm">
+                            {r.question}
+                          </span>
+                          <span className="text-orange-700 font-medium text-base mt-1">
+                            {r.answer}
+                          </span>
                         </li>
                       ))}
                     </ul>
@@ -392,13 +416,17 @@ export default function Page() {
                 {t("savePrompt")}
               </p>
               <div className="flex justify-center gap-4">
+                {!isGuest && (
                 <button
                   className="px-4 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition"
-                  onClick={() => setStage("save")}
+                  onClick={() => {
+                    if (!isGuest) setStage("save");
+                  }}
                   disabled={isSaving}
-                >
-                  {t("saveYes")}
-                </button>
+                  >
+                    {t("saveYes")}
+                  </button>
+                )}
                 <button
                   className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition"
                   onClick={() => router.push("/")}

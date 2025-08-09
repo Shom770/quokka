@@ -40,7 +40,16 @@ const phases = ["Breathe In", "Hold", "Breathe Out", "Hold "]; // Space on 2nd h
 const phaseDuration = 4;
 
 export default function SquareBreathing() {
-  useSession({ required: true });
+  useSession();
+  const [isGuest, setIsGuest] = useState(false);
+  useEffect(() => {
+    try {
+      const cookie = typeof document !== "undefined" ? document.cookie : "";
+      setIsGuest(cookie.split("; ").some((c) => c.startsWith("guest=1")));
+    } catch {
+      setIsGuest(false);
+    }
+  }, []);
 
   const [started, setStarted] = useState(false);
   const [phaseIndex, setPhaseIndex] = useState(0);
@@ -90,6 +99,7 @@ export default function SquareBreathing() {
   };
 
   const logBreathingActivity = async (durationSeconds: number) => {
+    if (isGuest) return;
     setIsLogging(true);
     try {
       const minutes = Math.round(durationSeconds / 60);

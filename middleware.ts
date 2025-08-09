@@ -9,11 +9,13 @@ export default auth((req) => {
   const publicPaths = ["/login", "/api"];
 
   const isAuthenticated = !!userAuth?.user;
+  const isGuest = req.cookies.get("guest")?.value === "1";
   const isPublicPath = publicPaths.some(
     (pp) => path === pp || path.startsWith(`${pp}/`)
   );
 
-  if (!isAuthenticated && !isPublicPath) {
+  // If not authenticated and not a guest and not a public path, redirect to login
+  if (!isAuthenticated && !isGuest && !isPublicPath) {
     return NextResponse.redirect(new URL("/login", nextUrl));
   }
   if (isAuthenticated && path === "/login") {

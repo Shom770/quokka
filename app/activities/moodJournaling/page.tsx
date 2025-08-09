@@ -41,7 +41,16 @@ const viewVariants = {
 };
 
 export default function Page() {
-  useSession({ required: true });
+  useSession();
+  const [isGuest, setIsGuest] = useState(false);
+  useEffect(() => {
+    try {
+      const cookie = typeof document !== "undefined" ? document.cookie : "";
+      setIsGuest(cookie.split("; ").some((c) => c.startsWith("guest=1")));
+    } catch {
+      setIsGuest(false);
+    }
+  }, []);
   const [time, setTime] = useState<number | null>(null);
   const [originalDuration, setOriginalDuration] = useState<number | null>(null);
   const [isLogging, setIsLogging] = useState(false);
@@ -52,6 +61,7 @@ export default function Page() {
 
   const logJournalingActivity = useCallback(async () => {
     if (!originalDuration) return;
+    if (isGuest) return;
     setIsLogging(true);
     try {
       const minutes = Math.floor(originalDuration / 60);
@@ -72,7 +82,7 @@ export default function Page() {
       setLogSuccess(false);
     }
     setIsLogging(false);
-  }, [originalDuration]);
+  }, [originalDuration, isGuest]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
