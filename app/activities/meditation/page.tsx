@@ -198,7 +198,7 @@ export default function Page() {
           onChange={(e) => setSelectedSong(e.target.value || null)}
         >
           <option value="">{t("noSoundOption")}</option>
-          <option value="/sounds/song1.mp3">{t("gentleRainOption")}</option>
+          <option value="/songs/song1.mp3">{t("gentleRainOption")}</option>
         </select>
       </motion.div>
 
