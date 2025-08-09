@@ -58,15 +58,16 @@ export async function GET(request: Request) {
 
   const { env } = await getRequestContext()
 
-  // 1️⃣ Compute current consecutive-day streak
+  // 1️⃣ Compute current consecutive-day streak (EST: UTC-5)
+  // If no activity today (EST), fall back to yesterday's (EST) streak group
   const streakSql = `
     WITH dated_activities AS (
       SELECT
-        date(completed_at) AS activity_date,
-        ROW_NUMBER() OVER (ORDER BY date(completed_at)) AS row_num
+        date(datetime(completed_at, '-5 hours')) AS activity_date,
+        ROW_NUMBER() OVER (ORDER BY date(datetime(completed_at, '-5 hours'))) AS row_num
       FROM activities
       WHERE user_id = ?1
-      GROUP BY date(completed_at)
+      GROUP BY date(datetime(completed_at, '-5 hours'))
       ORDER BY activity_date DESC
     ),
     streak_groups AS (
@@ -82,7 +83,11 @@ export async function GET(request: Request) {
       WHERE streak_group = (
         SELECT streak_group
         FROM streak_groups
-        WHERE activity_date = date('now')
+        WHERE activity_date IN (
+          date('now', '-5 hours'),
+          date('now', '-5 hours', '-1 day')
+        )
+        ORDER BY activity_date DESC
         LIMIT 1
       )
     )
@@ -94,18 +99,21 @@ export async function GET(request: Request) {
   const streakCount = streakResult?.streak_count ?? 0
 
   // 2️⃣ Get all activity dates for the current month
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const firstDay = `${year}-${month}-01`
-  const lastDayNum = new Date(year, now.getMonth() + 1, 0).getDate()
-  const lastDay = `${year}-${month}-${String(lastDayNum).padStart(2, '0')}`
+  // Compute current month in EST (UTC-5)
+  const nowUtcMs = Date.now()
+  const estNow = new Date(nowUtcMs - 5 * 60 * 60 * 1000)
+  const estYear = estNow.getUTCFullYear()
+  const estMonthIndex = estNow.getUTCMonth() // 0-based
+  const estMonth = String(estMonthIndex + 1).padStart(2, '0')
+  const firstDay = `${estYear}-${estMonth}-01`
+  const lastDayNum = new Date(Date.UTC(estYear, estMonthIndex + 1, 0)).getUTCDate()
+  const lastDay = `${estYear}-${estMonth}-${String(lastDayNum).padStart(2, '0')}`
 
   const monthSql = `
-    SELECT DISTINCT date(completed_at) AS activity_date
+    SELECT DISTINCT date(datetime(completed_at, '-5 hours')) AS activity_date
     FROM activities
     WHERE user_id = ?1
-      AND date(completed_at) BETWEEN ?2 AND ?3
+      AND date(datetime(completed_at, '-5 hours')) BETWEEN ?2 AND ?3
     ORDER BY activity_date ASC
   `
   const monthRes = await env.users
