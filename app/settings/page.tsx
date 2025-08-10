@@ -1,6 +1,7 @@
 "use client";
 
 import { useContext, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { rethinkSans } from "@/components/fonts";
 import Switch from "@/components/settings/switch";
 import { Context } from "@/app/layout-client";
@@ -30,6 +31,8 @@ export default function Page() {
   const { canShow, setCanShow } = useContext(Context);
   const [locale, setLocale] = useState<"en" | "es">("en");
   const t = useTranslations("settings");
+  const router = useRouter();
+  const [isGuest, setIsGuest] = useState(false);
 
   // Load the user's locale on mount
   useEffect(() => {
@@ -40,6 +43,15 @@ export default function Page() {
       }
     }
     fetchLocale();
+  }, []);
+
+  useEffect(() => {
+    try {
+      const cookie = typeof document !== "undefined" ? document.cookie : "";
+      setIsGuest(cookie.split("; ").some((c) => c.startsWith("guest=1")));
+    } catch {
+      setIsGuest(false);
+    }
   }, []);
 
   const handleLocaleChange = async (newLocale: "en" | "es") => {
@@ -98,6 +110,27 @@ export default function Page() {
         </div>
         <div className="h-px w-full bg-orange-400/50" />
       </motion.div>
+
+      {isGuest && (
+        <motion.div variants={itemVariants} className="w-full">
+          <div className="flex justify-between items-center mb-3 px-4">
+            <div className="text-xl w-full text-orange-500">Guest mode</div>
+            <button
+              className="text-md px-2 py-1 rounded bg-orange-500 text-white hover:bg-orange-600 self-start whitespace-nowrap"
+              onClick={() => {
+                try {
+                  // Expire the guest cookie
+                  document.cookie = "guest=; Path=/; Max-Age=0; SameSite=Lax";
+                } catch {}
+                router.push("/login");
+              }}
+            >
+              Exit guest mode
+            </button>
+          </div>
+          <div className="h-px w-full bg-orange-400/50" />
+        </motion.div>
+      )}
     </motion.div>
   );
 }
