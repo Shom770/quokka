@@ -225,11 +225,16 @@ export default function LoginPage() {
         onConfirm={() => {
           setIsSettingGuest(true);
           try {
-            document.cookie = `guest=1; Path=/; SameSite=Lax; Max-Age=${30 * 24 * 60 * 60}`;
+            const secure = typeof window !== "undefined" && window.location.protocol === "https:" ? "; Secure" : "";
+            document.cookie = `guest=1; Path=/; SameSite=Lax; Max-Age=${30 * 24 * 60 * 60}${secure}`;
           } catch {}
           setIsGuestModalOpen(false);
-          setIsSettingGuest(false);
-          router.push("/");
+          // Hard navigation to ensure middleware sees the new cookie in prod
+          if (typeof window !== "undefined") {
+            window.location.assign("/");
+          } else {
+            router.replace("/");
+          }
         }}
       />
     </motion.div>
