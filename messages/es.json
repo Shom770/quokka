@@ -262,6 +262,8 @@
     "selectSoundLabel": "Seleccionar Sonido de Fondo",
     "noSoundOption": "Sin Sonido",
     "gentleRainOption": "Lluvia Suave",
+    "playPreview": "Reproducir vista previa",
+    "pausePreview": "Pausar vista previa",
     "minutes": "{count} minutos",
     "resume": "Reanudar",
     "pause": "Pausa",

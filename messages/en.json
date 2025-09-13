@@ -262,6 +262,8 @@
     "selectSoundLabel": "Select Background Sound",
     "noSoundOption": "No Sound",
     "gentleRainOption": "Gentle Rain",
+    "playPreview": "Play preview",
+    "pausePreview": "Pause preview",
     "minutes": "{count} minutes",
     "resume": "Resume",
     "pause": "Pause",

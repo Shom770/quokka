@@ -52,6 +52,7 @@ export default function Page() {
 
   const [selectedSong, setSelectedSong] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(false);
+  const [isPreviewing, setIsPreviewing] = useState(false);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -76,15 +77,74 @@ export default function Page() {
       });
     }, 1000);
 
-    if (selectedSong) {
-      audioRef.current = new Audio(selectedSong);
-      if (!isMuted) {
-        audioRef.current
-          .play()
-          .catch((err) => console.error("Audio play error:", err));
+  if (selectedSong) {
+      // Reuse existing audioRef if it's the same song, otherwise create new
+      if (audioRef.current && (audioRef.current as HTMLAudioElement).src?.includes(selectedSong)) {
+        // ensure it's unpaused and plays from current time
+        if (!isMuted) {
+          audioRef.current.play().catch((err) => console.error("Audio play error:", err));
+        }
+      } else {
+        // Clean up any existing audio before creating new one
+        if (audioRef.current) {
+          try {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+          } catch {}
+          audioRef.current = null;
+        }
+        const a = new Audio(selectedSong);
+        a.loop = true;
+        a.muted = isMuted;
+        audioRef.current = a;
+        if (!isMuted) {
+          audioRef.current.play().catch((err) => console.error("Audio play error:", err));
+        }
+        // reflect that audio is playing for the UI toggle
+        setIsPreviewing(true);
       }
     }
   };
+
+  // Audio preview controls (play/pause/stop outside of meditation session)
+  const playAudioPreview = () => {
+    if (!selectedSong) return;
+    if (!audioRef.current) {
+      const a = new Audio(selectedSong);
+      a.loop = true;
+      a.muted = isMuted;
+      audioRef.current = a;
+    }
+    audioRef.current
+      .play()
+      .catch((err) => console.error("Audio preview play error:", err));
+    setIsMuted(false);
+    setIsPreviewing(true);
+  };
+
+  const pauseAudioPreview = () => {
+    if (!audioRef.current) return;
+    try {
+      audioRef.current.pause();
+      setIsPreviewing(false);
+    } catch (e) {
+      console.error("Audio preview pause error:", e);
+    }
+  };
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (audioRef.current) {
+        try {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        } catch {}
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   const logMeditationActivity = async (duration: number) => {
     if (isGuest) {
@@ -121,6 +181,8 @@ export default function Page() {
       audioRef.current.currentTime = 0;
       audioRef.current = null;
     }
+    // stop preview state so UI reflects stopped audio
+    setIsPreviewing(false);
     if (finished) {
       playAlarm();
       logMeditationActivity(sessionDuration);
@@ -136,6 +198,7 @@ export default function Page() {
     setIsPaused(true);
     if (intervalRef.current) clearInterval(intervalRef.current);
     audioRef.current?.pause();
+    setIsPreviewing(false);
   };
 
   const resumeMeditation = () => {
@@ -153,12 +216,19 @@ export default function Page() {
       audioRef.current
         ?.play()
         .catch((err) => console.error("Resume error:", err));
+    setIsPreviewing(true);
   };
 
   const toggleMute = () => {
-    setIsMuted(!isMuted);
+    const newMuted = !isMuted;
+    setIsMuted(newMuted);
     if (!audioRef.current) return;
-    audioRef.current.muted = !isMuted;
+    try {
+      audioRef.current.muted = newMuted;
+      if (!newMuted) audioRef.current.play().catch(() => {});
+    } catch (e) {
+      console.error("Toggle mute error:", e);
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -201,17 +271,29 @@ export default function Page() {
 
       <motion.div
         variants={itemVariants}
-        className="flex items-center justify-between w-full max-w-xs"
+        className="w-full max-w-md"
       >
-        <label className="font-semibold">{t("selectSoundLabel")}</label>
-        <select
-          className="border border-orange-300 text-gray-700 rounded px-2 py-1 focus:ring-2 focus:ring-orange-400"
-          value={selectedSong || ""}
-          onChange={(e) => setSelectedSong(e.target.value || null)}
-        >
-          <option value="">{t("noSoundOption")}</option>
-          <option value="/songs/song1.mp3">{t("gentleRainOption")}</option>
-        </select>
+        <label className="font-semibold mb-2 block">{t("selectSoundLabel")}</label>
+        <div className="flex items-center gap-3 w-full">
+          <select
+            className="flex-1 border border-orange-300 text-gray-700 rounded px-3 py-2 focus:ring-2 focus:ring-orange-400"
+            value={selectedSong || ""}
+            onChange={(e) => setSelectedSong(e.target.value || null)}
+          >
+            <option value="">{t("noSoundOption")}</option>
+            <option value="/songs/song1.mp3">{t("gentleRainOption")}</option>
+          </select>
+
+          <button
+            onClick={() => (isPreviewing ? pauseAudioPreview() : playAudioPreview())}
+            disabled={!selectedSong}
+            aria-label={isPreviewing ? t("pausePreview") : t("playPreview")}
+            title={isPreviewing ? t("pausePreview") : t("playPreview")}
+            className={`w-10 h-10 flex items-center justify-center rounded-md bg-orange-100 text-orange-700 hover:bg-orange-200 disabled:opacity-40 disabled:cursor-not-allowed`}
+          >
+            <span className="text-sm">{isPreviewing ? "⏸" : "▶"}</span>
+          </button>
+        </div>
       </motion.div>
 
       <motion.div variants={itemVariants} className="flex gap-4">
