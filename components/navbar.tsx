@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
+import NavbarLevel from "@/components/navbar-level";
 
 export default function Navbar() {
   const t = useTranslations("navbar");
@@ -163,6 +164,9 @@ export default function Navbar() {
                 </span>
               </motion.div>
             </Link>
+
+            {/* Level Component */}
+            <NavbarLevel totalPoints={pointsCount} />
 
             {/* Streak Badge */}
             <Link href="/stats" aria-label="View your streak">

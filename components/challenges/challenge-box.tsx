@@ -79,7 +79,7 @@ export default function ChallengeBox({
   description: string;
   isCompleted: boolean;
   allChallengesAccomplished: boolean;
-  onToggle: () => void;
+  onToggle: (event?: React.MouseEvent) => void;
   loading?: boolean;
   points?: number;
 }) {
@@ -98,7 +98,7 @@ export default function ChallengeBox({
           ? "bg-white/50 border-2 border-orange-200 text-gray-700 shadow-lg hover:shadow-xl"
           : "bg-gradient-to-br from-orange-500 to-yellow-500 text-white shadow-xl hover:shadow-2xl"
       }`}
-      onClick={onToggle}
+      onClick={(event) => onToggle(event)}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       transition={{ type: "spring", stiffness: 300, damping: 25 }}

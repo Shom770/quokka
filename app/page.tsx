@@ -8,6 +8,7 @@ import { rethinkSans } from "@/components/fonts";
 import { SparklesIcon, TrophyIcon } from "@heroicons/react/24/solid";
 import TutorialOverlay from "@/components/tutorial-overlay";
 import WelcomeAnimation from "@/components/welcome-animation";
+import Confetti from "@/components/confetti";
 import { useTutorial } from "@/hooks/use-tutorial";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
@@ -109,6 +110,11 @@ export default function Page() {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const locale = useLocale();
 
+  // Confetti state
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [confettiPosition, setConfettiPosition] = useState<{ x: number; y: number } | undefined>(undefined);
+
+
   const handleWelcomeComplete = () => {
     setShowWelcome(false);
   };
@@ -175,14 +181,26 @@ export default function Page() {
   }, [challenges, checkedCompletion, isGuest]);
 
   // Handle marking a challenge as complete
-  const handleToggle = async (challengeId: number) => {
+  const handleToggle = async (challengeId: number, event?: React.MouseEvent) => {
     if (completed[challengeId] || posting[challengeId]) return;
+    
+    // Get the position of the clicked challenge box for confetti
+    if (event) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      setConfettiPosition({
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2
+      });
+    }
+    
     setPosting((prev) => ({ ...prev, [challengeId]: true }));
     setPostError((prev) => ({ ...prev, [challengeId]: "" }));
     try {
       // Guest mode: do not call internal APIs; mark local completion only
       if (isGuest) {
         setCompleted((prev) => ({ ...prev, [challengeId]: true }));
+        // Trigger confetti animation for guest mode too
+        setShowConfetti(true);
         return;
       }
       const res = await fetch("/api/challenges", {
@@ -198,6 +216,10 @@ export default function Page() {
         );
       }
       setCompleted((prev) => ({ ...prev, [challengeId]: true }));
+      
+      // Trigger confetti animation
+      setShowConfetti(true);
+      
       // Wait for state update to finish, then update stats
       setTimeout(() => {
         window.dispatchEvent(new Event("statsUpdate"));
@@ -218,10 +240,18 @@ export default function Page() {
   const allCompleted =
     challenges.length > 0 && challenges.every((c) => completed[c.id]);
 
+  const handleConfettiComplete = () => {
+    setShowConfetti(false);
+    setConfettiPosition(undefined);
+  };
+
   return (
     <>
       {/* Welcome Animation */}
       {showWelcome && <WelcomeAnimation onComplete={handleWelcomeComplete} />}
+
+      {/* Confetti Animation */}
+      <Confetti trigger={showConfetti} onComplete={handleConfettiComplete} position={confettiPosition} />
 
       <motion.div
         className="flex flex-row-reverse items-center justify-between w-4/5 h-full"
@@ -312,7 +342,7 @@ export default function Page() {
                       category={challenge.theme}
                       description={challenge.description}
                       isCompleted={!!completed[challenge.id]}
-                      onToggle={() => handleToggle(challenge.id)}
+                      onToggle={(event) => handleToggle(challenge.id, event)}
                       allChallengesAccomplished={!!completed[challenge.id]}
                       loading={!!posting[challenge.id]}
                       points={challenge.points}
