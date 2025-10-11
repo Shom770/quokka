@@ -9,7 +9,8 @@
     "settings": "Configuraciones",
     "logout": "Cerrar sesión",
     "feedback": "Retroalimentación",
-    "streak": "{count} días de racha"
+    "streak": "{count} días de racha",
+    "calendar": "Calendario"
   },
   "settings": {
     "title": "Configuraciones",
@@ -110,6 +111,24 @@
     "saturday": "Sáb",
     "milestonesTitle": "Hitos",
     "currentLevel": "Nivel"
+  },
+  "calendar": {
+    "badge": "Asistente de calendario",
+    "title": "Mantente al día con tus tareas",
+    "description": "Pega tu enlace iCal y traeremos tus tareas. Todo permanece en este dispositivo, ideal para mantener tu semestre organizado.",
+    "inputLabel": "Enlace del calendario",
+    "placeholder": "https://school.edu/calendar.ics",
+    "inputError": "Pega un enlace iCal válido.",
+    "fetchError": "No se pudo cargar el calendario.",
+    "emptyFeed": "No se encontraron tareas en ese calendario.",
+    "unexpectedError": "Error inesperado al cargar el calendario.",
+    "importButton": "Importar",
+    "loading": "Cargando...",
+    "lastUpdated": "Última actualización {timestamp}",
+    "sectionTitle": "Próximas tareas",
+    "showingCount": "Mostrando {visible} de {total}",
+    "placeholderMessage": "Pega un enlace iCal arriba para ver tus tareas.",
+    "caughtUpMessage": "¡Genial! Parece que estás al día; no hay próximas tareas."
   },
   "activities": {
     "title": "Actividades hechas para ti.",

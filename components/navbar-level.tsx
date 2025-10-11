@@ -69,7 +69,7 @@ export default function NavbarLevel({ totalPoints }: NavbarLevelProps) {
               transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
             />
           </div>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-gray-500 mr-1">
             {Math.round(progressToNext)}%
           </span>
         </div>

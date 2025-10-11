@@ -9,7 +9,8 @@
     "settings": "Settings",
     "feedback": "Issues/Bugs",
     "logout": "Log out",
-    "streak": "{count} day streak"
+    "streak": "{count} day streak",
+    "calendar": "Assignments"
   },
   "settings": {
     "title": "Settings",
@@ -110,6 +111,24 @@
     "saturday": "Sat",
     "milestonesTitle": "Milestones",
     "currentLevel": "Level"
+  },
+  "calendar": {
+    "badge": "Calendar Assistant",
+    "title": "Stay on top of your assignments",
+    "description": "Paste your iCal feed link and we'll pull in your assignments. Everything stays on this device, perfect for keeping your semester organized.",
+    "inputLabel": "Calendar feed link",
+    "placeholder": "https://school.edu/calendar.ics",
+    "inputError": "Please paste a valid iCal feed link.",
+    "fetchError": "Unable to load the calendar feed.",
+    "emptyFeed": "No assignments were found in that calendar feed.",
+    "unexpectedError": "Unexpected error loading calendar.",
+    "importButton": "Import",
+    "loading": "Loading...",
+    "lastUpdated": "Last updated {timestamp}",
+    "sectionTitle": "Upcoming assignments",
+    "showingCount": "Showing {visible} of {total}",
+    "placeholderMessage": "Paste an iCal link above to see your assignments.",
+    "caughtUpMessage": "Nice! It looks like you're all caught up - no upcoming assignments found."
   },
   "activities": {
     "title": "Activities made for you.",
