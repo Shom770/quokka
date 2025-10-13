@@ -41,35 +41,51 @@ const assignmentVariants = {
   exit: { opacity: 0, y: -10, scale: 0.97, transition: { duration: 0.2 } },
 };
 
-function formatAssignmentTime(assignment: CalendarAssignment) {
-  const { start, end, allDay } = assignment;
+function normalizeAllDayDate(date: Date) {
+  return new Date(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate()
+  );
+}
 
-  if (allDay) {
-    return new Intl.DateTimeFormat(undefined, {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }).format(start);
-  }
+function formatAssignmentDate(assignment: CalendarAssignment) {
+  const dateToFormat = assignment.allDay
+    ? normalizeAllDayDate(assignment.start)
+    : assignment.start;
 
-  const startFormatter = new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(undefined, {
     weekday: "short",
     month: "short",
     day: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-  });
-  const endFormatter = new Intl.DateTimeFormat(undefined, {
-    hour: "numeric",
-    minute: "numeric",
-  });
+    year: "numeric",
+  }).format(dateToFormat);
+}
 
-  if (end) {
-    return `${startFormatter.format(start)} – ${endFormatter.format(end)}`;
+function formatAssignmentTimeRange(assignment: CalendarAssignment) {
+  if (assignment.allDay) {
+    return "";
   }
 
-  return startFormatter.format(start);
+  const hasValidStart = !Number.isNaN(assignment.start.getTime());
+  if (!hasValidStart) {
+    return "";
+  }
+
+  const timeFormatter = new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "numeric",
+  });
+
+  const startTime = timeFormatter.format(assignment.start);
+  if (assignment.end && !Number.isNaN(assignment.end.getTime())) {
+    const endTime = timeFormatter.format(assignment.end);
+    if (endTime !== startTime) {
+      return `${startTime} – ${endTime}`;
+    }
+  }
+
+  return startTime;
 }
 
 export default function CalendarImportPage() {
@@ -269,6 +285,7 @@ export default function CalendarImportPage() {
                   const key =
                     assignment.uid ??
                     `${assignment.title}-${assignment.start.getTime()}`;
+                  const timeLabel = formatAssignmentTimeRange(assignment);
                   return (
                     <motion.article
                       key={key}
@@ -283,9 +300,16 @@ export default function CalendarImportPage() {
                           <h3 className="text-base sm:text-lg font-semibold text-gray-900 break-words">
                             {assignment.title}
                           </h3>
-                          <p className="text-sm font-medium text-orange-600">
-                            {formatAssignmentTime(assignment)}
-                          </p>
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-3">
+                            <p className="text-sm font-medium text-orange-600">
+                              {formatAssignmentDate(assignment)}
+                            </p>
+                            {timeLabel ? (
+                              <p className="text-sm text-gray-500 sm:text-right">
+                                {timeLabel}
+                              </p>
+                            ) : null}
+                          </div>
                         </div>
                         <div className="flex flex-col items-start gap-2 text-sm text-gray-600">
                           {assignment.location && (
