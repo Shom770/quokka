@@ -27,7 +27,14 @@
     "calendarSaving": "Guardando...",
     "calendarSaved": "Enlace de calendario guardado.",
     "calendarErrorGeneric": "No se puede actualizar el enlace del calendario en este momento.",
-    "calendarRefreshHint": "Puedes actualizar las tareas más recientes desde la página Calendario."
+    "calendarRefreshHint": "Puedes actualizar las tareas más recientes desde la página Calendario.",
+    "motivationSectionTitle": "Modo motivación",
+    "motivationSectionDescription": "Adelanta los vencimientos próximos para que todo se sienta más cercano y fácil de abordar.",
+    "motivationStatusOn": "El modo motivación está activado.",
+    "motivationStatusOff": "El modo motivación está desactivado.",
+    "motivationEnableHint": "Actívalo desde la página Calendario cuando necesites un impulso extra.",
+    "motivationDisableButton": "Desactivar modo motivación",
+    "motivationDisabled": "El modo motivación se ha desactivado."
   },
   "home": {
     "dailyChallengesTitle": "Tus desafíos diarios",
@@ -137,6 +144,11 @@
     "editButton": "Actualizar enlace de calendario",
     "cancelButton": "Cancelar",
     "loading": "Cargando...",
+    "motivationButton": "Activar modo motivación",
+    "motivationModalTitle": "¿Activar el modo motivación?",
+    "motivationModalBody": "El modo motivación adelanta los vencimientos próximos un día mientras mantiene iguales las tareas de hoy. Es un suave impulso para mantenerte al día; puedes desactivarlo en Configuración.",
+    "motivationModalConfirm": "Iniciar modo motivación",
+    "motivationModalCancel": "Ahora no",
     "showDetails": "Mostrar detalles",
     "hideDetails": "Ocultar detalles",
     "manageInSettings": "Actualiza tu enlace de calendario desde Configuración.",

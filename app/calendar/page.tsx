@@ -3,6 +3,7 @@
 import {
   FormEvent,
   useCallback,
+  useContext,
   useEffect,
   useMemo,
   useState,
@@ -21,6 +22,7 @@ import type {
   CalendarAssignment,
   CalendarAssignmentPayload,
 } from "@/utils/ical";
+import { Context } from "@/app/layout-client";
 
 export const runtime = "edge";
 
@@ -77,10 +79,8 @@ function normalizeAllDayDate(date: Date) {
   );
 }
 
-function formatAssignmentDate(assignment: CalendarAssignment) {
-  const dateToFormat = assignment.allDay
-    ? normalizeAllDayDate(assignment.start)
-    : assignment.start;
+function formatAssignmentDate(date: Date, allDay: boolean) {
+  const dateToFormat = allDay ? normalizeAllDayDate(date) : date;
 
   return new Intl.DateTimeFormat(undefined, {
     weekday: "short",
@@ -90,12 +90,16 @@ function formatAssignmentDate(assignment: CalendarAssignment) {
   }).format(dateToFormat);
 }
 
-function formatAssignmentTimeRange(assignment: CalendarAssignment) {
-  if (assignment.allDay) {
+function formatAssignmentTimeRange(
+  start: Date,
+  end: Date | undefined,
+  allDay: boolean
+) {
+  if (allDay) {
     return "";
   }
 
-  const hasValidStart = !Number.isNaN(assignment.start.getTime());
+  const hasValidStart = !Number.isNaN(start.getTime());
   if (!hasValidStart) {
     return "";
   }
@@ -105,9 +109,9 @@ function formatAssignmentTimeRange(assignment: CalendarAssignment) {
     minute: "numeric",
   });
 
-  const startTime = timeFormatter.format(assignment.start);
-  if (assignment.end && !Number.isNaN(assignment.end.getTime())) {
-    const endTime = timeFormatter.format(assignment.end);
+  const startTime = timeFormatter.format(start);
+  if (end && !Number.isNaN(end.getTime())) {
+    const endTime = timeFormatter.format(end);
     if (endTime !== startTime) {
       return `${startTime} – ${endTime}`;
     }
@@ -126,6 +130,7 @@ function isSameDay(left: Date, right: Date) {
 
 export default function CalendarImportPage() {
   const t = useTranslations("calendar");
+  const { motivationMode, setMotivationMode } = useContext(Context);
   const [feedUrl, setFeedUrl] = useState("");
   const [assignments, setAssignments] = useState<CalendarAssignment[]>([]);
   const [viewState, setViewState] = useState<"boot" | "needsUrl" | "ready">(
@@ -139,6 +144,7 @@ export default function CalendarImportPage() {
   const [expandedAssignments, setExpandedAssignments] = useState<
     Record<string, boolean>
   >({});
+  const [showMotivationModal, setShowMotivationModal] = useState(false);
 
   const visibleAssignments = useMemo(() => {
     if (!assignments.length) return [];
@@ -239,7 +245,42 @@ export default function CalendarImportPage() {
 
   useEffect(() => {
     setExpandedAssignments({});
-  }, [assignments]);
+  }, [assignments, motivationMode]);
+
+  useEffect(() => {
+    if (motivationMode) {
+      setShowMotivationModal(false);
+    }
+  }, [motivationMode]);
+
+  const shiftDateForMotivation = useCallback(
+    (input: Date) => {
+      if (!motivationMode) {
+        return input;
+      }
+      const cloned = new Date(input);
+      if (Number.isNaN(cloned.getTime())) {
+        return input;
+      }
+      const now = new Date();
+      const todayStart = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate()
+      );
+      const candidateDay = new Date(
+        cloned.getFullYear(),
+        cloned.getMonth(),
+        cloned.getDate()
+      );
+      if (candidateDay <= todayStart) {
+        return input;
+      }
+      cloned.setDate(cloned.getDate() - 1);
+      return cloned;
+    },
+    [motivationMode]
+  );
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -401,19 +442,78 @@ export default function CalendarImportPage() {
                 {t("manageInSettings")}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                void fetchStoredAssignments();
-              }}
-              disabled={isFetching}
-              className="inline-flex items-center gap-2 rounded-2xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-orange-200 transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-300"
+            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+              {!motivationMode && (
+                <button
+                  type="button"
+                  onClick={() => setShowMotivationModal(true)}
+                  className="inline-flex items-center gap-2 rounded-2xl border border-orange-200 px-4 py-2 text-sm font-semibold text-orange-600 transition hover:bg-orange-50"
+                >
+                  {t("motivationButton")}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  void fetchStoredAssignments();
+                }}
+                disabled={isFetching}
+                className="inline-flex items-center gap-2 rounded-2xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-orange-200 transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-300"
+              >
+                <ArrowPathIcon
+                  className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
+                />
+                {isFetching ? t("loading") : t("refreshButton")}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showMotivationModal && !motivationMode && (
+          <motion.div
+            key="motivation-overlay"
+            className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowMotivationModal(false)}
+          >
+            <motion.div
+              className="w-full max-w-md rounded-3xl bg-white shadow-xl border border-orange-100 p-6 space-y-4"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              onClick={(event) => event.stopPropagation()}
             >
-              <ArrowPathIcon
-                className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
-              />
-              {isFetching ? t("loading") : t("refreshButton")}
-            </button>
+              <h3 className="text-xl font-semibold text-orange-600">
+                {t("motivationModalTitle")}
+              </h3>
+              <p className="text-sm text-gray-600 whitespace-pre-line">
+                {t("motivationModalBody")}
+              </p>
+              <div className="flex flex-col sm:flex-row-reverse sm:justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMotivationMode(true);
+                    setShowMotivationModal(false);
+                  }}
+                  className="inline-flex items-center justify-center rounded-2xl bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-orange-200 transition hover:bg-orange-600"
+                >
+                  {t("motivationModalConfirm")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowMotivationModal(false)}
+                  className="inline-flex items-center justify-center rounded-2xl border border-orange-200 px-5 py-2.5 text-sm font-semibold text-orange-600 transition hover:bg-orange-50"
+                >
+                  {t("motivationModalCancel")}
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -472,7 +572,15 @@ export default function CalendarImportPage() {
                   const key =
                     assignment.uid ??
                     `${assignment.title}-${assignment.start.getTime()}`;
-                  const timeLabel = formatAssignmentTimeRange(assignment);
+                  const displayStart = shiftDateForMotivation(assignment.start);
+                  const displayEnd = assignment.end
+                    ? shiftDateForMotivation(assignment.end)
+                    : undefined;
+                  const timeLabel = formatAssignmentTimeRange(
+                    displayStart,
+                    displayEnd,
+                    assignment.allDay
+                  );
                   const isExpanded = expandedAssignments[key] ?? false;
                   return (
                     <motion.article
@@ -490,7 +598,10 @@ export default function CalendarImportPage() {
                           </h3>
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-3">
                             <p className="text-sm font-medium text-orange-600">
-                              {formatAssignmentDate(assignment)}
+                              {formatAssignmentDate(
+                                displayStart,
+                                assignment.allDay
+                              )}
                             </p>
                             {timeLabel ? (
                               <p className="text-sm text-gray-500 sm:text-right">

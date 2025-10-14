@@ -27,7 +27,14 @@
     "calendarSaving": "Saving...",
     "calendarSaved": "Calendar link saved.",
     "calendarErrorGeneric": "Unable to update the calendar link right now.",
-    "calendarRefreshHint": "You can refresh the latest assignments from the Calendar page."
+    "calendarRefreshHint": "You can refresh the latest assignments from the Calendar page.",
+    "motivationSectionTitle": "Motivation mode",
+    "motivationSectionDescription": "Shift upcoming due dates forward so everything feels closer and easier to tackle.",
+    "motivationStatusOn": "Motivation Mode is currently on.",
+    "motivationStatusOff": "Motivation Mode is currently off.",
+    "motivationEnableHint": "Turn it on from the Calendar page whenever you need an extra push.",
+    "motivationDisableButton": "Turn off Motivation Mode",
+    "motivationDisabled": "Motivation Mode has been turned off."
   },
   "home": {
     "dailyChallengesTitle": "Your Daily Challenges",
@@ -137,6 +144,11 @@
     "editButton": "Update calendar link",
     "cancelButton": "Cancel",
     "loading": "Loading...",
+    "motivationButton": "Activate Motivation Mode",
+    "motivationModalTitle": "Enable Motivation Mode?",
+    "motivationModalBody": "Motivation Mode shifts upcoming due dates forward by one day while keeping today’s deadlines the same. It’s a gentle nudge to stay ahead—disable it anytime from Settings.",
+    "motivationModalConfirm": "Start Motivation Mode",
+    "motivationModalCancel": "Not now",
     "showDetails": "Show details",
     "hideDetails": "Hide details",
     "manageInSettings": "Update your calendar link from Settings.",

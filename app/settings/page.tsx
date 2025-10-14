@@ -35,7 +35,12 @@ const itemVariants = {
 };
 
 export default function Page() {
-  const { canShow, setCanShow } = useContext(Context);
+  const {
+    canShow,
+    setCanShow,
+    motivationMode,
+    setMotivationMode,
+  } = useContext(Context);
   const [locale, setLocale] = useState<"en" | "es">("en");
   const t = useTranslations("settings");
   const tCalendar = useTranslations("calendar");
@@ -50,6 +55,7 @@ export default function Page() {
   const [calendarSaving, setCalendarSaving] = useState(false);
   const [calendarError, setCalendarError] = useState<string | null>(null);
   const [calendarSuccess, setCalendarSuccess] = useState<string | null>(null);
+  const [motivationNotice, setMotivationNotice] = useState<string | null>(null);
 
   // Load the user's locale on mount
   useEffect(() => {
@@ -124,6 +130,17 @@ export default function Page() {
     setLocale(newLocale);
     await setUserLocale(newLocale);
   };
+
+  const handleDisableMotivationMode = () => {
+    setMotivationMode(false);
+    setMotivationNotice(t("motivationDisabled"));
+  };
+
+  useEffect(() => {
+    if (motivationMode) {
+      setMotivationNotice(null);
+    }
+  }, [motivationMode]);
 
   const handleCalendarSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -359,6 +376,45 @@ export default function Page() {
                 )}
               </div>
             </form>
+          )}
+        </div>
+      </motion.div>
+
+      <motion.div variants={itemVariants} className="w-full">
+        <div className="rounded-3xl border border-orange-200 bg-white/80 backdrop-blur-sm shadow-sm p-5 sm:p-6 space-y-4">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-xl font-semibold text-orange-600">
+              {t("motivationSectionTitle")}
+            </h2>
+            <p className="text-sm text-gray-600">
+              {t("motivationSectionDescription")}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-orange-100 bg-orange-50 px-4 py-3 text-sm text-orange-700">
+            <p className="font-semibold">
+              {motivationMode
+                ? t("motivationStatusOn")
+                : t("motivationStatusOff")}
+            </p>
+            {!motivationMode && (
+              <p className="mt-1 text-xs text-orange-500">
+                {t("motivationEnableHint")}
+              </p>
+            )}
+          </div>
+          {motivationNotice && (
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              {motivationNotice}
+            </div>
+          )}
+          {motivationMode && (
+            <button
+              type="button"
+              onClick={handleDisableMotivationMode}
+              className="inline-flex items-center justify-center rounded-2xl bg-orange-500 px-5 py-3 text-sm sm:text-base font-semibold text-white shadow-sm shadow-orange-200 transition hover:bg-orange-600"
+            >
+              {t("motivationDisableButton")}
+            </button>
           )}
         </div>
       </motion.div>
