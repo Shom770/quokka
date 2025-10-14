@@ -10,7 +10,11 @@
     "pages:build": "npx @cloudflare/next-on-pages",
     "preview": "npm run pages:build && wrangler pages dev",
     "deploy": "npm run pages:build && wrangler pages deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv ./env.d.ts"
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv ./env.d.ts",
+    "migrations:survey": "npx wrangler d1 migrations apply quokka-survey",
+    "migrations:survey:remote": "npx wrangler d1 migrations apply quokka-survey --remote",
+    "migrations:user": "npx wrangler d1 migrations apply quokka-user",
+    "migrations:user:remote": "npx wrangler d1 migrations apply quokka-user --remote"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
