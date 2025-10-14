@@ -1,28 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { StarIcon, TrophyIcon, SparklesIcon } from "@heroicons/react/24/solid";
+import { getMilestones } from "@/utils/levels";
 
 interface NavbarLevelProps {
   totalPoints: number;
 }
 
-const POINTS_PER_LEVEL = 200; // Constant you can easily change
-
 export default function NavbarLevel({ totalPoints }: NavbarLevelProps) {
-  const [currentLevel, setCurrentLevel] = useState(1);
-  const [progressToNext, setProgressToNext] = useState(0);
-
-  useEffect(() => {
-    // Calculate current level based on total points
-    const level = Math.floor(totalPoints / POINTS_PER_LEVEL) + 1;
-    const pointsInLevel = totalPoints % POINTS_PER_LEVEL;
-    const progress = (pointsInLevel / POINTS_PER_LEVEL) * 100;
-
-    setCurrentLevel(level);
-    setProgressToNext(progress);
-  }, [totalPoints]);
+  const { level: currentLevel, progress } = getMilestones(totalPoints);
+  const progressPercent = Math.max(0, Math.min(100, progress * 100));
 
   const getLevelIcon = (level: number) => {
     if (level <= 5) return <StarIcon className="w-4 h-4" />;
@@ -65,12 +53,12 @@ export default function NavbarLevel({ totalPoints }: NavbarLevelProps) {
             <motion.div
               className={`h-full bg-gradient-to-r ${getLevelColor(currentLevel)} rounded-full`}
               initial={{ width: 0 }}
-              animate={{ width: `${progressToNext}%` }}
+              animate={{ width: `${progressPercent}%` }}
               transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
             />
           </div>
           <span className="text-xs text-gray-500 mr-1">
-            {Math.round(progressToNext)}%
+            {Math.round(progressPercent)}%
           </span>
         </div>
       </div>

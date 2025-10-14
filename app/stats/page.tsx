@@ -12,6 +12,7 @@ import {
   type AnimationPlaybackControls,
 } from "framer-motion";
 import { rethinkSans } from "@/components/fonts";
+import { getMilestones, getMilestoneThreshold } from "@/utils/levels";
 import { useTranslations } from "next-intl";
 
 const MONTHS = [
@@ -88,36 +89,6 @@ function AnimatedCounter({ to }: { to: number }) {
   }, [to, count]);
 
   return <motion.span>{rounded}</motion.span>;
-}
-
-// Helper to get milestone thresholds for any level
-function getMilestoneThreshold(level: number) {
-  if (level === 1) return 100;
-  if (level === 2) return 250;
-  if (level === 3) return 500;
-  if (level === 4) return 1000;
-  // Level 5+: 2000, 3000, 4000, ...
-  return 1000 + 1000 * (level - 4);
-}
-
-function getMilestones(points: number) {
-  // Find current level and thresholds
-  let level = 1;
-  let prevThreshold = 0;
-  let nextThreshold = getMilestoneThreshold(1);
-
-  while (points >= nextThreshold) {
-    level++;
-    prevThreshold = nextThreshold;
-    nextThreshold = getMilestoneThreshold(level);
-  }
-
-  const progress = Math.min(
-    1,
-    (points - prevThreshold) / (nextThreshold - prevThreshold)
-  );
-
-  return { level, prevThreshold, nextThreshold, progress };
 }
 
 export default function StatsPage() {
