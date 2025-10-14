@@ -137,7 +137,13 @@ export async function POST(request: Request) {
       throw new Error("Failed to store calendar URL");
     }
 
-    return NextResponse.json(result, { status: 200 });
+    return NextResponse.json(
+      {
+        ...result,
+        icalUrl: parsedUrl.toString(),
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("[/api/calendar/ical] Failed to fetch calendar", error);
     return NextResponse.json(
@@ -193,7 +199,13 @@ export async function GET(request: Request) {
       return result;
     }
 
-    return NextResponse.json(result, { status: 200 });
+    return NextResponse.json(
+      {
+        ...result,
+        icalUrl: storedUrl,
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("[/api/calendar/ical] Failed to load stored calendar", error);
     return NextResponse.json(

@@ -17,7 +17,17 @@
     "allowFeedback": "Permitir preguntas de retroalimentación de la aplicación",
     "language": "Idioma",
     "english": "Inglés",
-    "spanish": "Español"
+    "spanish": "Español",
+    "calendarSectionTitle": "Enlace del calendario",
+    "calendarSectionDescription": "Administra el feed iCal que alimenta tu calendario de tareas.",
+    "calendarStatusConnected": "Enlace de calendario conectado.",
+    "calendarStatusMissing": "Aún no hay un feed guardado; agrégalo a continuación.",
+    "calendarUpdateButton": "Actualizar enlace de calendario",
+    "calendarConnectButton": "Guardar enlace de calendario",
+    "calendarSaving": "Guardando...",
+    "calendarSaved": "Enlace de calendario guardado.",
+    "calendarErrorGeneric": "No se puede actualizar el enlace del calendario en este momento.",
+    "calendarRefreshHint": "Puedes actualizar las tareas más recientes desde la página Calendario."
   },
   "home": {
     "dailyChallengesTitle": "Tus desafíos diarios",
@@ -127,6 +137,9 @@
     "editButton": "Actualizar enlace de calendario",
     "cancelButton": "Cancelar",
     "loading": "Cargando...",
+    "showDetails": "Mostrar detalles",
+    "hideDetails": "Ocultar detalles",
+    "manageInSettings": "Actualiza tu enlace de calendario desde Configuración.",
     "lastUpdated": "Última actualización {timestamp}",
     "sectionTitle": "Próximas tareas",
     "showingCount": "Mostrando {visible} de {total}",

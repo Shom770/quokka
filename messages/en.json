@@ -17,7 +17,17 @@
     "allowFeedback": "Allow App Feedback Questions",
     "language": "Language",
     "english": "English",
-    "spanish": "Spanish"
+    "spanish": "Spanish",
+    "calendarSectionTitle": "Calendar link",
+    "calendarSectionDescription": "Manage the iCal feed that powers your assignments calendar.",
+    "calendarStatusConnected": "Calendar link connected.",
+    "calendarStatusMissing": "No calendar feed saved yet — add one below.",
+    "calendarUpdateButton": "Update calendar link",
+    "calendarConnectButton": "Save calendar link",
+    "calendarSaving": "Saving...",
+    "calendarSaved": "Calendar link saved.",
+    "calendarErrorGeneric": "Unable to update the calendar link right now.",
+    "calendarRefreshHint": "You can refresh the latest assignments from the Calendar page."
   },
   "home": {
     "dailyChallengesTitle": "Your Daily Challenges",
@@ -127,6 +137,9 @@
     "editButton": "Update calendar link",
     "cancelButton": "Cancel",
     "loading": "Loading...",
+    "showDetails": "Show details",
+    "hideDetails": "Hide details",
+    "manageInSettings": "Update your calendar link from Settings.",
     "lastUpdated": "Last updated {timestamp}",
     "sectionTitle": "Upcoming assignments",
     "showingCount": "Showing {visible} of {total}",

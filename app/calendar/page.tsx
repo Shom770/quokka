@@ -13,8 +13,8 @@ import {
   ArrowPathIcon,
   CalendarDaysIcon,
   ClipboardDocumentCheckIcon,
+  ChevronDownIcon,
   LinkIcon,
-  PencilSquareIcon,
 } from "@heroicons/react/24/solid";
 import { rethinkSans } from "@/components/fonts";
 import type {
@@ -136,6 +136,9 @@ export default function CalendarImportPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [expandedAssignments, setExpandedAssignments] = useState<
+    Record<string, boolean>
+  >({});
 
   const visibleAssignments = useMemo(() => {
     if (!assignments.length) return [];
@@ -234,6 +237,10 @@ export default function CalendarImportPage() {
     void fetchStoredAssignments();
   }, [fetchStoredAssignments]);
 
+  useEffect(() => {
+    setExpandedAssignments({});
+  }, [assignments]);
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!feedUrl.trim()) {
@@ -300,7 +307,7 @@ export default function CalendarImportPage() {
           <span>{t("badge")}</span>
         </div>
         <h1
-          className={`${rethinkSans.className} antialiased text-orange-600 font-extrabold text-3xl sm:text-4xl md:text-[46px] leading-[1.05] px-4`}
+          className={`${rethinkSans.className} antialiased text-orange-600 font-extrabold text-3xl sm:text-4xl md:text-5xl leading-[1.05] px-4`}
         >
           {t("title")}
         </h1>
@@ -369,7 +376,7 @@ export default function CalendarImportPage() {
       </AnimatePresence>
 
       <AnimatePresence initial={false}>
-        {viewState === "ready" && !showForm && (
+        {viewState === "ready" && !shouldShowForm && (
           <motion.div
             key="calendar-actions"
             className="w-full max-w-3xl mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
@@ -377,45 +384,36 @@ export default function CalendarImportPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
           >
-            {lastUpdated && (
-              <p className="text-xs text-gray-500">
-                {t("lastUpdated", {
-                  timestamp: new Intl.DateTimeFormat(undefined, {
-                    hour: "numeric",
-                    minute: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  }).format(lastUpdated),
-                })}
+            <div className="flex flex-col gap-1">
+              {lastUpdated && (
+                <p className="text-xs text-gray-500">
+                  {t("lastUpdated", {
+                    timestamp: new Intl.DateTimeFormat(undefined, {
+                      hour: "numeric",
+                      minute: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    }).format(lastUpdated),
+                  })}
+                </p>
+              )}
+              <p className="text-xs text-gray-400">
+                {t("manageInSettings")}
               </p>
-            )}
-            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowForm(true);
-                  setError(null);
-                  setFeedUrl("");
-                }}
-                className="inline-flex items-center gap-2 rounded-2xl border border-orange-200 px-4 py-2 text-sm font-semibold text-orange-600 transition hover:bg-orange-50"
-              >
-                <PencilSquareIcon className="h-4 w-4" />
-                {t("editButton")}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  void fetchStoredAssignments();
-                }}
-                disabled={isFetching}
-                className="inline-flex items-center gap-2 rounded-2xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-orange-200 transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-300"
-              >
-                <ArrowPathIcon
-                  className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
-                />
-                {isFetching ? t("loading") : t("refreshButton")}
-              </button>
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                void fetchStoredAssignments();
+              }}
+              disabled={isFetching}
+              className="inline-flex items-center gap-2 rounded-2xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-orange-200 transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-300"
+            >
+              <ArrowPathIcon
+                className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
+              />
+              {isFetching ? t("loading") : t("refreshButton")}
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -475,6 +473,7 @@ export default function CalendarImportPage() {
                     assignment.uid ??
                     `${assignment.title}-${assignment.start.getTime()}`;
                   const timeLabel = formatAssignmentTimeRange(assignment);
+                  const isExpanded = expandedAssignments[key] ?? false;
                   return (
                     <motion.article
                       key={key}
@@ -485,7 +484,7 @@ export default function CalendarImportPage() {
                       className="rounded-3xl border border-orange-100/70 bg-white p-4 sm:p-5 md:p-6 shadow-sm hover:shadow-md transition-shadow"
                     >
                       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3 lg:gap-6">
-                        <div className="space-y-2 w-full lg:max-w-xl">
+                        <div className="space-y-2 w-full">
                           <h3 className="text-base sm:text-lg font-semibold text-gray-900 break-words">
                             {assignment.title}
                           </h3>
@@ -509,9 +508,43 @@ export default function CalendarImportPage() {
                         </div>
                       </div>
                       {assignment.description && (
-                        <p className="mt-4 whitespace-pre-line text-sm text-gray-600">
-                          {assignment.description}
-                        </p>
+                        <div className="mt-4">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setExpandedAssignments((prev) => ({
+                                ...prev,
+                                [key]: !isExpanded,
+                              }))
+                            }
+                            className="inline-flex items-center gap-2 text-sm font-semibold text-orange-600 hover:text-orange-700 transition"
+                          >
+                            {isExpanded ? t("hideDetails") : t("showDetails")}
+                            <motion.span
+                              animate={{ rotate: isExpanded ? 180 : 0 }}
+                              transition={{ duration: 0.2, ease: "easeOut" }}
+                              className="inline-flex"
+                            >
+                              <ChevronDownIcon className="h-4 w-4" />
+                            </motion.span>
+                          </button>
+                          <AnimatePresence initial={false}>
+                            {isExpanded && (
+                              <motion.div
+                                key={`description-${key}`}
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.25, ease: "easeOut" }}
+                                className="overflow-hidden"
+                              >
+                                <p className="mt-3 whitespace-pre-line text-sm text-gray-600">
+                                  {assignment.description}
+                                </p>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
                       )}
                     </motion.article>
                   );
