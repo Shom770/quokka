@@ -63,24 +63,51 @@ function mapAssignmentsFromPayload(
     return [];
   }
 
-  return payload
-    .map((item) => ({
+  return payload.reduce<CalendarAssignment[]>((accumulator, item) => {
+    const parseDate = (value: string | undefined) => {
+      if (!value) {
+        return undefined;
+      }
+      const parsed = new Date(value);
+      if (Number.isNaN(parsed.getTime())) {
+        return undefined;
+      }
+      if (item.allDay) {
+        return new Date(
+          parsed.getUTCFullYear(),
+          parsed.getUTCMonth(),
+          parsed.getUTCDate()
+        );
+      }
+      return parsed;
+    };
+
+    const start = parseDate(item.start);
+    if (!start) {
+      return accumulator;
+    }
+
+    const end = parseDate(item.end);
+
+    accumulator.push({
       uid: item.uid,
       title: item.title,
-      start: new Date(item.start),
-      end: item.end ? new Date(item.end) : undefined,
+      start,
+      end,
       description: item.description,
       location: item.location,
       allDay: item.allDay,
-    }))
-    .filter((item) => !Number.isNaN(item.start.getTime()));
+    });
+
+    return accumulator;
+  }, []);
 }
 
 function normalizeAllDayDate(date: Date) {
   return new Date(
-    date.getUTCFullYear(),
-    date.getUTCMonth(),
-    date.getUTCDate()
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate()
   );
 }
 
