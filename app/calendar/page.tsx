@@ -354,6 +354,11 @@ export default function CalendarImportPage() {
   const calendarMeta = useMemo(() => {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const todayStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
     const startOfGrid = new Date(startOfMonth);
     startOfGrid.setDate(startOfGrid.getDate() - startOfMonth.getDay());
 
@@ -378,12 +383,14 @@ export default function CalendarImportPage() {
               a.displayStart.getTime() - b.displayStart.getTime()
           )
         : [];
+      const dayStart = normalizeAllDayDate(day);
 
       return {
         date: day,
         assignments: assignmentsForDay,
         isCurrentMonth: day.getMonth() === startOfMonth.getMonth(),
         isToday: isSameDay(day, now),
+        isPast: dayStart.getTime() < todayStart.getTime(),
       };
     });
 
@@ -739,69 +746,92 @@ export default function CalendarImportPage() {
                     >
                       {calendarDays.map((day) => {
                         const dayKey = toDateKey(day.date);
+                        const isPastCurrentMonth =
+                          day.isPast && day.isCurrentMonth && !day.isToday;
                         return (
                           <div
                             key={dayKey}
-                            className={`rounded-2xl border p-2 flex flex-col gap-2 min-h-[120px] transition shadow-sm ${
+                            className={`relative rounded-2xl border p-2 min-h-[120px] transition shadow-sm overflow-hidden ${
                               day.isCurrentMonth
-                                ? "bg-white border-orange-100"
+                                ? isPastCurrentMonth
+                                  ? "bg-gray-100 border-gray-200"
+                                  : "bg-white border-orange-100"
                                 : "bg-gray-50 border-gray-100 text-gray-400"
                             }`}
                           >
-                            <div className="flex items-center justify-between">
-                              <span
-                                className={`text-sm font-semibold ${
-                                  day.isCurrentMonth
-                                    ? "text-gray-900"
-                                    : "text-gray-400"
-                                }`}
-                              >
-                                {day.date.getDate()}
-                              </span>
-                              {day.isToday && (
-                                <span className="text-[10px] font-semibold text-orange-500 bg-orange-100/80 px-2 py-0.5 rounded-full">
-                                  {t("calendarTodayLabel")}
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex flex-col gap-2 max-h-36 overflow-y-auto pr-1">
-                              {day.assignments.length === 0 && day.isCurrentMonth ? (
-                                <span className="text-[11px] text-gray-300">
-                                  {t("calendarEmptyDay")}
-                                </span>
-                              ) : (
-                                day.assignments.map((assignment) => {
-                              const assignmentKey =
-                                assignment.uid ??
-                                `${assignment.title}-${assignment.displayStart.getTime()}`;
-                              const timeLabel = formatAssignmentTimeRange(
-                                assignment.displayStart,
-                                assignment.displayEnd,
-                                assignment.allDay
-                              );
-                              const detailLabel =
-                                timeLabel ||
-                                (assignment.allDay
-                                  ? t("calendarAllDay")
-                                  : "");
-                              return (
-                                <div
-                                  key={assignmentKey}
-                                  className="rounded-xl border border-orange-100 bg-orange-50 px-2 py-1"
+                            {isPastCurrentMonth ? (
+                              <div className="absolute inset-0 border-2 border-dashed border-gray-300/70 rounded-2xl" />
+                            ) : null}
+                            <div className="relative z-10 flex h-full flex-col gap-2">
+                              <div className="flex items-center justify-between">
+                                <span
+                                  className={`text-sm font-semibold ${
+                                    !day.isCurrentMonth
+                                      ? "text-gray-400"
+                                      : isPastCurrentMonth
+                                      ? "text-gray-600"
+                                      : "text-gray-900"
+                                  }`}
                                 >
-                                  <p className="text-[11px] font-semibold text-orange-700 truncate">
-                                    {assignment.title}
-                                  </p>
-                                  {detailLabel ? (
-                                    <p className="text-[11px] text-orange-600">
-                                      {detailLabel}
-                                    </p>
-                                  ) : null}
-                                </div>
-                              );
-                            })
-                          )}
-                        </div>
+                                  {day.date.getDate()}
+                                </span>
+                                {day.isToday && (
+                                  <span className="text-[10px] font-semibold text-orange-500 bg-orange-100/80 px-2 py-0.5 rounded-full">
+                                    {t("calendarTodayLabel")}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex flex-col gap-2 max-h-36 overflow-y-auto pr-1">
+                                {day.assignments.length === 0 && day.isCurrentMonth ? (
+                                  <span
+                                    className={`text-[11px] ${
+                                      isPastCurrentMonth
+                                        ? "text-gray-400"
+                                        : "text-gray-300"
+                                    }`}
+                                  >
+                                    {t("calendarEmptyDay")}
+                                  </span>
+                                ) : (
+                                  day.assignments.map((assignment) => {
+                                    const assignmentKey =
+                                      assignment.uid ??
+                                      `${assignment.title}-${assignment.displayStart.getTime()}`;
+                                    const timeLabel = formatAssignmentTimeRange(
+                                      assignment.displayStart,
+                                      assignment.displayEnd,
+                                      assignment.allDay
+                                    );
+                                    const detailLabel =
+                                      timeLabel ||
+                                      (assignment.allDay
+                                        ? t("calendarAllDay")
+                                        : "");
+                                    const assignmentShellClasses = isPastCurrentMonth
+                                      ? "rounded-xl border border-gray-200 bg-gray-100/80 px-2 py-1"
+                                      : "rounded-xl border border-orange-100 bg-orange-50 px-2 py-1";
+                                    const assignmentTitleClasses = isPastCurrentMonth
+                                      ? "text-[11px] font-semibold text-gray-600 truncate"
+                                      : "text-[11px] font-semibold text-orange-700 truncate";
+                                    const assignmentDetailClasses = isPastCurrentMonth
+                                      ? "text-[11px] text-gray-500"
+                                      : "text-[11px] text-orange-600";
+                                    return (
+                                      <div key={assignmentKey} className={assignmentShellClasses}>
+                                        <p className={assignmentTitleClasses}>
+                                          {assignment.title}
+                                        </p>
+                                        {detailLabel ? (
+                                          <p className={assignmentDetailClasses}>
+                                            {detailLabel}
+                                          </p>
+                                        ) : null}
+                                      </div>
+                                    );
+                                  })
+                                )}
+                              </div>
+                            </div>
                           </div>
                         );
                       })}
