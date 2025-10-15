@@ -34,13 +34,13 @@
       "database_name": "quokka-challenges",
       "database_id": "8a04ec7c-ea5a-4927-8d25-6f2d7cbceb3a"
     }
-  ]
+  ],
 
   /**
    * Environment Variables
    * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
    */
-  // "vars": { "MY_VARIABLE": "production_value" },
+  "vars": { "AUTH_GOOGLE_ID": "255807240303-5i2dilip2tro0ldtanqioj90d9hglbua.apps.googleusercontent.com" },
   /**
    * Note: Use secrets to store sensitive data.
    * https://developers.cloudflare.com/workers/configuration/secrets/
