@@ -40,7 +40,7 @@
    * Environment Variables
    * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
    */
-  "vars": { "AUTH_GOOGLE_ID": "255807240303-5i2dilip2tro0ldtanqioj90d9hglbua.apps.googleusercontent.com" },
+  "vars": { "AUTH_GOOGLE_ID": "255807240303-5i2dilip2tro0ldtanqioj90d9hglbua.apps.googleusercontent.com" }
   /**
    * Note: Use secrets to store sensitive data.
    * https://developers.cloudflare.com/workers/configuration/secrets/
