@@ -1,4 +1,4 @@
-CREATE TABLE sleep_records (
+CREATE TABLE IF NOT EXISTS sleep_records (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id TEXT NOT NULL,
   hours REAL NOT NULL CHECK (hours >= 0 AND hours <= 24),

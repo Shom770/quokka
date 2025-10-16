@@ -33,29 +33,30 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
       <motion.div
         ref={ref}
         key={title}
-        className={`absolute ${position} flex flex-col px-8 items-center justify-around py-4 gap-2 w-[360px] h-[400px] rounded-2xl transition-all duration-150 ease-in-out`}
+        className={`absolute ${position} flex flex-col px-8 items-center justify-around py-4 gap-2 w-[360px] h-[400px] rounded-2xl transition-all duration-150 ease-in-out cursor-pointer`}
         style={{
           backgroundColor: color,
-          zIndex: zIndex,
+          zIndex,
         }}
         whileHover={{
-          zIndex: 20, // Elevate on hover
+          zIndex: 20,
           transform: `rotate(${rotate}) scale(1.07)`,
           transition: {
             type: "spring",
-            stiffness: 100, // Adjust for bounciness
-            damping: 10, // Controls the smoothness
+            stiffness: 100,
+            damping: 10,
           },
         }}
         initial={{
           opacity: 0,
           y: 20,
           transform: `rotate(${rotate}) scale(1.0)`,
+          zIndex,
         }}
         animate={{
           opacity: 1,
           y: 0,
-          transition: { duration: 0.5, ease: "easeInOut", delay: delay },
+          transition: { duration: 0.5, ease: "easeInOut", delay },
         }}
       >
         <h1

@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   try {
     const verified = await jose.jwtVerify(credential, JWKS, {
       issuer: 'https://accounts.google.com',
-      audience: process.env.APP_GOOGLE_ID,
+      audience: process.env.AUTH_GOOGLE_ID,
     })
     payload = verified.payload
   } catch (err: unknown) {

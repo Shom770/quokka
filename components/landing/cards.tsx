@@ -3,6 +3,7 @@
 import {
   BookmarkIcon,
   BookOpenIcon,
+  CalendarDaysIcon,
   PencilIcon,
 } from "@heroicons/react/24/solid";
 import Link from "next/link";
@@ -36,10 +37,29 @@ export default function Cards({ meditationCardRef, journalingCardRef, resourcesC
           icon={PencilIcon}
           iconColor="#FFE5E5"
           color="#F66B6B"
-          rotate="-12deg"
-          zIndex={0}
-          position="right-[30%] top-0"
+          rotate="-8deg"
+          zIndex={3}
+          position="right-[28%] top-[10%]"
           delay={0.6}
+        />
+      </Link>
+      <Link href="/calendar" className="calendar-card">
+        <Card
+          title={t("calendarTitle")}
+          text={
+            <p>
+              {t.rich("calendarText", {
+                bold: (chunks) => <span className="font-extrabold">{chunks}</span>,
+              })}
+            </p>
+          }
+          icon={CalendarDaysIcon}
+          iconColor="#FFEFD6"
+          color="#F7A24C"
+          rotate="-12deg"
+          zIndex={1}
+          position="right-[34%] top-[0%]"
+          delay={0.7}
         />
       </Link>
       <Link href="/resources" className="resources-card">
@@ -56,10 +76,10 @@ export default function Cards({ meditationCardRef, journalingCardRef, resourcesC
           icon={BookmarkIcon}
           iconColor="#FFE8DC"
           color="#FD906C"
-          rotate="0deg"
-          zIndex={5}
-          position="right-[20%] top-[15%]"
-          delay={0.8}
+          rotate="-2deg"
+          zIndex={4}
+          position="right-[22%] top-[19%]"
+          delay={0.9}
         />
       </Link>
       <Link href="/activities" className="meditation-card">
