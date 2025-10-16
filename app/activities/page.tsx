@@ -112,23 +112,24 @@ export default function Page() {
 
   return (
     <motion.div
-      className="relative flex flex-col justify-center gap-8 w-3/5 h-full"
+      className="relative flex flex-col gap-6 md:gap-8 w-full md:w-4/5 lg:w-3/5 min-h-screen px-6 md:px-0 py-6 md:py-12 mx-auto md:justify-center items-center"
       {...animationVariants.pageContainer}
     >
       <motion.h1
-        className={`${rethinkSans.className} antialiased text-orange-600 font-extrabold text-[46px] leading-[1]`}
+        className={`${rethinkSans.className} antialiased text-orange-600 font-extrabold text-3xl md:text-[46px] leading-tight md:leading-[1]`}
         {...animationVariants.title}
       >
         {t("title")}
       </motion.h1>
 
       <motion.div
-        className="grid grid-cols-2 grid-rows-4 gap-3"
+        className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 pb-4 md:pb-0 w-full h-[75vh] md:h-full overflow-scroll"
         {...animationVariants.gridContainer}
       >
         {activities.map((activity, index) => (
           <motion.div
             key={index}
+            className="h-24 sm:h-32 md:h-auto"
             {...animationVariants.resourceCard}
             initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50, scale: 0.9 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}

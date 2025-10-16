@@ -79,7 +79,7 @@ export default function Cards({ meditationCardRef, journalingCardRef, resourcesC
           color="#B35D40"
           rotate="12deg"
           zIndex={10}
-          position="bottom-[15%] right-[12.5%]"
+          position="top-[30%] right-[10%]"
           delay={1.0}
         />
       </Link>

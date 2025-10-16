@@ -36,6 +36,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
         className={`absolute ${position} flex flex-col px-8 items-center justify-around py-4 gap-2 w-[360px] h-[400px] rounded-2xl transition-all duration-150 ease-in-out`}
         style={{
           backgroundColor: color,
+          zIndex: zIndex,
         }}
         whileHover={{
           zIndex: 20, // Elevate on hover
@@ -50,7 +51,6 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
           opacity: 0,
           y: 20,
           transform: `rotate(${rotate}) scale(1.0)`,
-          zIndex: zIndex,
         }}
         animate={{
           opacity: 1,

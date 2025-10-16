@@ -11,6 +11,7 @@ import {
 } from "@heroicons/react/24/solid";
 
 const getCategoryIcon = (category: string): React.ReactElement => {
+  if (!category) return <PlayCircleIcon className="w-6 h-6" />;
   const lowerCategory = category.toLowerCase();
 
   if (
@@ -39,6 +40,7 @@ const getCategoryIcon = (category: string): React.ReactElement => {
 };
 
 const getCategoryColor = (category: string): string => {
+  if (!category) return "from-gray-500 to-gray-600";
   const lowerCategory = category.toLowerCase();
 
   if (

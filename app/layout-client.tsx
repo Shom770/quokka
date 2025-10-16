@@ -36,9 +36,9 @@ export default function RootLayout({
    <SessionProvider>
      <Context.Provider value={{ canShow, setCanShow }}>
        <Navbar />
-       <div className="flex flex-col items-center justify-center w-screen h-[90vh] overflow-x-hidden">
-         {children}
-       </div>
+      <div className="flex flex-col items-center justify-center w-screen min-h-screen overflow-x-hidden">
+        {children}
+      </div>
        <SurveyManager />
      </Context.Provider>
    </SessionProvider>
