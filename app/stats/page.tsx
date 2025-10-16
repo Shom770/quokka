@@ -304,16 +304,22 @@ export default function StatsPage() {
       variants={pageVariants}
       initial="hidden"
       animate="visible"
-      className="flex flex-col items-center w-full py-16 px-4 min-h-screen"
+      className="flex flex-col w-full h-[90vh]"
     >
+      {/* Fixed Header */}
       <motion.h1
         variants={itemVariants}
-        className={`${rethinkSans.className} antialiased font-extrabold text-[46px] leading-[1] text-orange-600 mb-12`} // mb-12 for more space below main title
+        className={`${rethinkSans.className} antialiased font-extrabold text-3xl lg:text-[46px] leading-[1] text-orange-600 mb-2 text-center px-4`}
       >
         {t("title")}
       </motion.h1>
 
-      <motion.div variants={itemVariants} className="w-full max-w-4xl space-y-14"> {/* space-y-14 for more vertical spacing between sections */}
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto px-4 relative" style={{
+        maskImage: 'linear-gradient(to bottom, transparent 0%, black 10%)',
+        WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 10%)'
+      }}>
+        <motion.div variants={itemVariants} className="w-full max-w-4xl mx-auto space-y-14 pt-12 pb-20">
         {/* Milestones Section */}
         <motion.div
           variants={itemVariants}
@@ -323,7 +329,7 @@ export default function StatsPage() {
             {t("milestonesTitle", { defaultValue: "Milestones" })}
           </h2>
 
-          <div className="relative w-full max-w-2xl mx-auto flex items-center" style={{ minHeight: 88 }}>
+          <div className="relative w-4/5 md:w-full max-w-2xl mx-auto flex items-center" style={{ minHeight: 88 }}>
             {/* Single continuous connecting bar */}
             <div className="absolute left-8 right-8 h-2 z-0" style={{ top: "50%", transform: "translateY(-50%)" }}>
               {/* Grey background bar */}
@@ -339,7 +345,7 @@ export default function StatsPage() {
             </div>
 
             {/* Milestone circles */}
-            <div className="relative z-10 flex items-center justify-between w-full">
+            <div className="relative z-10 flex items-center justify-between w-4/5 md:w-full">
               {displayedLevels.map((milestoneLevel) => {
                 const threshold = getMilestoneThreshold(milestoneLevel);
                 // A level is highlighted if the user has enough points for it.
@@ -741,7 +747,8 @@ export default function StatsPage() {
             )}
           </ul>
         </motion.div>
-      </motion.div>
+        </motion.div>
+      </div>
     </motion.div>
   );
 }

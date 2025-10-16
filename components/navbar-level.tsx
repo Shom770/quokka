@@ -6,6 +6,7 @@ import { getMilestones } from "@/utils/levels";
 
 interface NavbarLevelProps {
   totalPoints: number;
+  animationDelay?: number;
 }
 
 export default function NavbarLevel({ totalPoints }: NavbarLevelProps) {
@@ -33,7 +34,7 @@ export default function NavbarLevel({ totalPoints }: NavbarLevelProps) {
       className="flex items-center gap-2 px-2 py-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm border border-orange-200 min-w-[220px]"
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.4, delay: 3.4 }}
+      transition={{ duration: 0.4, delay: animationDelay }}
     >
       {/* Level Icon */}
       <div className={`p-2 rounded-full bg-gradient-to-br ${getLevelColor(currentLevel)} text-white shadow-sm`}>

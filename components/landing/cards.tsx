@@ -97,9 +97,9 @@ export default function Cards({ meditationCardRef, journalingCardRef, resourcesC
           icon={BookOpenIcon}
           iconColor="#FFE5E5"
           color="#B35D40"
-          rotate="4deg"
-          zIndex={5}
-          position="bottom-[12%] right-[14%]"
+          rotate="12deg"
+          zIndex={10}
+          position="top-[30%] right-[10%]"
           delay={1.0}
         />
       </Link>

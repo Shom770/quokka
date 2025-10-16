@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Cog6ToothIcon, FireIcon, StarIcon } from "@heroicons/react/24/solid";
+import { Cog6ToothIcon, FireIcon, StarIcon, Bars3Icon, XMarkIcon } from "@heroicons/react/24/solid";
 import { useSession, signOut } from "next-auth/react";
 import { rethinkSans } from "@/components/fonts";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
 import NavbarLevel from "@/components/navbar-level";
 
@@ -19,6 +19,7 @@ export default function Navbar() {
   const [displayedStreak, setDisplayedStreak] = useState(0);
   const [displayedPoints, setDisplayedPoints] = useState(0);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const prevPointsRef = useRef(0);
@@ -117,71 +118,96 @@ export default function Navbar() {
     setIsDropdownOpen(!isDropdownOpen);
   };
 
+  const toggleMobileMenu = () => {
+    console.log('Mobile menu toggled:', !isMobileMenuOpen);
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
   const handleSignOut = () => {
     signOut({ callbackUrl: "/" });
   };
 
   return (
-    <motion.div
-      className="flex flex-row items-center justify-between w-full pt-8 px-20 h-[10vh]"
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }} // <-- reduced delay
-    >
+    <>
+      <motion.div
+        className="relative flex flex-row items-center justify-between w-full px-8 md:px-20 h-[10vh] border-b border-orange-400/25 md:border-b-0"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
+      >
       <motion.div
         initial={{ opacity: 0, x: -30 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }} // <-- reduced delay
       >
         <Link href="/">
-          <div className="-space-y-3 hover:opacity-80 transition-opacity duration-200">
+          <div className="hover:opacity-80 transition-opacity duration-200">
             <h1
-              className={`${rethinkSans.className} antialiased font-extrabold text-[40px] text-orange-600`}
+              className={`${rethinkSans.className} antialiased font-extrabold text-3xl md:text-[40px] text-orange-600`}
             >
               quokka
             </h1>
-            <h1 className="font-medium text-orange-600">{t("subtitle")}</h1>
+            <h1 className="hidden md:block font-medium text-orange-600 text-base">{t("subtitle")}</h1>
           </div>
         </Link>
       </motion.div>
 
       <motion.div
-        className="flex items-center space-x-6"
+        className="flex items-center space-x-2 md:space-x-6"
         initial={{ opacity: 0, x: 30 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.6, delay: 0.7, ease: "easeOut" }} // <-- reduced delay
+        transition={{ duration: 0.6, delay: 0.7, ease: "easeOut" }}
       >
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center space-x-6">
+          {session && !isLoginPage && (
+            <>
+              {/* Points Badge */}
+              <Link href="/stats" aria-label="View your points">
+                <motion.div className="flex items-center bg-gradient-to-r from-yellow-100 to-yellow-200 px-4 py-2 rounded-full shadow-sm hover:shadow-md transition">
+                  <StarIcon className="w-5 h-5 text-yellow-500 mr-2" />
+                  <span
+                    className={`${rethinkSans.className} text-yellow-600 font-medium text-sm`}
+                  >
+                    {displayedPoints}
+                  </span>
+                </motion.div>
+              </Link>
+
+              {/* Level Component */}
+              <NavbarLevel totalPoints={pointsCount} />
+
+              {/* Streak Badge */}
+              <Link href="/stats" aria-label="View your streak">
+                <motion.div className="flex items-center bg-gradient-to-r from-orange-100 to-yellow-100 px-4 py-2 rounded-full shadow-sm hover:shadow-md transition">
+                  <FireIcon className="w-5 h-5 text-orange-600 mr-2" />
+                  <span
+                    className={`${rethinkSans.className} text-orange-600 font-medium text-sm`}
+                  >
+                    {t("streak", { count: displayedStreak })}
+                  </span>
+                </motion.div>
+              </Link>
+            </>
+          )}
+        </div>
+
+        {/* Mobile Hamburger Menu */}
         {session && !isLoginPage && (
-          <>
-            {/* Points Badge */}
-            <Link href="/stats" aria-label="View your points">
-              <motion.div className="flex items-center bg-gradient-to-r from-yellow-100 to-yellow-200 px-4 py-2 rounded-full shadow-sm hover:shadow-md transition">
-                <StarIcon className="w-5 h-5 text-yellow-500 mr-2" />
-                <span
-                  className={`${rethinkSans.className} text-yellow-600 font-medium text-sm`}
-                >
-                  {displayedPoints}
-                </span>
-              </motion.div>
-            </Link>
-
-            {/* Level Component */}
-            <NavbarLevel totalPoints={pointsCount} />
-
-            {/* Streak Badge */}
-            <Link href="/stats" aria-label="View your streak">
-              <motion.div className="flex items-center bg-gradient-to-r from-orange-100 to-yellow-100 px-4 py-2 rounded-full shadow-sm hover:shadow-md transition">
-                <FireIcon className="w-5 h-5 text-orange-600 mr-2" />
-                <span
-                  className={`${rethinkSans.className} text-orange-600 font-medium text-sm`}
-                >
-                  {t("streak", { count: displayedStreak })}
-                </span>
-              </motion.div>
-            </Link>
-          </>
+          <button
+            onClick={toggleMobileMenu}
+            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            aria-label="Toggle mobile menu"
+          >
+            {isMobileMenuOpen ? (
+              <XMarkIcon className="w-6 h-6 text-gray-600" />
+            ) : (
+              <Bars3Icon className="w-6 h-6 text-gray-600" />
+            )}
+          </button>
         )}
 
+        {/* Profile Section */}
         <div className="relative" ref={dropdownRef}>
           {session?.user?.image ? (
             <div>
@@ -196,7 +222,7 @@ export default function Navbar() {
 
               <div
                 className={`
-                  absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10
+                  absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50
                   transform transition-all duration-300 ease-in-out origin-top-right
                   ${
                     isDropdownOpen
@@ -251,12 +277,85 @@ export default function Navbar() {
           ) : (
             !isLoginPage && (
               <Link href="/settings">
-                <Cog6ToothIcon className="w-12 h-12 text-orange-600" />
+                <Cog6ToothIcon className="w-8 h-8 md:w-12 md:h-12 text-orange-600" />
               </Link>
             )
           )}
         </div>
       </motion.div>
-    </motion.div>
+      </motion.div>
+
+      {/* Mobile Menu Dropdown */}
+      <AnimatePresence>
+        {isMobileMenuOpen && session && !isLoginPage && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="md:hidden fixed top-[10vh] left-0 right-0 bg-white border-t border-gray-200 shadow-xl z-50"
+          >
+            <div className="px-6 py-4 space-y-4">
+              {/* Mobile Stats Row - Smaller */}
+              <div className="flex items-center justify-center space-x-3 mb-3">
+                {/* Points Badge */}
+                <Link href="/stats" aria-label="View your points">
+                  <div className="flex items-center bg-gradient-to-r from-yellow-100 to-yellow-200 px-3 py-1.5 rounded-full shadow-sm">
+                    <StarIcon className="w-4 h-4 text-yellow-500 mr-1.5" />
+                    <span className={`${rethinkSans.className} text-yellow-600 font-medium text-sm`}>
+                      {displayedPoints}
+                    </span>
+                  </div>
+                </Link>
+
+                {/* Level Badge - Small Pill */}
+                <Link href="/stats" aria-label="View your level">
+                  <div className="flex items-center bg-gradient-to-r from-orange-100 to-yellow-100 px-3 py-1.5 rounded-full shadow-sm">
+                    <span className={`${rethinkSans.className} text-orange-600 font-medium text-sm`}>
+                      Level {Math.floor(pointsCount / 100) + 1}
+                    </span>
+                  </div>
+                </Link>
+
+                {/* Streak Badge */}
+                <Link href="/stats" aria-label="View your streak">
+                  <div className="flex items-center bg-gradient-to-r from-orange-100 to-yellow-100 px-3 py-1.5 rounded-full shadow-sm">
+                    <FireIcon className="w-4 h-4 text-orange-600 mr-1.5" />
+                    <span className={`${rethinkSans.className} text-orange-600 font-medium text-sm`}>
+                      {t("streak", { count: displayedStreak })}
+                    </span>
+                  </div>
+                </Link>
+              </div>
+
+              {/* Mobile Navigation Links */}
+              <div className="space-y-1">
+                <Link
+                  href="/reflection"
+                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-lg transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <span className="font-medium">Mental Health Reflection</span>
+                </Link>
+                <Link
+                  href="/resources"
+                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-lg transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <span className="font-medium">Mental Health Resources</span>
+                </Link>
+                <Link
+                  href="/activities"
+                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-lg transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <span className="font-medium">Activities</span>
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

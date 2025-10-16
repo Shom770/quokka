@@ -254,12 +254,12 @@ export default function Page() {
       <Confetti trigger={showConfetti} onComplete={handleConfettiComplete} position={confettiPosition} />
 
       <motion.div
-        className="flex flex-row-reverse items-center justify-between w-4/5 h-full"
+        className="flex flex-col lg:flex-row-reverse items-center justify-between w-4/5 h-[90vh] gap-8 lg:gap-0"
         {...animationVariants.pageContainer}
       >
         <motion.div
           ref={activityCardsRef}
-          className="flex items-center justify-center relative w-[40%] h-[80%] activity-cards"
+          className="hidden lg:flex items-center justify-center relative w-[40%] h-[80%] activity-cards"
           {...animationVariants.leftSection}
         >
           <Cards
@@ -269,11 +269,11 @@ export default function Page() {
           />
         </motion.div>
         <motion.div
-          className="relative flex flex-col justify-center w-2/5 h-3/5 gap-8"
+          className="relative flex flex-col justify-center w-full lg:w-2/5 h-auto lg:h-3/5 gap-4 lg:gap-8"
           {...animationVariants.rightSection}
         >
           <motion.div
-            className="absolute inset-2 bg-gradient-to-r from-[#F66B6B]/75 to-[#F5C114]/75 blur-[75px] rounded-xl z-0"
+            className="absolute inset-2 bg-gradient-to-r from-[#F66B6B]/30 to-[#F5C114]/30 blur-[50px] rounded-xl z-0"
             {...animationVariants.gradientBackground}
           />
           {isLoading ? (
@@ -288,11 +288,11 @@ export default function Page() {
             <>
               <div>
                 <h1
-                  className={`${rethinkSans.className} antialiased text-orange-600 font-extrabold text-4xl leading-none drop-shadow-sm`}
+                  className={`${rethinkSans.className} antialiased text-orange-600 font-extrabold text-2xl lg:text-4xl leading-none drop-shadow-sm`}
                 >
                   {t("dailyChallengesTitle")}
                 </h1>
-                <p className="text-gray-600 text-lg font-medium 4">
+                <p className="text-gray-600 text-sm lg:text-lg font-medium">
                   {t("dailyChallengesSubtitle")}
                 </p>
               </div>
@@ -304,7 +304,7 @@ export default function Page() {
                   <div className="flex items-center justify-center gap-2">
                     <TrophyIcon className="w-6 h-6 text-yellow-500" />
                     <h2
-                      className={`${rethinkSans.className} antialiased text-2xl text-orange-600 font-extrabold`}
+                      className={`${rethinkSans.className} antialiased text-lg lg:text-2xl text-orange-600 font-extrabold`}
                     >
                       {t("allComplete")}
                     </h2>
@@ -363,6 +363,7 @@ export default function Page() {
           )}
         </motion.div>
       </motion.div>
+
 
       {/* Tutorial Overlay */}
       <TutorialOverlay
