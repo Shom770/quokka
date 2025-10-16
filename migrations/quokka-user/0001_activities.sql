@@ -1,4 +1,4 @@
-CREATE TABLE "activities" (
+CREATE TABLE IF NOT EXISTS "activities" (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id TEXT NOT NULL,
   activity_id TEXT NOT NULL,

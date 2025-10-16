@@ -8,7 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import {
   ArrowPathIcon,
@@ -24,7 +24,17 @@ import type {
 } from "@/utils/ical";
 import { Context } from "@/app/layout-client";
 
-type DisplayAssignment = CalendarAssignment & {
+type CalendarAssignmentPayloadWithStatus = CalendarAssignmentPayload & {
+  completed?: boolean;
+  completedAt?: string | null;
+};
+
+type CalendarAssignmentWithStatus = CalendarAssignment & {
+  completed: boolean;
+  completedAt: Date | null;
+};
+
+type DisplayAssignment = CalendarAssignmentWithStatus & {
   displayStart: Date;
   displayEnd?: Date;
 };
@@ -57,13 +67,13 @@ const assignmentVariants = {
 };
 
 function mapAssignmentsFromPayload(
-  payload: CalendarAssignmentPayload[] | undefined
-): CalendarAssignment[] {
+  payload: CalendarAssignmentPayloadWithStatus[] | undefined
+): CalendarAssignmentWithStatus[] {
   if (!Array.isArray(payload)) {
     return [];
   }
 
-  return payload.reduce<CalendarAssignment[]>((accumulator, item) => {
+  return payload.reduce<CalendarAssignmentWithStatus[]>((accumulator, item) => {
     const parseDate = (value: string | undefined) => {
       if (!value) {
         return undefined;
@@ -88,6 +98,13 @@ function mapAssignmentsFromPayload(
     }
 
     const end = parseDate(item.end);
+    const completed = item.completed === true;
+    const completedAtDate =
+      typeof item.completedAt === "string" ? new Date(item.completedAt) : null;
+    const completedAt =
+      completedAtDate && !Number.isNaN(completedAtDate.getTime())
+        ? completedAtDate
+        : null;
 
     accumulator.push({
       uid: item.uid,
@@ -97,6 +114,8 @@ function mapAssignmentsFromPayload(
       description: item.description,
       location: item.location,
       allDay: item.allDay,
+      completed,
+      completedAt: completed && completedAt ? completedAt : null,
     });
 
     return accumulator;
@@ -167,11 +186,34 @@ function toDateKey(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
+function getAssignmentId(
+  assignment: Pick<CalendarAssignmentWithStatus, "uid" | "title" | "start">
+) {
+  if (assignment.uid) {
+    return assignment.uid;
+  }
+  return `${assignment.title}-${assignment.start.getTime()}`;
+}
+
+function compareDisplayAssignments(
+  left: Pick<DisplayAssignment, "displayStart" | "completed">,
+  right: Pick<DisplayAssignment, "displayStart" | "completed">
+) {
+  const leftCompleted = left.completed ? 1 : 0;
+  const rightCompleted = right.completed ? 1 : 0;
+  if (leftCompleted !== rightCompleted) {
+    return leftCompleted - rightCompleted;
+  }
+  return left.displayStart.getTime() - right.displayStart.getTime();
+}
+
 export default function CalendarImportPage() {
   const t = useTranslations("calendar");
   const { motivationMode, setMotivationMode } = useContext(Context);
   const [feedUrl, setFeedUrl] = useState("");
-  const [assignments, setAssignments] = useState<CalendarAssignment[]>([]);
+  const [assignments, setAssignments] = useState<
+    CalendarAssignmentWithStatus[]
+  >([]);
   const [viewState, setViewState] = useState<"boot" | "needsUrl" | "ready">(
     "boot"
   );
@@ -185,6 +227,9 @@ export default function CalendarImportPage() {
     Record<string, boolean>
   >({});
   const [showMotivationModal, setShowMotivationModal] = useState(false);
+  const [pendingCompletion, setPendingCompletion] = useState<
+    Record<string, boolean>
+  >({});
 
   const fetchStoredAssignments = useCallback(
     async ({ silent = false }: { silent?: boolean } = {}) => {
@@ -199,12 +244,12 @@ export default function CalendarImportPage() {
           cache: "no-store",
         });
         let data: {
-          assignments?: CalendarAssignmentPayload[];
+          assignments?: CalendarAssignmentPayloadWithStatus[];
           message?: string;
         } = {};
         try {
           data = (await response.json()) as {
-            assignments?: CalendarAssignmentPayload[];
+            assignments?: CalendarAssignmentPayloadWithStatus[];
             message?: string;
           };
         } catch {
@@ -318,7 +363,7 @@ export default function CalendarImportPage() {
     if (!displayedAssignments.length) return [];
     const now = new Date();
 
-    return displayedAssignments.filter((item) => {
+    const relevant = displayedAssignments.filter((item) => {
       const startTime = item.displayStart.getTime();
       const endTime = item.displayEnd?.getTime() ?? startTime;
 
@@ -338,7 +383,121 @@ export default function CalendarImportPage() {
 
       return startIsToday || endIsToday;
     });
+    return relevant.sort(compareDisplayAssignments);
   }, [displayedAssignments]);
+
+  const toggleAssignmentCompletion = useCallback(
+    async (assignment: DisplayAssignment) => {
+      const assignmentId = getAssignmentId(assignment);
+      let shouldAbort = false;
+
+      setPendingCompletion((prev) => {
+        if (prev[assignmentId]) {
+          shouldAbort = true;
+          return prev;
+        }
+        return { ...prev, [assignmentId]: true };
+      });
+
+      if (shouldAbort) {
+        return;
+      }
+
+      const wasCompleted = assignment.completed === true;
+      const previousCompletedAt = assignment.completedAt ?? null;
+      const nextCompleted = !wasCompleted;
+      const optimisticCompletedAt = nextCompleted ? new Date() : null;
+
+      setAssignments((prev) =>
+        prev.map((item) => {
+          if (getAssignmentId(item) !== assignmentId) {
+            return item;
+          }
+
+          return {
+            ...item,
+            completed: nextCompleted,
+            completedAt: nextCompleted ? optimisticCompletedAt : null,
+          };
+        })
+      );
+
+      try {
+        const response = await fetch("/api/calendar/ical/complete", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            assignmentId: assignment.uid ?? assignmentId,
+            completed: nextCompleted,
+          }),
+          cache: "no-store",
+        });
+
+        const data = (await response
+          .json()
+          .catch(() => ({}))) as { message?: string; completedAt?: string | null };
+
+        if (!response.ok) {
+          const message =
+            typeof data.message === "string"
+              ? data.message
+              : t("unexpectedError");
+          throw new Error(message);
+        }
+
+        const serverCompletedAt =
+          typeof data.completedAt === "string"
+            ? new Date(data.completedAt)
+            : null;
+        const resolvedCompletedAt =
+          nextCompleted && serverCompletedAt && !Number.isNaN(serverCompletedAt.getTime())
+            ? serverCompletedAt
+            : nextCompleted
+            ? optimisticCompletedAt
+            : null;
+
+        setAssignments((prev) =>
+          prev.map((item) => {
+            if (getAssignmentId(item) !== assignmentId) {
+              return item;
+            }
+
+            return {
+              ...item,
+              completed: nextCompleted,
+              completedAt: nextCompleted ? resolvedCompletedAt : null,
+            };
+          })
+        );
+        setError(null);
+      } catch (err) {
+        setAssignments((prev) =>
+          prev.map((item) => {
+            if (getAssignmentId(item) !== assignmentId) {
+              return item;
+            }
+
+            return {
+              ...item,
+              completed: wasCompleted,
+              completedAt: wasCompleted ? previousCompletedAt : null,
+            };
+          })
+        );
+
+        const message =
+          err instanceof Error ? err.message : t("unexpectedError");
+        setError(message);
+      } finally {
+        setPendingCompletion((prev) => {
+          const next = { ...prev };
+          delete next[assignmentId];
+          return next;
+        });
+      }
+    },
+    [t]
+  );
 
   const weekdayLabels = useMemo(() => {
     const base = new Date(Date.UTC(2021, 0, 3)); // Sunday baseline
@@ -379,8 +538,7 @@ export default function CalendarImportPage() {
       const key = toDateKey(day);
       const assignmentsForDay = assignmentsByDay.has(key)
         ? [...(assignmentsByDay.get(key) ?? [])].sort(
-            (a, b) =>
-              a.displayStart.getTime() - b.displayStart.getTime()
+            (a, b) => compareDisplayAssignments(a, b)
           )
         : [];
       const dayStart = normalizeAllDayDate(day);
@@ -424,7 +582,10 @@ export default function CalendarImportPage() {
 
       const data = (await response
         .json()
-        .catch(() => ({}))) as { message?: string };
+        .catch(() => ({}))) as {
+        message?: string;
+        assignments?: CalendarAssignmentPayloadWithStatus[];
+      };
       if (!response.ok) {
         const message = typeof data.message === "string"
           ? data.message
@@ -794,9 +955,7 @@ export default function CalendarImportPage() {
                                   </span>
                                 ) : (
                                   day.assignments.map((assignment) => {
-                                    const assignmentKey =
-                                      assignment.uid ??
-                                      `${assignment.title}-${assignment.displayStart.getTime()}`;
+                                    const assignmentKey = getAssignmentId(assignment);
                                     const timeLabel = formatAssignmentTimeRange(
                                       assignment.displayStart,
                                       assignment.displayEnd,
@@ -807,26 +966,73 @@ export default function CalendarImportPage() {
                                       (assignment.allDay
                                         ? t("calendarAllDay")
                                         : "");
-                                    const assignmentShellClasses = isPastCurrentMonth
-                                      ? "rounded-xl border border-gray-200 bg-gray-100/80 px-2 py-1"
-                                      : "rounded-xl border border-orange-100 bg-orange-50 px-2 py-1";
-                                    const assignmentTitleClasses = isPastCurrentMonth
-                                      ? "text-[11px] font-semibold text-gray-600 truncate"
-                                      : "text-[11px] font-semibold text-orange-700 truncate";
-                                    const assignmentDetailClasses = isPastCurrentMonth
-                                      ? "text-[11px] text-gray-500"
-                                      : "text-[11px] text-orange-600";
+                                    const isCompleted = assignment.completed === true;
+                                    const isPending = Boolean(
+                                      pendingCompletion[assignmentKey]
+                                    );
+                                    const baseShellClasses = isPastCurrentMonth
+                                      ? "border-gray-200 bg-gray-100/80"
+                                      : "border-orange-100 bg-orange-50";
+                                    const completedShellClasses = isPastCurrentMonth
+                                      ? "border-gray-300 bg-gray-200/70"
+                                      : "border-emerald-200 bg-emerald-50/80";
+                                    const baseTitleClasses = isPastCurrentMonth
+                                      ? "text-gray-600"
+                                      : "text-orange-700";
+                                    const completedTitleClasses = isPastCurrentMonth
+                                      ? "text-gray-500"
+                                      : "text-emerald-700";
+                                    const baseDetailClasses = isPastCurrentMonth
+                                      ? "text-gray-500"
+                                      : "text-orange-600";
+                                    const completedDetailClasses = isPastCurrentMonth
+                                      ? "text-gray-400"
+                                      : "text-emerald-600";
                                     return (
-                                      <div key={assignmentKey} className={assignmentShellClasses}>
-                                        <p className={assignmentTitleClasses}>
+                                      <motion.button
+                                        key={assignmentKey}
+                                        type="button"
+                                        onClick={() =>
+                                          void toggleAssignmentCompletion(assignment)
+                                        }
+                                        disabled={isPending}
+                                        className={`relative rounded-xl border px-2 py-1 text-left transition focus:outline-none focus:ring-2 focus:ring-orange-400/70 focus:ring-offset-1 ${
+                                          isCompleted
+                                            ? completedShellClasses
+                                            : baseShellClasses
+                                        } ${
+                                          isPending
+                                            ? "opacity-60 cursor-not-allowed"
+                                            : "cursor-pointer"
+                                        }`}
+                                        layoutId={`calendar-${assignmentKey}`}
+                                        layout="position"
+                                        whileTap={{ scale: 0.97 }}
+                                        transition={{
+                                          layout: { duration: 0.3, ease: "easeInOut" },
+                                        }}
+                                      >
+                                        <span
+                                          className={`block text-[11px] font-semibold truncate ${
+                                            isCompleted
+                                              ? completedTitleClasses
+                                              : baseTitleClasses
+                                          }`}
+                                        >
                                           {assignment.title}
-                                        </p>
+                                        </span>
                                         {detailLabel ? (
-                                          <p className={assignmentDetailClasses}>
+                                          <span
+                                            className={`block text-[11px] ${
+                                              isCompleted
+                                                ? completedDetailClasses
+                                                : baseDetailClasses
+                                            }`}
+                                          >
                                             {detailLabel}
-                                          </p>
+                                          </span>
                                         ) : null}
-                                      </div>
+                                      </motion.button>
                                     );
                                   })
                                 )}
@@ -872,105 +1078,173 @@ export default function CalendarImportPage() {
                       <span className="text-sm font-medium">{t("loading")}</span>
                     </motion.div>
                   ) : viewState === "ready" && hasVisibleAssignments ? (
-                    <motion.div
-                      key="assignments"
-                      className="flex flex-col gap-4 mb-12"
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.3, ease: "easeOut" }}
-                    >
-                      {visibleAssignments.map((assignment) => {
-                        const key =
-                          assignment.uid ??
-                          `${assignment.title}-${assignment.displayStart.getTime()}`;
-                        const timeLabel = formatAssignmentTimeRange(
-                          assignment.displayStart,
-                          assignment.displayEnd,
-                          assignment.allDay
-                        );
-                        const isExpanded = expandedAssignments[key] ?? false;
-                        return (
-                          <motion.article
-                            key={key}
-                            variants={assignmentVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit="exit"
-                            className="rounded-3xl border border-orange-100/70 bg-white p-4 sm:p-5 md:p-6 shadow-sm hover:shadow-md transition-shadow"
-                          >
-                            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3 lg:gap-6">
-                              <div className="space-y-2 w-full">
-                                <h3 className="text-base sm:text-lg font-semibold text-gray-900 break-words">
-                                  {assignment.title}
-                                </h3>
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-3">
-                                  <p className="text-sm font-medium text-orange-600">
-                                    {formatAssignmentDate(
-                                      assignment.displayStart,
-                                      assignment.allDay
-                                    )}
-                                  </p>
-                                  {timeLabel || assignment.allDay ? (
-                                    <p className="text-sm text-gray-500 sm:text-right">
-                                      {timeLabel || t("calendarAllDay")}
+                    <LayoutGroup>
+                      <motion.div
+                        key="assignments"
+                        className="flex flex-col gap-4 mb-12"
+                        layout
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
+                      >
+                        {visibleAssignments.map((assignment) => {
+                          const assignmentKey = getAssignmentId(assignment);
+                          const timeLabel = formatAssignmentTimeRange(
+                            assignment.displayStart,
+                            assignment.displayEnd,
+                            assignment.allDay
+                          );
+                          const isExpanded =
+                            expandedAssignments[assignmentKey] ?? false;
+                          const isCompleted = assignment.completed === true;
+                          const isPending = Boolean(
+                            pendingCompletion[assignmentKey]
+                          );
+                          return (
+                            <motion.article
+                              key={assignmentKey}
+                              layoutId={`list-${assignmentKey}`}
+                              variants={assignmentVariants}
+                              initial="hidden"
+                              animate="visible"
+                              exit="exit"
+                              layout
+                              role="button"
+                              tabIndex={0}
+                              aria-pressed={isCompleted}
+                              aria-disabled={isPending}
+                              onClick={(event) => {
+                                if (
+                                  (event.target as HTMLElement | null)?.closest(
+                                    "[data-prevent-toggle]"
+                                  )
+                                ) {
+                                  return;
+                                }
+                                if (isPending) {
+                                  return;
+                                }
+                                void toggleAssignmentCompletion(assignment);
+                              }}
+                              onKeyDown={(event) => {
+                                if (isPending) {
+                                  return;
+                                }
+                                if (event.key === "Enter" || event.key === " ") {
+                                  event.preventDefault();
+                                  void toggleAssignmentCompletion(assignment);
+                                }
+                              }}
+                              transition={{
+                                layout: { duration: 0.35, ease: "easeOut" },
+                              }}
+                              className={`relative rounded-3xl border p-4 sm:p-5 md:p-6 shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/70 focus-visible:ring-offset-2 ${
+                                isCompleted
+                                  ? "border-emerald-200 bg-emerald-50/70"
+                                  : "border-orange-100/70 bg-white hover:shadow-md"
+                              } ${
+                                isPending
+                                  ? "opacity-60 cursor-not-allowed"
+                                  : "cursor-pointer"
+                              }`}
+                            >
+                              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3 lg:gap-6">
+                                <div className="space-y-2 w-full">
+                                  <h3 className="relative text-base sm:text-lg font-semibold break-words">
+                                    <span
+                                      className={`relative inline-block ${
+                                        isCompleted
+                                          ? "text-emerald-700"
+                                          : "text-gray-900"
+                                      }`}
+                                    >
+                                      {assignment.title}
+                                    </span>
+                                  </h3>
+                                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-3">
+                                    <p
+                                      className={`text-sm font-medium ${
+                                        isCompleted ? "text-emerald-700" : "text-orange-600"
+                                      }`}
+                                    >
+                                      {formatAssignmentDate(
+                                        assignment.displayStart,
+                                        assignment.allDay
+                                      )}
                                     </p>
-                                  ) : null}
+                                    {timeLabel || assignment.allDay ? (
+                                      <p
+                                        className={`text-sm sm:text-right ${
+                                          isCompleted ? "text-emerald-600" : "text-gray-500"
+                                        }`}
+                                      >
+                                        {timeLabel || t("calendarAllDay")}
+                                      </p>
+                                    ) : null}
+                                  </div>
+                                </div>
+                                <div className="flex flex-col items-start gap-2 text-sm text-gray-600">
+                                  {assignment.location && (
+                                    <div
+                                      className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
+                                        isCompleted
+                                          ? "bg-emerald-100 text-emerald-700"
+                                          : "bg-orange-100 text-orange-700"
+                                      }`}
+                                    >
+                                      📍 {assignment.location}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
-                              <div className="flex flex-col items-start gap-2 text-sm text-gray-600">
-                                {assignment.location && (
-                                  <div className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-orange-700 text-xs font-semibold">
-                                    📍 {assignment.location}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            {assignment.description && (
-                              <div className="mt-4">
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setExpandedAssignments((prev) => ({
-                                      ...prev,
-                                      [key]: !isExpanded,
-                                    }))
-                                  }
-                                  className="inline-flex items-center gap-2 text-sm font-semibold text-orange-600 hover:text-orange-700 transition"
-                                >
-                                  {isExpanded
-                                    ? t("hideDetails")
-                                    : t("showDetails")}
-                                  <motion.span
-                                    animate={{ rotate: isExpanded ? 180 : 0 }}
-                                    transition={{ duration: 0.2, ease: "easeOut" }}
-                                    className="inline-flex"
+                              {assignment.description && (
+                                <div className="mt-4">
+                                  <button
+                                    type="button"
+                                    data-prevent-toggle
+                                    onClick={() =>
+                                      setExpandedAssignments((prev) => ({
+                                        ...prev,
+                                        [assignmentKey]: !isExpanded,
+                                      }))
+                                    }
+                                    className="inline-flex items-center gap-2 text-sm font-semibold text-orange-600 hover:text-orange-700 transition"
                                   >
-                                    <ChevronDownIcon className="h-4 w-4" />
-                                  </motion.span>
-                                </button>
-                                <AnimatePresence initial={false}>
-                                  {isExpanded && (
-                                    <motion.div
-                                      key={`description-${key}`}
-                                      initial={{ height: 0, opacity: 0 }}
-                                      animate={{ height: "auto", opacity: 1 }}
-                                      exit={{ height: 0, opacity: 0 }}
-                                      transition={{ duration: 0.25, ease: "easeOut" }}
-                                      className="overflow-hidden"
+                                    {isExpanded
+                                      ? t("hideDetails")
+                                      : t("showDetails")}
+                                    <motion.span
+                                      animate={{ rotate: isExpanded ? 180 : 0 }}
+                                      transition={{ duration: 0.2, ease: "easeOut" }}
+                                      className="inline-flex"
                                     >
-                                      <p className="mt-3 whitespace-pre-line text-sm text-gray-600">
-                                        {assignment.description}
-                                      </p>
-                                    </motion.div>
-                                  )}
-                                </AnimatePresence>
-                              </div>
-                            )}
-                          </motion.article>
-                        );
-                      })}
-                    </motion.div>
+                                      <ChevronDownIcon className="h-4 w-4" />
+                                    </motion.span>
+                                  </button>
+                                  <AnimatePresence initial={false}>
+                                    {isExpanded && (
+                                      <motion.div
+                                        key={`description-${assignmentKey}`}
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: "auto", opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        transition={{ duration: 0.25, ease: "easeOut" }}
+                                        className="overflow-hidden"
+                                      >
+                                        <p className="mt-3 whitespace-pre-line text-sm text-gray-600">
+                                          {assignment.description}
+                                        </p>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
+                              )}
+                            </motion.article>
+                          );
+                        })}
+                      </motion.div>
+                    </LayoutGroup>
                   ) : viewState === "ready" && hasAnyAssignments ? (
                     <motion.div
                       key="caught-up"

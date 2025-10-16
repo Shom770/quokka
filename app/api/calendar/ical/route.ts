@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import {
   parseICalendarFeed,
   serializeAssignments,
+  type CalendarAssignmentPayload,
 } from "@/utils/ical";
 
 export const runtime = "edge";
@@ -121,19 +122,31 @@ export async function POST(request: Request) {
     }
 
     const { env } = await getRequestContext();
-    const upsertResult = await env.users
+    const deleteResult = await env.calendar
       .prepare(
         `
-        INSERT INTO users (user_id, points, ical_iurl)
-        VALUES (?1, 0, ?2)
-        ON CONFLICT(user_id) DO UPDATE
-          SET ical_iurl = excluded.ical_iurl
+        DELETE FROM user_urls
+        WHERE user_id = ?1
+      `
+      )
+      .bind(userId)
+      .run();
+
+    if (!deleteResult.success) {
+      throw new Error("Failed to clear existing calendar URLs");
+    }
+
+    const insertResult = await env.calendar
+      .prepare(
         `
+        INSERT INTO user_urls (user_id, url)
+        VALUES (?1, ?2)
+      `
       )
       .bind(userId, parsedUrl.toString())
       .run();
 
-    if (!upsertResult.success) {
+    if (!insertResult.success) {
       throw new Error("Failed to store calendar URL");
     }
 
@@ -163,18 +176,20 @@ export async function GET(request: Request) {
 
   try {
     const { env } = await getRequestContext();
-    const row = await env.users
+    const row = await env.calendar
       .prepare(
         `
-        SELECT ical_iurl
-        FROM users
+        SELECT url
+        FROM user_urls
         WHERE user_id = ?1
+        ORDER BY created_at DESC
+        LIMIT 1
       `
       )
       .bind(userId)
-      .first<{ ical_iurl: string | null }>();
+      .first<{ url: string | null }>();
 
-    const storedUrl = row?.ical_iurl ?? null;
+    const storedUrl = row?.url ?? null;
 
     if (!storedUrl) {
       return NextResponse.json(
@@ -199,9 +214,52 @@ export async function GET(request: Request) {
       return result;
     }
 
+    const { results: completionRows } = await env.calendar
+      .prepare(
+        `
+        SELECT assignment_id, completed, completed_at
+        FROM completed_assignments
+        WHERE user_id = ?1
+      `
+      )
+      .bind(userId)
+      .all<{ assignment_id: string; completed: number; completed_at: string | null }>();
+
+    const completionMap = new Map<
+      string,
+      { completed: boolean; completedAt: string | null }
+    >();
+
+    for (const row of completionRows ?? []) {
+      completionMap.set(row.assignment_id, {
+        completed: row.completed === 1,
+        completedAt: row.completed === 1 ? row.completed_at : null,
+      });
+    }
+
+    type AssignmentWithStatus = CalendarAssignmentPayload & {
+      completed: boolean;
+      completedAt: string | null;
+    };
+
+    const assignmentsWithStatus: AssignmentWithStatus[] = result.assignments.map(
+      (assignment) => {
+        const completion = assignment.uid
+          ? completionMap.get(assignment.uid)
+          : undefined;
+
+        return {
+          ...assignment,
+          completed: completion?.completed ?? false,
+          completedAt: completion?.completedAt ?? null,
+        };
+      }
+    );
+
     return NextResponse.json(
       {
         ...result,
+        assignments: assignmentsWithStatus,
         icalUrl: storedUrl,
       },
       { status: 200 }

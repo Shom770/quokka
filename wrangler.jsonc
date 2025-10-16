@@ -27,12 +27,20 @@
     {
       "binding": "users",
       "database_name": "quokka-user",
-      "database_id": "7bfe3721-6501-45f7-a79a-f8adaf28f95e"
+      "database_id": "7bfe3721-6501-45f7-a79a-f8adaf28f95e",
+      "migrations_dir": "migrations/quokka-user"
     },
     {
       "binding": "challenges",
       "database_name": "quokka-challenges",
-      "database_id": "8a04ec7c-ea5a-4927-8d25-6f2d7cbceb3a"
+      "database_id": "8a04ec7c-ea5a-4927-8d25-6f2d7cbceb3a",
+      "migrations_dir": "migrations/quokka-challenges"
+    },
+    {
+      "binding": "calendar",
+      "database_name": "quokka-calendar",
+      "database_id": "ef48669f-6f35-4512-aea2-67b673bf9884",
+      "migrations_dir": "migrations/quokka-calendar"
     }
   ],
 

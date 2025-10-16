@@ -14,7 +14,9 @@
     "migrations:survey": "npx wrangler d1 migrations apply quokka-survey",
     "migrations:survey:remote": "npx wrangler d1 migrations apply quokka-survey --remote",
     "migrations:user": "npx wrangler d1 migrations apply quokka-user",
-    "migrations:user:remote": "npx wrangler d1 migrations apply quokka-user --remote"
+    "migrations:user:remote": "npx wrangler d1 migrations apply quokka-user --remote",
+    "migrations:calendar": "npx wrangler d1 migrations apply quokka-calendar",
+    "migrations:calendar:remote": "npx wrangler d1 migrations apply quokka-calendar --remote"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
