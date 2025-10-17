@@ -1,5 +1,6 @@
 "use client"
 
+import * as jose from "jose";
 import { useState } from "react";
 
 export const runtime = "edge";
@@ -14,18 +15,44 @@ type ClientMessage =
 type ServerMessage = { kind: "Messages", messages: Message[] }
 	| { kind: "New Message"; message: Message };
 
+interface ConnectMessage {
+  room_id: string,
+  name: string,
+  teacher: boolean
+}
+
 export default function Game() {
   let [state, setState] = useState(1);
+  
   let [rid, setRid] = useState("");
+  let [name, setName] = useState("");
+  let [teacher, setTeacher] = useState(false);
+
+  let [code, setCode] = useState<string | null>(null);
+
   let [messages, setMessages] = useState<Message[]>([]);
   let [ws, setWs] = useState<WebSocket | undefined>();
 
   let [msg, setMsg] = useState("");
 
   function connect() {
-    console.log("Connecting...");
+    console.log("connecting with " + teacher);
+    connectAsync();
+  }
 
-    let socket = new WebSocket(`ws://127.0.0.1:8787/ws?room_id=${rid}`);
+  async function connectAsync() {
+    // so secure
+    // TODO: move to server and use real secret
+    const secret = jose.base64url.decode('zH4NRP1HMALxxCFnRZABFA7GOJtzU_gIj02alfL1lvI');
+
+    const jk = await new jose.EncryptJWT({
+        name: name,
+        teacher: teacher
+      })
+      .setProtectedHeader({ alg: 'dir', enc: 'A128CBC-HS256' })
+      .encrypt(secret);
+
+    let socket = new WebSocket(`ws://127.0.0.1:8787/ws?room_id=${rid}&jk=${jk}`);
     setWs(socket);
 
     socket.addEventListener("message", (event) => { 
@@ -39,11 +66,16 @@ export default function Game() {
     });
 
     socket.addEventListener("open", (e) => {
-      setState(2);
+      setState(3);
 
       let m: ClientMessage = { kind: "Get Messages" };
       socket.send(JSON.stringify(m));
     }); 
+
+    socket.addEventListener("error", (e) => {
+      console.log(e);
+      setCode("Code not found");
+    });
   } 
 
   function sendMessage() {
@@ -67,10 +99,32 @@ export default function Game() {
           value={rid} onChange={(e) => setRid(e.target.value)}
         />
 
-        <button onClick={connect} className="bg-orange-500/25 hover:bg-orange-600/25 hover:scale-110 text-orange-600 px-4 py-2 rounded-lg border border-orange-600 duration-5050">Submit</button>
+        <button onClick={() => { setState(state + 1); }} className="bg-orange-500/25 hover:bg-orange-600/25 hover:scale-110 text-orange-600 px-4 py-2 rounded-lg border border-orange-600 duration-5050">Submit</button>
       </div>
     );
   } else if (state == 2) {
+    return (
+      <div className="space-y-2 flex flex-col items-center">
+        <p className="text-center text-2xl font-semibold text-orange-600">
+          Enter your name below
+        </p>
+        
+        <input className="w-full border text-gray-700 border-orange-400 px-2 py-1 rounded-md focus:ring-2 focus:ring-orange-400"
+          value={name} onChange={(e) => setName(e.target.value)}
+        />
+
+        <div className="space-x-2">
+          <button onClick={connect} className="bg-orange-500/25 hover:bg-orange-600/25 hover:scale-110 text-orange-600 px-4 py-2 rounded-lg border border-orange-600 duration-5050">Submit</button>
+
+          <button onClick={() => { 
+              setTeacher(!teacher); 
+          }} className="bg-orange-500/25 hover:bg-orange-600/25 hover:scale-110 text-orange-600 px-4 py-2 rounded-lg border border-orange-600 duration-5050">Teacher</button>
+        </div>
+
+        {code ? <p className="text-orange-600">{code}</p> : <></>}
+      </div>
+    );
+  } else if (state == 3) {
     let board = messages.map((x, i) => ( 
       <div className="bg-white border-orange-400 border p-2 max-w-md" key={i}>
         <p className="text-orange-700 text-xl">{x.author.substring(0, 8)}</p>
