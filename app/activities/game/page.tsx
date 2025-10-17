@@ -139,7 +139,7 @@ export default function Game() {
 
     return (
       <div className="space-y-2 flex flex-col items-center">
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-2 px-20">
           {board}
         </div>
 
@@ -147,7 +147,7 @@ export default function Game() {
           Enter your message below
         </p>
 
-        <input value={msg} onChange={(e) => { setMsg(e.target.value) }} className="w-full border text-gray-700 border-orange-400 px-2 py-1 rounded-md focus:ring-2 focus:ring-orange-400" />
+        <input value={msg} onChange={(e) => { setMsg(e.target.value) }} className="mx-2 max-w-sm w-full border text-gray-700 border-orange-400 px-2 py-1 rounded-md focus:ring-2 focus:ring-orange-400" />
 
         <button onClick={sendMessage} className="bg-orange-500/25 hover:bg-orange-600/25 hover:scale-110 text-orange-600 px-4 py-2 rounded-lg border border-orange-600 duration-50">Submit</button>
       </div>
@@ -162,7 +162,7 @@ export default function Game() {
 
     return (
       <div className="space-y-2 flex flex-col items-center">
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-2 px-20">
           {board}
         </div>
 
