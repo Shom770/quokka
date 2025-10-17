@@ -273,7 +273,7 @@ export default function Page() {
           {...animationVariants.rightSection}
         >
           <motion.div
-            className="absolute inset-2 bg-gradient-to-r from-[#F66B6B]/30 to-[#F5C114]/30 blur-[36px] rounded-xl z-0"
+            className="absolute inset-32 bg-gradient-to-r from-[#F66B6B]/30 to-[#F5C114]/30 blur-[36px] rounded-xl z-0"
             {...animationVariants.gradientBackground}
           />
           {isLoading ? (
