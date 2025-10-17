@@ -193,7 +193,7 @@ export default function Navbar() {
         </div>
 
         {/* Mobile Hamburger Menu */}
-        {session && !isLoginPage && (
+        {!isLoginPage && (
           <button
             onClick={toggleMobileMenu}
             className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
@@ -287,46 +287,48 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       <AnimatePresence>
-        {isMobileMenuOpen && session && !isLoginPage && (
+        {isMobileMenuOpen && !isLoginPage && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="md:hidden fixed top-[10vh] left-0 right-0 bg-white border-t border-gray-200 shadow-xl z-50"
+            className="md:hidden fixed top-[10vh] left-0 right-0 bg-white border-t border-gray-200 shadow-xl z-50 max-h-[80vh] overflow-y-auto"
           >
             <div className="px-6 py-4 space-y-4">
-              {/* Mobile Stats Row - Smaller */}
-              <div className="flex items-center justify-center space-x-3 mb-3">
-                {/* Points Badge */}
-                <Link href="/stats" aria-label="View your points">
-                  <div className="flex items-center bg-gradient-to-r from-yellow-100 to-yellow-200 px-3 py-1.5 rounded-full shadow-sm">
-                    <StarIcon className="w-4 h-4 text-yellow-500 mr-1.5" />
-                    <span className={`${rethinkSans.className} text-yellow-600 font-medium text-sm`}>
-                      {displayedPoints}
-                    </span>
-                  </div>
-                </Link>
+              {/* Mobile Stats Row - Smaller (only show if logged in) */}
+              {session && (
+                <div className="flex items-center justify-center space-x-3 mb-3">
+                  {/* Points Badge */}
+                  <Link href="/stats" aria-label="View your points">
+                    <div className="flex items-center bg-gradient-to-r from-yellow-100 to-yellow-200 px-3 py-1.5 rounded-full shadow-sm">
+                      <StarIcon className="w-4 h-4 text-yellow-500 mr-1.5" />
+                      <span className={`${rethinkSans.className} text-yellow-600 font-medium text-sm`}>
+                        {displayedPoints}
+                      </span>
+                    </div>
+                  </Link>
 
-                {/* Level Badge - Small Pill */}
-                <Link href="/stats" aria-label="View your level">
-                  <div className="flex items-center bg-gradient-to-r from-orange-100 to-yellow-100 px-3 py-1.5 rounded-full shadow-sm">
-                    <span className={`${rethinkSans.className} text-orange-600 font-medium text-sm`}>
-                      Level {Math.floor(pointsCount / 100) + 1}
-                    </span>
-                  </div>
-                </Link>
+                  {/* Level Badge - Small Pill */}
+                  <Link href="/stats" aria-label="View your level">
+                    <div className="flex items-center bg-gradient-to-r from-orange-100 to-yellow-100 px-3 py-1.5 rounded-full shadow-sm">
+                      <span className={`${rethinkSans.className} text-orange-600 font-medium text-sm`}>
+                        Level {Math.floor(pointsCount / 100) + 1}
+                      </span>
+                    </div>
+                  </Link>
 
-                {/* Streak Badge */}
-                <Link href="/stats" aria-label="View your streak">
-                  <div className="flex items-center bg-gradient-to-r from-orange-100 to-yellow-100 px-3 py-1.5 rounded-full shadow-sm">
-                    <FireIcon className="w-4 h-4 text-orange-600 mr-1.5" />
-                    <span className={`${rethinkSans.className} text-orange-600 font-medium text-sm`}>
-                      {t("streak", { count: displayedStreak })}
-                    </span>
-                  </div>
-                </Link>
-              </div>
+                  {/* Streak Badge */}
+                  <Link href="/stats" aria-label="View your streak">
+                    <div className="flex items-center bg-gradient-to-r from-orange-100 to-yellow-100 px-3 py-1.5 rounded-full shadow-sm">
+                      <FireIcon className="w-4 h-4 text-orange-600 mr-1.5" />
+                      <span className={`${rethinkSans.className} text-orange-600 font-medium text-sm`}>
+                        {t("streak", { count: displayedStreak })}
+                      </span>
+                    </div>
+                  </Link>
+                </div>
+              )}
 
               {/* Mobile Navigation Links */}
               <div className="space-y-1">

@@ -269,11 +269,11 @@ export default function Page() {
           />
         </motion.div>
         <motion.div
-          className="relative flex flex-col justify-center w-full lg:w-2/5 h-auto lg:h-3/5 gap-4 lg:gap-8"
+          className="relative flex flex-col justify-start w-full lg:w-2/5 h-auto lg:h-full gap-4 lg:gap-8 pt-6 lg:pt-12"
           {...animationVariants.rightSection}
         >
           <motion.div
-            className="absolute inset-2 bg-gradient-to-r from-[#F66B6B]/30 to-[#F5C114]/30 blur-[50px] rounded-xl z-0"
+            className="absolute inset-2 bg-gradient-to-r from-[#F66B6B]/30 to-[#F5C114]/30 blur-[36px] rounded-xl z-0"
             {...animationVariants.gradientBackground}
           />
           {isLoading ? (
@@ -318,7 +318,7 @@ export default function Page() {
               {/* Vertically Stacked Challenge Cards */}
               <div
                 ref={challengeBoxRef}
-                className="flex flex-col gap-4 w-full h-full"
+                className="flex flex-col justify-self-center gap-4 w-full h-2/3"
               >
                 {challenges.map((challenge, idx) => (
                   <div

@@ -37,7 +37,7 @@ export default function Cards({ meditationCardRef, journalingCardRef, resourcesC
           icon={PencilIcon}
           iconColor="#FFE5E5"
           color="#F66B6B"
-          rotate="-8deg"
+          rotate="-6deg"
           zIndex={3}
           position="right-[28%] top-[10%]"
           delay={0.6}
@@ -76,9 +76,9 @@ export default function Cards({ meditationCardRef, journalingCardRef, resourcesC
           icon={BookmarkIcon}
           iconColor="#FFE8DC"
           color="#FD906C"
-          rotate="-2deg"
+          rotate="0deg"
           zIndex={4}
-          position="right-[22%] top-[19%]"
+          position="right-[22%] top-[20%]"
           delay={0.9}
         />
       </Link>
@@ -97,9 +97,9 @@ export default function Cards({ meditationCardRef, journalingCardRef, resourcesC
           icon={BookOpenIcon}
           iconColor="#FFE5E5"
           color="#B35D40"
-          rotate="12deg"
+          rotate="6deg"
           zIndex={10}
-          position="top-[30%] right-[10%]"
+          position="top-[30%] right-[16%]"
           delay={1.0}
         />
       </Link>
