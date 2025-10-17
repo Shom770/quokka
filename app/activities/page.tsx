@@ -120,7 +120,7 @@ export default function Page() {
 
   return (
     <motion.div
-      className="relative flex flex-col gap-6 md:gap-8 w-full md:w-4/5 lg:w-3/5 min-h-screen px-6 md:px-0 py-6 md:py-12 mx-auto md:justify-center items-center"
+      className="relative flex flex-col gap-6 md:gap-8 w-full md:w-4/5 lg:w-3/5 h-full px-6 md:px-0 py-6 md:py-12 mx-auto md:justify-center items-center"
       {...animationVariants.pageContainer}
     >
       <motion.h1

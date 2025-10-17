@@ -117,6 +117,7 @@ export default function LoginPage() {
   // Redirect to home if already authenticated
   useEffect(() => {
     if (status === "authenticated") {
+      sessionStorage.setItem('justSignedIn', 'true');
       router.push("/");
     }
   }, [router, status]);

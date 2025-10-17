@@ -15,12 +15,12 @@ import { useLocale } from "next-intl";
 
 export const runtime = "edge";
 
-const animationVariants = {
+const getAnimationVariants = (showWelcome: boolean) => ({
   pageContainer: {
     initial: { opacity: 0 },
     animate: {
       opacity: 1,
-      transition: { duration: 0.8, ease: "easeOut", delay: 3.3 },
+      transition: { duration: 0.8, ease: "easeOut", delay: showWelcome ? 3.3 : 0.3 },
     },
   },
   leftSection: {
@@ -28,7 +28,7 @@ const animationVariants = {
     animate: {
       x: 0,
       opacity: 1,
-      transition: { duration: 0.6, delay: 3.5, ease: "easeOut" },
+      transition: { duration: 0.6, delay: showWelcome ? 3.5 : 0.5, ease: "easeOut" },
     },
   },
   rightSection: {
@@ -36,7 +36,7 @@ const animationVariants = {
     animate: {
       x: 0,
       opacity: 1,
-      transition: { duration: 0.6, delay: 3.7, ease: "easeOut" },
+      transition: { duration: 0.6, delay: showWelcome ? 3.7 : 0.7, ease: "easeOut" },
     },
   },
   gradientBackground: {
@@ -46,7 +46,7 @@ const animationVariants = {
       opacity: 1,
       transition: {
         duration: 1.0,
-        delay: 3.9,
+        delay: showWelcome ? 3.9 : 0.9,
         type: "spring",
         stiffness: 100,
         damping: 15,
@@ -68,7 +68,7 @@ const animationVariants = {
       },
     },
   },
-};
+});
 
 type CalendarActivity = {
   id: number;
@@ -86,7 +86,7 @@ type Challenge = {
 
 export default function Page() {
   const { showTutorial, completeTutorial, skipTutorial } = useTutorial();
-  const [showWelcome, setShowWelcome] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(false);
   const [isGuest, setIsGuest] = useState<boolean>(false);
 
   // Add translations
@@ -126,6 +126,16 @@ export default function Page() {
       setIsGuest(cookie.split("; ").some((c) => c.startsWith("guest=1")));
     } catch {
       setIsGuest(false);
+    }
+  }, []);
+
+  // Show welcome animation only on sign-in
+  useEffect(() => {
+    const isSignIn = sessionStorage.getItem('justSignedIn');
+    
+    if (isSignIn) {
+      setShowWelcome(true);
+      sessionStorage.removeItem('justSignedIn');
     }
   }, []);
 
@@ -255,12 +265,12 @@ export default function Page() {
 
       <motion.div
         className="flex flex-col lg:flex-row-reverse items-center justify-between w-4/5 h-[90vh] gap-8 lg:gap-0"
-        {...animationVariants.pageContainer}
+        {...getAnimationVariants(showWelcome).pageContainer}
       >
         <motion.div
           ref={activityCardsRef}
           className="hidden lg:flex items-center justify-center relative w-[40%] h-[80%] activity-cards"
-          {...animationVariants.leftSection}
+          {...getAnimationVariants(showWelcome).leftSection}
         >
           <Cards
             meditationCardRef={meditationCardRef}
@@ -269,13 +279,9 @@ export default function Page() {
           />
         </motion.div>
         <motion.div
-          className="relative flex flex-col justify-start w-full lg:w-2/5 h-auto lg:h-full gap-4 lg:gap-8 pt-6 lg:pt-12"
-          {...animationVariants.rightSection}
+          className="relative flex flex-col justify-start lg:justify-center w-full lg:w-2/5 h-auto lg:h-full gap-4 lg:gap-8 pt-6 lg:pt-0"
+          {...getAnimationVariants(showWelcome).rightSection}
         >
-          <motion.div
-            className="absolute inset-32 bg-gradient-to-r from-[#F66B6B]/30 to-[#F5C114]/30 blur-[36px] rounded-xl z-0"
-            {...animationVariants.gradientBackground}
-          />
           {isLoading ? (
             <div className="flex items-center justify-center w-full h-full z-10">
               <motion.div
@@ -318,8 +324,12 @@ export default function Page() {
               {/* Vertically Stacked Challenge Cards */}
               <div
                 ref={challengeBoxRef}
-                className="flex flex-col justify-self-center gap-4 w-full h-2/3"
+                className="relative flex flex-col justify-self-center gap-4 w-full h-2/3"
               >
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-[#F66B6B]/30 to-[#F5C114]/30 blur-[64px] rounded-xl z-0"
+                  {...getAnimationVariants(showWelcome).gradientBackground}
+                />
                 {challenges.map((challenge, idx) => (
                   <div
                     key={challenge.id}

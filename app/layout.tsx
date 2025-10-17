@@ -20,7 +20,7 @@ export default async function RootLayout({
   return (
     <html lang={locale}>
       <body
-        className={`flex flex-col items-center bg-[#FCF4F0] ${figtree.className} antialiased overflow-hidden w-full`}
+        className={`flex flex-col items-center bg-[#FCF4F0] ${figtree.className} antialiased w-full`}
       >
         <NextIntlClientProvider>
           <LayoutClient>{children}</LayoutClient>
