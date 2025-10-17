@@ -109,12 +109,12 @@ export default function Page() {
       description: t("squareBreathingDesc"),
     },
     {
-      title: "Join live participation game",
-      icon: "🟦",
+      title: "Live activity",
+      icon: "🎮",
       backgroundColor:
         "bg-yellow-200/30 hover:bg-yellow-200/20 border-2 border-yellow-400",
       link: "/activities/game",
-      description: "sample game TEST",
+      description: "Join or host a live activity with the entire class",
     }
   ];
 
