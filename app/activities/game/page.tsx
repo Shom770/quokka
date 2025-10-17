@@ -54,7 +54,7 @@ export default function Game() {
       .setProtectedHeader({ alg: 'dir', enc: 'A128CBC-HS256' })
       .encrypt(secret);
 
-    let socket = new WebSocket(`ws://websocket.quokka-app.workers.dev/ws?room_id=${id}&jk=${jk}`);
+    let socket = new WebSocket(`wss://websocket.quokka-app.workers.dev/ws?room_id=${id}&jk=${jk}`);
     setWs(socket);
 
     socket.addEventListener("message", (event) => {
