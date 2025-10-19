@@ -305,7 +305,7 @@ export default function Page() {
               {allCompleted && (
                 <motion.div
                   className="text-center"
-                  {...animationVariants.completionMessage}
+                  {...getAnimationVariants(showWelcome).completionMessage}
                 >
                   <div className="flex items-center justify-center gap-2">
                     <TrophyIcon className="w-6 h-6 text-yellow-500" />

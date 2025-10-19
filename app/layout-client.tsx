@@ -54,7 +54,7 @@ export default function RootLayout({
    <SessionProvider>
      <Context.Provider value={{ canShow, setCanShow, motivationMode, setMotivationMode }}>
        <Navbar />
-      <div className="flex flex-col items-center w-screen overflow-x-hidden">
+      <div className="flex flex-col items-center w-full overflow-x-hidden">
         {children}
       </div>
        <SurveyManager />
