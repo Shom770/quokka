@@ -324,7 +324,7 @@ export default function Page() {
               {/* Vertically Stacked Challenge Cards */}
               <div
                 ref={challengeBoxRef}
-                className="relative flex flex-col justify-self-center gap-4 w-full h-2/3"
+                className="relative flex flex-col justify-self-center gap-3 md:gap-4 w-full h-full sm:h-2/3"
               >
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-[#F66B6B]/30 to-[#F5C114]/30 blur-[64px] rounded-xl z-0"
@@ -333,7 +333,7 @@ export default function Page() {
                 {challenges.map((challenge, idx) => (
                   <div
                     key={challenge.id}
-                    className="flex-1 transition-all duration-300 group cursor-pointer"
+                    className="h-1/3 transition-all duration-300 group cursor-pointer"
                     style={{
                       zIndex: hoveredIdx === idx ? 50 : 10,
                       transform:

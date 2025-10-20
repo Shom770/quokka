@@ -178,7 +178,7 @@ export default function ChallengeBox({
 
         {/* Category Title */}
         <h1
-          className={`${rethinkSans.className} text-lg font-extrabold text-center leading-tight`}
+            className={`${rethinkSans.className} text-lg md:text-base lg:text-xl font-extrabold text-center leading-tight`}
         >
           {category}
         </h1>
@@ -186,7 +186,7 @@ export default function ChallengeBox({
         {/* Description */}
         <div className="px-3 text-center flex-1 flex items-center">
           <p
-            className={`${inter.className} antialiased text-xs font-medium leading-relaxed opacity-90 line-clamp-4`}
+            className={`${inter.className} antialiased text-sm md:text-sm lg:text-base font-medium leading-relaxed opacity-90 line-clamp-4`}
           >
             {description}
           </p>
