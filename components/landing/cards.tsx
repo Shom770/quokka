@@ -39,7 +39,7 @@ export default function Cards({ meditationCardRef, journalingCardRef, resourcesC
           color="#F66B6B"
           rotate="-6deg"
           zIndex={3}
-          position="right-[28%] top-[10%]"
+          position="right-[28%] top-[13%]"
           delay={0.6}
         />
       </Link>
@@ -78,7 +78,7 @@ export default function Cards({ meditationCardRef, journalingCardRef, resourcesC
           color="#FD906C"
           rotate="0deg"
           zIndex={4}
-          position="right-[22%] top-[20%]"
+          position="right-[22%] top-[26%]"
           delay={0.9}
         />
       </Link>
@@ -99,7 +99,7 @@ export default function Cards({ meditationCardRef, journalingCardRef, resourcesC
           color="#B35D40"
           rotate="6deg"
           zIndex={10}
-          position="top-[30%] right-[16%]"
+          position="top-[39%] right-[16%]"
           delay={1.0}
         />
       </Link>

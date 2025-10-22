@@ -618,11 +618,14 @@ export default function CalendarImportPage() {
 
   return (
     <motion.div
-      className="flex flex-col items-center w-full min-h-screen py-12 px-4 md:px-6"
+      className="relative flex flex-col items-center w-full min-h-screen py-12 px-4 md:px-6"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
+      <div
+        className="absolute w-2/3 h-2/3 rounded-full bg-gradient-to-r from-[#F66B6B]/30 to-[#F5C114]/30 blur-[256px] z-0"
+      />
       <motion.div
         className="flex flex-col items-center text-center gap-4 mb-10 w-full max-w-4xl"
         variants={containerVariants}
