@@ -322,7 +322,9 @@ export function gradeResponses(
     });
   });
 
-  const dimensionMeans: Record<Dimension, number> = {} as any;
+  const dimensionMeans = Object.fromEntries(
+    DIMENSIONS.map((d) => [d, 0])
+  ) as Record<Dimension, number>;
   for (const d of DIMENSIONS) {
     const t = totals[d] ?? 0;
     const w = weights[d] ?? 0;
@@ -333,7 +335,9 @@ export function gradeResponses(
   const timeAvailable = dimensionMeans.time || 3;
 
   // 2) Map to activities via dot product weights
-  const activityScores: Record<Activity, number> = {} as any;
+  const activityScores = Object.fromEntries(
+    (Object.keys(activityWeights) as Activity[]).map((a) => [a, 0])
+  ) as Record<Activity, number>;
   (Object.keys(activityWeights) as Activity[]).forEach((a) => {
     const w = activityWeights[a];
     let s = 0;
