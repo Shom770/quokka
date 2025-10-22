@@ -164,7 +164,7 @@ export default function Navbar() {
             <>
               {/* Points Badge */}
               <Link href="/stats" aria-label="View your points">
-                <motion.div className="flex items-center bg-gradient-to-r from-yellow-100 to-yellow-200 px-4 py-2 rounded-full shadow-sm hover:shadow-md transition">
+                <motion.div className="flex items-center bg-gradient-to-r from-yellow-100 to-yellow-200 px-4 py-2 rounded-full shadow-sm hover:shadow-md transition-all duration-300">
                   <StarIcon className="w-5 h-5 text-yellow-500 mr-2" />
                   <span
                     className={`${rethinkSans.className} text-yellow-600 font-medium text-sm`}
@@ -179,7 +179,7 @@ export default function Navbar() {
 
               {/* Streak Badge */}
               <Link href="/stats" aria-label="View your streak">
-                <motion.div className="flex items-center bg-gradient-to-r from-orange-100 to-yellow-100 px-4 py-2 rounded-full shadow-sm hover:shadow-md transition">
+                <motion.div className="flex items-center bg-gradient-to-r from-orange-100 to-yellow-100 px-4 py-2 rounded-full shadow-sm hover:shadow-md transition-all duration-300">
                   <FireIcon className="w-5 h-5 text-orange-600 mr-2" />
                   <span
                     className={`${rethinkSans.className} text-orange-600 font-medium text-sm`}
@@ -216,7 +216,7 @@ export default function Navbar() {
                 alt={session.user.name ?? "Profile"}
                 width={40}
                 height={40}
-                className="rounded-full cursor-pointer hover:opacity-80 hover:scale-110 transition-[transform, opacity] duration-500"
+                className="rounded-full cursor-pointer hover:opacity-80 hover:scale-110 transition-[transform, opacity] duration-500 border border-orange-300"
                 onClick={toggleDropdown}
               />
 

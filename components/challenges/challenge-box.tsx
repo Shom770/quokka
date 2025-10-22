@@ -186,7 +186,7 @@ export default function ChallengeBox({
         {/* Description */}
         <div className="px-3 text-center flex-1 flex items-center">
           <p
-            className={`${inter.className} antialiased text-sm md:text-sm lg:text-base font-medium leading-relaxed opacity-90 line-clamp-4`}
+            className={`${inter.className} antialiased text-sm font-medium leading-relaxed opacity-90 line-clamp-4`}
           >
             {description}
           </p>
