@@ -217,8 +217,19 @@ export default function Page() {
       animate="animate"
       variants={animationVariants.pageContainer}
     >
-      <div className="w-full max-w-xl">
+      <div className="relative w-full max-w-xl z-10">
         <AnimatePresence mode="wait" custom={direction}>
+          <motion.div
+            className="absolute -inset-16 bg-gradient-to-r from-[#F66B6B]/40 to-[#F5C114]/40 blur-[64px] rounded-xl -z-10"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ 
+              duration: 0.6, 
+              ease: "easeInOut" 
+            }}
+            key="gradient-bg"
+          />
           {stage === "intro" && !showPast && (
             <motion.div
               key="intro"

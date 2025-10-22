@@ -68,8 +68,7 @@
     "getStarted": "Get Started"
   },
   "resources": {
-    "titleLine1": "Mental health resources,",
-    "titleLine2": "curated for you.",
+    "titleLine": "Mental health resources, curated for you.",
     "subtitle": "Professional support and resources for your mental health journey",
     "988": {
       "title": "988 Suicide & Crisis Lifeline",

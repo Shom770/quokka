@@ -36,7 +36,7 @@ export default function Resource({ title, description, pathToImage, link }: Reso
   return (
     <>
     <motion.div 
-      className="bg-gradient-to-r from-orange-600/5 to-red-600/5 border-2 border-orange-600/75 flex flex-row items-center justify-center gap-8 w-full h-36 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group"
+      className="bg-gradient-to-r from-orange-600/10 to-red-600/10 border-2 border-orange-600/75 flex flex-row items-center justify-center gap-8 w-full h-36 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group"
       whileHover={{ 
         scale: 1.02, 
         boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",

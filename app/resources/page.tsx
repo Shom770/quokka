@@ -64,13 +64,9 @@ const animationVariants = {
     initial: { opacity: 0, scale: 0.95 },
     animate: { opacity: 1, scale: 1, transition: { duration: 0.6, ease: "easeOut" } }
   },
-  titleLine1: {
+  titleLine: {
     initial: { opacity: 0, y: -30 },
     animate: { opacity: 1, y: 0, transition: { duration: 0.8, delay: 0.2 } }
-  },
-  titleLine2: {
-    initial: { opacity: 0, y: -30 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.8, delay: 0.4 } }
   },
   scrollContainer: {
     initial: { opacity: 0, y: 30 },
@@ -102,7 +98,7 @@ export default function Page() {
 
   return (
     <motion.div 
-      className="relative flex flex-col justify-center gap-8 w-full max-w-4xl mx-auto h-[75vh] overflow-hidden"
+      className="relative flex flex-col justify-center gap-8 w-full md:w-2/3 mx-auto min-h-screen"
       {...animationVariants.pageContainer}
     >
       {/* Background Elements */}
@@ -110,8 +106,14 @@ export default function Page() {
         className="absolute inset-0 pointer-events-none z-0"
         {...animationVariants.backgroundElements}
       >
-        {/* Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-red-50 to-pink-50 opacity-30" />
+        <motion.div
+          className="absolute inset-16 bg-gradient-to-r from-[#F66B6B]/30 to-[#F5C114]/30 blur-[100px] -z-10"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          transition={{ duration: 0.6, ease: "easeInOut" }}
+          key="gradient-bg"
+        />
         
         {/* Decorative Elements */}
         <div className="absolute top-20 right-20 w-32 h-32 rounded-full bg-gradient-to-br from-orange-200 to-red-200 opacity-20 blur-2xl" />
@@ -146,15 +148,9 @@ export default function Page() {
         <div className="text-center space-y-2">
           <motion.div 
             className={`text-orange-600 font-extrabold text-[46px] leading-[1] ${rethinkSans.className}`}
-            {...animationVariants.titleLine1}
+            {...animationVariants.titleLine}
           >
-            {t("titleLine1")}
-          </motion.div>
-          <motion.div 
-            className={`text-orange-600 font-extrabold text-[46px] leading-[1] ${rethinkSans.className}`}
-            {...animationVariants.titleLine2}
-          >
-            {t("titleLine2")}
+            {t("titleLine")}
           </motion.div>
           <motion.p 
             className="text-gray-600 text-lg font-medium mt-4"
@@ -168,7 +164,7 @@ export default function Page() {
 
         {/* Resources Container */}
         <motion.div 
-          className="flex-1 overflow-y-auto space-y-4 px-3"
+          className="flex-1 space-y-4 px-3 pb-4"
           {...animationVariants.scrollContainer}
         >
           {resources.map((resource, index) => (
