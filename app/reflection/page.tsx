@@ -30,12 +30,12 @@ const animationVariants = {
     initial: { opacity: 0 },
     animate: { opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
   },
-  titleContainer: {
-    initial: { opacity: 0, y: -30 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.8, delay: 0.2 } },
-  },
   card: {
-    initial: { opacity: 0, x: 50, scale: 0.95 },
+    initial: (direction: number) => ({
+      opacity: 0,
+      x: direction > 0 ? 50 : -50,
+      scale: 0.95,
+    }),
     animate: {
       opacity: 1,
       x: 0,
@@ -47,7 +47,12 @@ const animationVariants = {
         damping: 15,
       },
     },
-    exit: { opacity: 0, x: -50, scale: 0.95, transition: { duration: 0.4 } },
+    exit: (direction: number) => ({
+      opacity: 0,
+      x: direction > 0 ? -50 : 50,
+      scale: 0.95,
+      transition: { duration: 0.4 },
+    }),
   },
   navButton: {
     initial: { opacity: 0, y: 20 },
@@ -80,6 +85,7 @@ export default function Page() {
   const [loadingPast, setLoadingPast] = useState(false);
   const router = useRouter();
   const [isGuest, setIsGuest] = useState(false);
+  const [direction, setDirection] = useState<1 | -1>(1);
 
   // Detect guest mode via cookie
   useEffect(() => {
@@ -102,6 +108,7 @@ export default function Page() {
   };
 
   const nextQuestion = () => {
+    setDirection(1);
     if (current < questions.length - 1) {
       setCurrent(current + 1);
     } else {
@@ -110,12 +117,14 @@ export default function Page() {
   };
 
   const prevQuestion = () => {
+    setDirection(-1);
     if (current > 0) {
       setCurrent(current - 1);
     }
   };
 
   const gradeQuiz = () => {
+    setDirection(1);
     const categories = new Map<string, number>();
     questions.forEach((q, idx) => {
       const opt = q.options.find((o) => o.text === selected[idx]);
@@ -186,13 +195,14 @@ export default function Page() {
 
   return (
     <motion.div
-      className="relative w-full max-w-xl mx-auto p-4"
+      className="relative flex w-full items-center justify-center px-4 py-8 min-h-[calc(100dvh-10vh)]"
       initial="initial"
       animate="animate"
       variants={animationVariants.pageContainer}
     >
-      <AnimatePresence mode="wait">
-        {stage === "intro" && !showPast && (
+      <div className="w-full max-w-xl">
+        <AnimatePresence mode="wait" custom={direction}>
+          {stage === "intro" && !showPast && (
           <motion.div
             key="intro"
             className="text-center p-6 bg-orange-100 rounded-xl shadow"
@@ -200,27 +210,23 @@ export default function Page() {
             animate="animate"
             exit="exit"
             variants={animationVariants.card}
+            custom={direction}
           >
-            <motion.h1
+            <h1
               className={`${rethinkSans.className} text-3xl font-bold text-orange-600`}
-              initial="initial"
-              animate="animate"
-              variants={animationVariants.titleContainer}
             >
               {t("title")}
-            </motion.h1>
-            <motion.p
-              className="mt-2 text-gray-700"
-              initial="initial"
-              animate="animate"
-              variants={animationVariants.titleContainer}
-            >
+            </h1>
+            <p className="mt-2 text-gray-700">
               {t("subtitle")}
-            </motion.p>
+            </p>
             <div className="flex flex-col gap-4 mt-6">
               <motion.button
                 className="px-4 py-2 bg-orange-500 text-white rounded-lg flex items-center mx-auto"
-                onClick={() => setStage("quiz")}
+                onClick={() => {
+                  setDirection(1);
+                  setStage("quiz");
+                }}
                 initial="initial"
                 animate="animate"
                 variants={animationVariants.navButton}
@@ -232,7 +238,10 @@ export default function Page() {
               {!isGuest && (
                 <motion.button
                   className="px-4 py-2 bg-white border border-orange-400 text-orange-600 rounded-lg flex items-center mx-auto hover:bg-orange-50 transition"
-                  onClick={() => setShowPast(true)}
+                  onClick={() => {
+                    setDirection(1);
+                    setShowPast(true);
+                  }}
                   initial="initial"
                   animate="animate"
                   variants={animationVariants.navButton}
@@ -243,9 +252,9 @@ export default function Page() {
               )}
             </div>
           </motion.div>
-        )}
+          )}
 
-        {stage === "intro" && showPast && !isGuest && (
+          {stage === "intro" && showPast && !isGuest && (
           <motion.div
             key="past"
             className="p-6 bg-orange-50 rounded-xl shadow"
@@ -253,6 +262,7 @@ export default function Page() {
             animate="animate"
             exit="exit"
             variants={animationVariants.card}
+            custom={direction}
           >
             <h2 className="text-3xl font-extrabold text-orange-700 mb-8 text-center">
               {t("pastTitle")}
@@ -301,15 +311,18 @@ export default function Page() {
             <div className="flex justify-center mt-10">
               <button
                 className="px-6 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 shadow transition"
-                onClick={() => setShowPast(false)}
+                onClick={() => {
+                  setDirection(-1);
+                  setShowPast(false);
+                }}
               >
                 {t("back")}
               </button>
             </div>
           </motion.div>
-        )}
+          )}
 
-        {stage === "quiz" && (
+          {stage === "quiz" && (
           <motion.div
             key={`quiz-${current}`}
             className="relative z-10 bg-orange-100 p-4 rounded-xl shadow"
@@ -317,17 +330,13 @@ export default function Page() {
             animate="animate"
             exit="exit"
             variants={animationVariants.card}
+            custom={direction}
           >
             <fieldset className="mb-4">
               <legend className="sr-only">{questions[current].question}</legend>
-              <motion.h5
-                className="text-xl font-bold text-gray-700 mb-3"
-                initial="initial"
-                animate="animate"
-                variants={animationVariants.titleContainer}
-              >
+              <h5 className="text-xl font-bold text-gray-700 mb-3">
                 {questions[current].question}
-              </motion.h5>
+              </h5>
               {questions[current].options.map((o, i) => (
                 <label
                   key={i}
@@ -379,9 +388,9 @@ export default function Page() {
               </motion.button>
             </div>
           </motion.div>
-        )}
+          )}
 
-        {stage === "result" && (
+          {stage === "result" && (
           <motion.div
             key="result"
             className="p-6 bg-orange-50 rounded-xl shadow text-center"
@@ -389,6 +398,7 @@ export default function Page() {
             animate="animate"
             exit="exit"
             variants={animationVariants.card}
+            custom={direction}
           >
             <motion.div
               className="mb-4 flex justify-center"
@@ -420,7 +430,10 @@ export default function Page() {
                 <button
                   className="px-4 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition"
                   onClick={() => {
-                    if (!isGuest) setStage("save");
+                    if (!isGuest) {
+                      setDirection(1);
+                      setStage("save");
+                    }
                   }}
                   disabled={isSaving}
                   >
@@ -437,9 +450,9 @@ export default function Page() {
               </div>
             </div>
           </motion.div>
-        )}
+          )}
 
-        {stage === "save" && (
+          {stage === "save" && (
           <motion.div
             key="save"
             className="p-6 bg-orange-50 rounded-xl shadow text-center"
@@ -447,6 +460,7 @@ export default function Page() {
             animate="animate"
             exit="exit"
             variants={animationVariants.card}
+            custom={direction}
           >
             <h3 className="text-xl font-bold text-gray-900 mb-4">
               {t("saving")}
@@ -487,8 +501,9 @@ export default function Page() {
               </div>
             )}
           </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
+      </div>
     </motion.div>
   );
 }
