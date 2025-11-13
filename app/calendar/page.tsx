@@ -15,6 +15,8 @@ import {
   CalendarDaysIcon,
   ClipboardDocumentCheckIcon,
   ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   LinkIcon,
 } from "@heroicons/react/24/solid";
 import { rethinkSans } from "@/components/fonts";
@@ -37,6 +39,14 @@ type CalendarAssignmentWithStatus = CalendarAssignment & {
 type DisplayAssignment = CalendarAssignmentWithStatus & {
   displayStart: Date;
   displayEnd?: Date;
+};
+
+type WeekBucket = {
+  key: string;
+  start: Date;
+  end: Date;
+  label: string;
+  assignments: DisplayAssignment[];
 };
 
 export const runtime = "edge";
@@ -207,6 +217,48 @@ function compareDisplayAssignments(
   return left.displayStart.getTime() - right.displayStart.getTime();
 }
 
+function startOfWeek(date: Date) {
+  const result = new Date(date);
+  result.setHours(0, 0, 0, 0);
+  const day = result.getDay();
+  result.setDate(result.getDate() - day);
+  return result;
+}
+
+function endOfWeek(start: Date) {
+  const result = new Date(start);
+  result.setDate(result.getDate() + 6);
+  result.setHours(23, 59, 59, 999);
+  return result;
+}
+
+function formatWeekRange(start: Date, end: Date) {
+  const sameYear = start.getFullYear() === end.getFullYear();
+  const startFormatter = new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    ...(sameYear ? {} : { year: "numeric" }),
+  });
+  const endFormatter = new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  const startLabel = startFormatter.format(start);
+  const endLabel = endFormatter.format(end);
+
+  return `${startLabel} – ${endLabel}`;
+}
+
+function formatWeekdayHeader(date: Date) {
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  }).format(date);
+}
+
 export default function CalendarImportPage() {
   const t = useTranslations("calendar");
   const { motivationMode, setMotivationMode } = useContext(Context);
@@ -217,7 +269,6 @@ export default function CalendarImportPage() {
   const [viewState, setViewState] = useState<"boot" | "needsUrl" | "ready">(
     "boot"
   );
-  const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
   const [showForm, setShowForm] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -230,6 +281,7 @@ export default function CalendarImportPage() {
   const [pendingCompletion, setPendingCompletion] = useState<
     Record<string, boolean>
   >({});
+  const [selectedWeekKey, setSelectedWeekKey] = useState<string | null>(null);
 
   const fetchStoredAssignments = useCallback(
     async ({ silent = false }: { silent?: boolean } = {}) => {
@@ -274,7 +326,7 @@ export default function CalendarImportPage() {
 
         const mapped = mapAssignmentsFromPayload(data.assignments);
         setAssignments(mapped);
-        setLastUpdated(new Date());
+        setLastUpdated(mapped.length > 0 ? new Date() : null);
         setViewState("ready");
         setShowForm(false);
         setError(null);
@@ -359,7 +411,7 @@ export default function CalendarImportPage() {
     [assignments, shiftDateForMotivation]
   );
 
-  const visibleAssignments = useMemo<DisplayAssignment[]>(() => {
+  const relevantAssignments = useMemo<DisplayAssignment[]>(() => {
     if (!displayedAssignments.length) return [];
     const now = new Date();
 
@@ -385,6 +437,194 @@ export default function CalendarImportPage() {
     });
     return relevant.sort(compareDisplayAssignments);
   }, [displayedAssignments]);
+
+  const weeks = useMemo<WeekBucket[]>(() => {
+    if (!relevantAssignments.length) {
+      return [];
+    }
+
+    const buckets = new Map<string, WeekBucket>();
+
+    relevantAssignments.forEach((assignment) => {
+      const weekStart = startOfWeek(assignment.displayStart);
+      const key = toDateKey(weekStart);
+      const existing = buckets.get(key);
+      if (existing) {
+        existing.assignments.push(assignment);
+        return;
+      }
+      const weekEnd = endOfWeek(weekStart);
+      buckets.set(key, {
+        key,
+        start: weekStart,
+        end: weekEnd,
+        label: formatWeekRange(weekStart, weekEnd),
+        assignments: [assignment],
+      });
+    });
+
+    return Array.from(buckets.values())
+      .map((bucket) => ({
+        ...bucket,
+        assignments: bucket.assignments.sort(compareDisplayAssignments),
+      }))
+      .sort(
+        (left, right) => left.start.getTime() - right.start.getTime()
+      );
+  }, [relevantAssignments]);
+
+  useEffect(() => {
+    if (!weeks.length) {
+      setSelectedWeekKey(null);
+      return;
+    }
+
+    setSelectedWeekKey((previous) => {
+      if (previous && weeks.some((week) => week.key === previous)) {
+        return previous;
+      }
+
+      const todayStart = startOfWeek(new Date());
+      const todayKey = toDateKey(todayStart);
+      const todayWeek = weeks.find((week) => week.key === todayKey);
+      if (todayWeek) {
+        return todayWeek.key;
+      }
+
+      const upcomingWeek = weeks.find(
+        (week) => week.start.getTime() >= todayStart.getTime()
+      );
+      if (upcomingWeek) {
+        return upcomingWeek.key;
+      }
+
+      return weeks[weeks.length - 1]?.key ?? previous ?? null;
+    });
+  }, [weeks]);
+
+  const selectedWeek = useMemo(
+    () => weeks.find((week) => week.key === selectedWeekKey) ?? null,
+    [weeks, selectedWeekKey]
+  );
+
+  const selectedWeekIndex = useMemo(() => {
+    if (!selectedWeekKey) {
+      return -1;
+    }
+    return weeks.findIndex((week) => week.key === selectedWeekKey);
+  }, [weeks, selectedWeekKey]);
+
+  const previousWeekKey =
+    selectedWeekIndex > 0 ? weeks[selectedWeekIndex - 1]?.key ?? null : null;
+
+  const nextWeekKey =
+    selectedWeekIndex >= 0 && selectedWeekIndex < weeks.length - 1
+      ? weeks[selectedWeekIndex + 1]?.key ?? null
+      : null;
+
+  const selectedWeekDayGroups = useMemo(() => {
+    if (!selectedWeek) {
+      return [];
+    }
+
+    const groups = new Map<
+      string,
+      {
+        key: string;
+        date: Date;
+        label: string;
+        assignments: DisplayAssignment[];
+      }
+    >();
+
+    selectedWeek.assignments.forEach((assignment) => {
+      const normalizedDate = normalizeAllDayDate(assignment.displayStart);
+      const groupKey = toDateKey(normalizedDate);
+      const existing = groups.get(groupKey);
+      if (existing) {
+        existing.assignments.push(assignment);
+        return;
+      }
+
+      groups.set(groupKey, {
+        key: groupKey,
+        date: normalizedDate,
+        label: formatWeekdayHeader(normalizedDate),
+        assignments: [assignment],
+      });
+    });
+
+    return Array.from(groups.values())
+      .map((group) => ({
+        ...group,
+        assignments: group.assignments.sort(compareDisplayAssignments),
+      }))
+      .sort((left, right) => left.date.getTime() - right.date.getTime());
+  }, [selectedWeek]);
+
+  const selectedWeekAssignments = selectedWeek?.assignments ?? [];
+
+  const weekdayLabels = useMemo(() => {
+    const base = new Date(Date.UTC(2021, 0, 3)); // Sunday baseline
+    return Array.from({ length: 7 }, (_, index) => {
+      const date = new Date(base);
+      date.setDate(base.getDate() + index);
+      return new Intl.DateTimeFormat(undefined, { weekday: "short" }).format(
+        date
+      );
+    });
+  }, []);
+
+  const calendarMeta = useMemo(() => {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const todayStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+    const startOfGrid = new Date(startOfMonth);
+    startOfGrid.setDate(startOfGrid.getDate() - startOfMonth.getDay());
+
+    const assignmentsByDay = new Map<string, DisplayAssignment[]>();
+    displayedAssignments.forEach((assignment) => {
+      const key = toDateKey(assignment.displayStart);
+      const existing = assignmentsByDay.get(key);
+      if (existing) {
+        existing.push(assignment);
+      } else {
+        assignmentsByDay.set(key, [assignment]);
+      }
+    });
+
+    const days = Array.from({ length: 42 }, (_, index) => {
+      const day = new Date(startOfGrid);
+      day.setDate(startOfGrid.getDate() + index);
+      const key = toDateKey(day);
+      const assignmentsForDay = assignmentsByDay.has(key)
+        ? [...(assignmentsByDay.get(key) ?? [])].sort(compareDisplayAssignments)
+        : [];
+      const dayStart = normalizeAllDayDate(day);
+
+      return {
+        date: day,
+        assignments: assignmentsForDay,
+        isCurrentMonth: day.getMonth() === startOfMonth.getMonth(),
+        isToday: isSameDay(day, now),
+        isPast: dayStart.getTime() < todayStart.getTime(),
+      };
+    });
+
+    const monthLabel = new Intl.DateTimeFormat(undefined, {
+      month: "long",
+      year: "numeric",
+    }).format(startOfMonth);
+
+    return { days, monthLabel };
+  }, [displayedAssignments]);
+
+  const calendarDays = calendarMeta.days;
+  const calendarMonthLabel = calendarMeta.monthLabel;
 
   const toggleAssignmentCompletion = useCallback(
     async (assignment: DisplayAssignment) => {
@@ -499,70 +739,6 @@ export default function CalendarImportPage() {
     [t]
   );
 
-  const weekdayLabels = useMemo(() => {
-    const base = new Date(Date.UTC(2021, 0, 3)); // Sunday baseline
-    return Array.from({ length: 7 }, (_, index) => {
-      const date = new Date(base);
-      date.setDate(base.getDate() + index);
-      return new Intl.DateTimeFormat(undefined, { weekday: "short" }).format(
-        date
-      );
-    });
-  }, []);
-
-  const calendarMeta = useMemo(() => {
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const todayStart = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate()
-    );
-    const startOfGrid = new Date(startOfMonth);
-    startOfGrid.setDate(startOfGrid.getDate() - startOfMonth.getDay());
-
-    const assignmentsByDay = new Map<string, DisplayAssignment[]>();
-    displayedAssignments.forEach((assignment) => {
-      const key = toDateKey(assignment.displayStart);
-      const existing = assignmentsByDay.get(key);
-      if (existing) {
-        existing.push(assignment);
-      } else {
-        assignmentsByDay.set(key, [assignment]);
-      }
-    });
-
-    const days = Array.from({ length: 42 }, (_, index) => {
-      const day = new Date(startOfGrid);
-      day.setDate(startOfGrid.getDate() + index);
-      const key = toDateKey(day);
-      const assignmentsForDay = assignmentsByDay.has(key)
-        ? [...(assignmentsByDay.get(key) ?? [])].sort(
-            (a, b) => compareDisplayAssignments(a, b)
-          )
-        : [];
-      const dayStart = normalizeAllDayDate(day);
-
-      return {
-        date: day,
-        assignments: assignmentsForDay,
-        isCurrentMonth: day.getMonth() === startOfMonth.getMonth(),
-        isToday: isSameDay(day, now),
-        isPast: dayStart.getTime() < todayStart.getTime(),
-      };
-    });
-
-    const monthLabel = new Intl.DateTimeFormat(undefined, {
-      month: "long",
-      year: "numeric",
-    }).format(startOfMonth);
-
-    return { days, monthLabel };
-  }, [displayedAssignments]);
-
-  const calendarDays = calendarMeta.days;
-  const calendarMonthLabel = calendarMeta.monthLabel;
-
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!feedUrl.trim()) {
@@ -610,9 +786,9 @@ export default function CalendarImportPage() {
     }
   };
 
-  const shouldShowForm = viewState === "needsUrl" || showForm;
+  const shouldShowForm = showForm;
   const hasAnyAssignments = displayedAssignments.length > 0;
-  const hasVisibleAssignments = visibleAssignments.length > 0;
+  const hasVisibleAssignments = selectedWeekAssignments.length > 0;
   const isBootLoading =
     viewState === "boot" && (isFetching || !hasAnyAssignments);
 
@@ -741,16 +917,13 @@ export default function CalendarImportPage() {
               )}
               <button
                 type="button"
-                onClick={() =>
-                  setViewMode((mode) =>
-                    mode === "calendar" ? "list" : "calendar"
-                  )
-                }
+                onClick={() => {
+                  setShowForm(true);
+                  setError(null);
+                }}
                 className="inline-flex items-center gap-2 rounded-2xl border border-orange-200 px-4 py-2 text-sm font-semibold text-orange-600 transition hover:bg-orange-50"
               >
-                {viewMode === "calendar"
-                  ? t("viewListButton")
-                  : t("viewCalendarButton")}
+                {t("editButton")}
               </button>
               <button
                 type="button"
@@ -851,226 +1024,73 @@ export default function CalendarImportPage() {
             )}
           </div>
 
-          <AnimatePresence mode="wait">
-            {viewMode === "calendar" ? (
+          <div className="md:hidden space-y-5">
+            {weeks.length > 0 && (
               <motion.div
-                key="calendar-view"
-                className="w-full rounded-3xl border border-orange-100 bg-white p-4 sm:p-6 shadow-sm"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
-              >
-                {isBootLoading || isFetching ? (
-                  <motion.div
-                    key="calendar-loading"
-                    className="flex flex-col items-center justify-center gap-3 py-16 text-orange-500"
-                    variants={assignmentVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                  >
-                    <motion.div
-                      className="h-10 w-10 rounded-full border-4 border-orange-200 border-t-orange-500"
-                      animate={{ rotate: 360 }}
-                      transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                    />
-                    <motion.span
-                      className="text-sm font-medium"
+                key="week-navigation"
+                className="w-full rounded-3xl border border-orange-100/80 bg-white/80 p-3 sm:p-4 shadow-sm"
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2, ease: "easeOut", delay: 0.1 }}
-                    >
-                      {t("loading")}
-                    </motion.span>
-                  </motion.div>
-                ) : (
-                  <>
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900 capitalize">
-                        {calendarMonthLabel}
-                      </h3>
-                      <span className="text-sm text-gray-500">
-                        {t("calendarViewHint")}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-7 gap-2 text-xs font-semibold uppercase text-gray-500">
-                      {weekdayLabels.map((label) => (
-                        <span key={label} className="text-center tracking-wide">
-                          {label}
-                        </span>
-                      ))}
-                    </div>
-                    <motion.div
-                      className="mt-2 grid grid-cols-7 gap-2"
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25, ease: "easeOut" }}
-                    >
-                      {calendarDays.map((day) => {
-                        const dayKey = toDateKey(day.date);
-                        const isPastCurrentMonth =
-                          day.isPast && day.isCurrentMonth && !day.isToday;
-                        return (
-                          <div
-                            key={dayKey}
-                            className={`relative rounded-2xl border p-2 min-h-[120px] transition shadow-sm overflow-hidden ${
-                              day.isCurrentMonth
-                                ? isPastCurrentMonth
-                                  ? "bg-gray-100 border-gray-200"
-                                  : "bg-white border-orange-100"
-                                : "bg-gray-50 border-gray-100 text-gray-400"
-                            }`}
-                          >
-                            {isPastCurrentMonth ? (
-                              <div className="absolute inset-0 border-2 border-dashed border-gray-300/70 rounded-2xl" />
-                            ) : null}
-                            <div className="relative z-10 flex h-full flex-col gap-2">
-                              <div className="flex items-center justify-between">
-                                <span
-                                  className={`text-sm font-semibold ${
-                                    !day.isCurrentMonth
-                                      ? "text-gray-400"
-                                      : isPastCurrentMonth
-                                      ? "text-gray-600"
-                                      : "text-gray-900"
-                                  }`}
-                                >
-                                  {day.date.getDate()}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (previousWeekKey) {
+                        setSelectedWeekKey(previousWeekKey);
+                      }
+                    }}
+                    disabled={!previousWeekKey}
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-orange-200 text-orange-600 transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <ChevronLeftIcon className="h-5 w-5" />
+                    <span className="sr-only">Previous week</span>
+                  </button>
+                  <span className="text-sm font-semibold text-orange-700 sm:text-base">
+                    {selectedWeek?.label ?? ""}
                                 </span>
-                                {day.isToday && (
-                                  <span className="text-[10px] font-semibold text-orange-500 bg-orange-100/80 px-2 py-0.5 rounded-full">
-                                    {t("calendarTodayLabel")}
-                                  </span>
-                                )}
-                              </div>
-                              <div className="flex flex-col gap-2 max-h-36 overflow-y-auto pr-1">
-                                {day.assignments.length === 0 && day.isCurrentMonth ? (
-                                  <span
-                                    className={`text-[11px] ${
-                                      isPastCurrentMonth
-                                        ? "text-gray-400"
-                                        : "text-gray-300"
-                                    }`}
-                                  >
-                                    {t("calendarEmptyDay")}
-                                  </span>
-                                ) : (
-                                  day.assignments.map((assignment) => {
-                                    const assignmentKey = getAssignmentId(assignment);
-                                    const timeLabel = formatAssignmentTimeRange(
-                                      assignment.displayStart,
-                                      assignment.displayEnd,
-                                      assignment.allDay
-                                    );
-                                    const detailLabel =
-                                      timeLabel ||
-                                      (assignment.allDay
-                                        ? t("calendarAllDay")
-                                        : "");
-                                    const isCompleted = assignment.completed === true;
-                                    const isPending = Boolean(
-                                      pendingCompletion[assignmentKey]
-                                    );
-                                    const baseShellClasses = isPastCurrentMonth
-                                      ? "border-gray-200 bg-gray-100/80"
-                                      : "border-orange-100 bg-orange-50";
-                                    const completedShellClasses = isPastCurrentMonth
-                                      ? "border-gray-300 bg-gray-200/70"
-                                      : "border-emerald-200 bg-emerald-50/80";
-                                    const baseTitleClasses = isPastCurrentMonth
-                                      ? "text-gray-600"
-                                      : "text-orange-700";
-                                    const completedTitleClasses = isPastCurrentMonth
-                                      ? "text-gray-500"
-                                      : "text-emerald-700";
-                                    const baseDetailClasses = isPastCurrentMonth
-                                      ? "text-gray-500"
-                                      : "text-orange-600";
-                                    const completedDetailClasses = isPastCurrentMonth
-                                      ? "text-gray-400"
-                                      : "text-emerald-600";
-                                    return (
-                                      <motion.button
-                                        key={assignmentKey}
+                  <button
                                         type="button"
-                                        onClick={() =>
-                                          void toggleAssignmentCompletion(assignment)
-                                        }
-                                        disabled={isPending}
-                                        className={`relative rounded-xl border px-2 py-1 text-left transition focus:outline-none focus:ring-2 focus:ring-orange-400/70 focus:ring-offset-1 ${
-                                          isCompleted
-                                            ? completedShellClasses
-                                            : baseShellClasses
-                                        } ${
-                                          isPending
-                                            ? "opacity-60 cursor-not-allowed"
-                                            : "cursor-pointer"
-                                        }`}
-                                        layoutId={`calendar-${assignmentKey}`}
-                                        layout="position"
-                                        whileTap={{ scale: 0.97 }}
-                                        transition={{
-                                          layout: { duration: 0.3, ease: "easeInOut" },
-                                        }}
-                                      >
-                                        <span
-                                          className={`block text-[11px] font-semibold truncate ${
-                                            isCompleted
-                                              ? completedTitleClasses
-                                              : baseTitleClasses
-                                          }`}
-                                        >
-                                          {assignment.title}
-                                        </span>
-                                        {detailLabel ? (
-                                          <span
-                                            className={`block text-[11px] ${
-                                              isCompleted
-                                                ? completedDetailClasses
-                                                : baseDetailClasses
-                                            }`}
-                                          >
-                                            {detailLabel}
-                                          </span>
-                                        ) : null}
-                                      </motion.button>
-                                    );
-                                  })
-                                )}
-                              </div>
-                            </div>
-                          </div>
+                    onClick={() => {
+                      if (nextWeekKey) {
+                        setSelectedWeekKey(nextWeekKey);
+                      }
+                    }}
+                    disabled={!nextWeekKey}
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-orange-200 text-orange-600 transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <ChevronRightIcon className="h-5 w-5" />
+                    <span className="sr-only">Next week</span>
+                  </button>
+                </div>
+                <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
+                  {weeks.map((week) => {
+                    const isActive = week.key === selectedWeekKey;
+                    return (
+                      <button
+                        key={week.key}
+                        type="button"
+                        onClick={() => setSelectedWeekKey(week.key)}
+                        className={`whitespace-nowrap rounded-2xl px-3 py-1.5 text-xs sm:text-sm font-semibold transition ${
+                          isActive
+                            ? "bg-orange-500 text-white shadow shadow-orange-200"
+                            : "bg-orange-50 text-orange-700 hover:bg-orange-100"
+                        }`}
+                        aria-pressed={isActive}
+                      >
+                        {week.label}
+                      </button>
                         );
                       })}
+                </div>
                     </motion.div>
-                    {!hasAnyAssignments && (
-                      <motion.p
-                        className="mt-6 text-sm text-gray-500 text-center"
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.25, ease: "easeOut" }}
-                      >
-                        {t("calendarNoAssignmentsMonth")}
-                      </motion.p>
-                    )}
-                  </>
-                )}
-              </motion.div>
-            ) : (
-              <motion.div
-                key="list-view"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                className="w-full"
-              >
+            )}
+
                 <AnimatePresence mode="wait">
                   {isBootLoading || isFetching ? (
                     <motion.div
-                      key="loading"
+                  key="loading-mobile"
                       className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-orange-200 bg-orange-50/70 p-8 sm:p-10 text-orange-500"
                       variants={assignmentVariants}
                       initial="hidden"
@@ -1080,18 +1100,39 @@ export default function CalendarImportPage() {
                       <div className="h-10 w-10 rounded-full border-4 border-orange-200 border-t-orange-500 animate-spin" />
                       <span className="text-sm font-medium">{t("loading")}</span>
                     </motion.div>
-                  ) : viewState === "ready" && hasVisibleAssignments ? (
+              ) : viewState === "ready" && hasVisibleAssignments && selectedWeek ? (
                     <LayoutGroup>
                       <motion.div
-                        key="assignments"
-                        className="flex flex-col gap-4 mb-12"
+                    key={selectedWeek.key}
+                    className="flex flex-col gap-6 mb-12"
                         layout
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -8 }}
                         transition={{ duration: 0.3, ease: "easeOut" }}
                       >
-                        {visibleAssignments.map((assignment) => {
+                    {selectedWeekDayGroups.map((day) => (
+                      <motion.div
+                        key={day.key}
+                        layout
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.25, ease: "easeOut" }}
+                        className="flex flex-col gap-3"
+                      >
+                        <div className="flex items-center justify-between px-1">
+                          <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-600">
+                            {day.label}
+                          </h3>
+                          {isSameDay(day.date, new Date()) && (
+                            <span className="text-xs font-semibold text-orange-600 bg-orange-100/80 px-2 py-0.5 rounded-full">
+                              {t("calendarTodayLabel")}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-4">
+                          {day.assignments.map((assignment) => {
                           const assignmentKey = getAssignmentId(assignment);
                           const timeLabel = formatAssignmentTimeRange(
                             assignment.displayStart,
@@ -1104,10 +1145,11 @@ export default function CalendarImportPage() {
                           const isPending = Boolean(
                             pendingCompletion[assignmentKey]
                           );
+
                           return (
                             <motion.article
                               key={assignmentKey}
-                              layoutId={`list-${assignmentKey}`}
+                                layoutId={`week-${assignmentKey}`}
                               variants={assignmentVariants}
                               initial="hidden"
                               animate="visible"
@@ -1142,7 +1184,7 @@ export default function CalendarImportPage() {
                               transition={{
                                 layout: { duration: 0.35, ease: "easeOut" },
                               }}
-                              className={`relative rounded-3xl border p-4 sm:p-5 md:p-6 shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/70 focus-visible:ring-offset-2 ${
+                                className={`relative rounded-3xl border p-4 sm:p-5 shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/70 focus-visible:ring-offset-2 ${
                                 isCompleted
                                   ? "border-emerald-200 bg-emerald-50/70"
                                   : "border-orange-100/70 bg-white hover:shadow-md"
@@ -1152,15 +1194,14 @@ export default function CalendarImportPage() {
                                   : "cursor-pointer"
                               }`}
                             >
-                              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3 lg:gap-6">
-                                <div className="space-y-2 w-full">
-                                  <h3 className="relative text-base sm:text-lg font-semibold break-words">
+                                <div className="space-y-2">
+                                  <h3 className="text-base font-semibold">
                                     <span
-                                      className={`relative inline-block ${
+                                      className={
                                         isCompleted
                                           ? "text-emerald-700"
                                           : "text-gray-900"
-                                      }`}
+                                      }
                                     >
                                       {assignment.title}
                                     </span>
@@ -1168,7 +1209,9 @@ export default function CalendarImportPage() {
                                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-3">
                                     <p
                                       className={`text-sm font-medium ${
-                                        isCompleted ? "text-emerald-700" : "text-orange-600"
+                                        isCompleted
+                                          ? "text-emerald-700"
+                                          : "text-orange-600"
                                       }`}
                                     >
                                       {formatAssignmentDate(
@@ -1178,8 +1221,10 @@ export default function CalendarImportPage() {
                                     </p>
                                     {timeLabel || assignment.allDay ? (
                                       <p
-                                        className={`text-sm sm:text-right ${
-                                          isCompleted ? "text-emerald-600" : "text-gray-500"
+                                        className={`text-sm ${
+                                          isCompleted
+                                            ? "text-emerald-600"
+                                            : "text-gray-500"
                                         }`}
                                       >
                                         {timeLabel || t("calendarAllDay")}
@@ -1187,20 +1232,11 @@ export default function CalendarImportPage() {
                                     ) : null}
                                   </div>
                                 </div>
-                                <div className="flex flex-col items-start gap-2 text-sm text-gray-600">
                                   {assignment.location && (
-                                    <div
-                                      className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
-                                        isCompleted
-                                          ? "bg-emerald-100 text-emerald-700"
-                                          : "bg-orange-100 text-orange-700"
-                                      }`}
-                                    >
+                                  <div className="mt-3 inline-flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
                                       📍 {assignment.location}
                                     </div>
                                   )}
-                                </div>
-                              </div>
                               {assignment.description && (
                                 <div className="mt-4">
                                   <button
@@ -1246,11 +1282,14 @@ export default function CalendarImportPage() {
                             </motion.article>
                           );
                         })}
+                        </div>
+                      </motion.div>
+                    ))}
                       </motion.div>
                     </LayoutGroup>
                   ) : viewState === "ready" && hasAnyAssignments ? (
                     <motion.div
-                      key="caught-up"
+                  key="caught-up-mobile"
                       className="rounded-3xl border border-amber-200 bg-amber-50 px-6 py-7 text-center text-amber-700 shadow-sm"
                       variants={assignmentVariants}
                       initial="hidden"
@@ -1261,7 +1300,7 @@ export default function CalendarImportPage() {
                     </motion.div>
                   ) : viewState === "ready" ? (
                     <motion.div
-                      key="empty"
+                  key="empty-mobile"
                       className="rounded-3xl border border-orange-100/70 bg-white p-8 sm:p-10 text-center text-orange-600 shadow-sm"
                       variants={assignmentVariants}
                       initial="hidden"
@@ -1272,7 +1311,7 @@ export default function CalendarImportPage() {
                     </motion.div>
                   ) : (
                     <motion.div
-                      key="placeholder"
+                  key="placeholder-mobile"
                       className="rounded-3xl border border-dashed border-orange-200 bg-orange-50/70 p-8 sm:p-10 text-center text-orange-500"
                       variants={assignmentVariants}
                       initial="hidden"
@@ -1283,9 +1322,218 @@ export default function CalendarImportPage() {
                     </motion.div>
                   )}
                 </AnimatePresence>
+          </div>
+
+          <div className="hidden md:block">
+            <AnimatePresence mode="wait">
+              {isBootLoading || isFetching ? (
+                <motion.div
+                  key="loading-desktop"
+                  className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-orange-200 bg-orange-50/70 p-10 text-orange-500"
+                  variants={assignmentVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                >
+                  <div className="h-12 w-12 rounded-full border-4 border-orange-200 border-t-orange-500 animate-spin" />
+                  <span className="text-base font-medium">{t("loading")}</span>
+                </motion.div>
+              ) : viewState === "ready" && hasAnyAssignments ? (
+                <motion.div
+                  key="calendar-view"
+                  className="w-full rounded-3xl border border-orange-100 bg-white p-6 shadow-sm"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                >
+                  <div className="flex items-center justify-between gap-2 mb-6">
+                    <h3 className="text-xl font-semibold text-gray-900 capitalize">
+                      {calendarMonthLabel}
+                    </h3>
+                    <span className="text-sm text-gray-500">
+                      {t("calendarViewHint")}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-7 gap-2 text-xs font-semibold uppercase text-gray-500">
+                    {weekdayLabels.map((label) => (
+                      <span key={label} className="text-center tracking-wide">
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+                  <motion.div
+                    className="mt-3 grid grid-cols-7 gap-2"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25, ease: "easeOut" }}
+                  >
+                    {calendarDays.map((day) => {
+                      const dayKey = toDateKey(day.date);
+                      const isPastCurrentMonth =
+                        day.isPast && day.isCurrentMonth && !day.isToday;
+                      return (
+                        <div
+                          key={dayKey}
+                          className={`relative rounded-2xl border p-3 min-h-[140px] transition shadow-sm overflow-hidden ${
+                            day.isCurrentMonth
+                              ? isPastCurrentMonth
+                                ? "bg-gray-100 border-gray-200"
+                                : "bg-white border-orange-100"
+                              : "bg-gray-50 border-gray-100 text-gray-400"
+                          }`}
+                        >
+                          {isPastCurrentMonth ? (
+                            <div className="absolute inset-0 border-2 border-dashed border-gray-300/70 rounded-2xl" />
+                          ) : null}
+                          <div className="relative z-10 flex h-full flex-col gap-2">
+                            <div className="flex items-center justify-between">
+                              <span
+                                className={`text-sm font-semibold ${
+                                  !day.isCurrentMonth
+                                    ? "text-gray-400"
+                                    : isPastCurrentMonth
+                                    ? "text-gray-600"
+                                    : "text-gray-900"
+                                }`}
+                              >
+                                {day.date.getDate()}
+                              </span>
+                              {day.isToday && (
+                                <span className="text-[10px] font-semibold text-orange-500 bg-orange-100/80 px-2 py-0.5 rounded-full">
+                                  {t("calendarTodayLabel")}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex flex-col gap-2 max-h-40 overflow-y-auto pr-1">
+                              {day.assignments.length === 0 && day.isCurrentMonth ? (
+                                <span
+                                  className={`text-[11px] ${
+                                    isPastCurrentMonth
+                                      ? "text-gray-400"
+                                      : "text-gray-300"
+                                  }`}
+                                >
+                                  {t("calendarEmptyDay")}
+                                </span>
+                              ) : (
+                                day.assignments.map((assignment) => {
+                                  const assignmentKey =
+                                    getAssignmentId(assignment);
+                                  const timeLabel = formatAssignmentTimeRange(
+                                    assignment.displayStart,
+                                    assignment.displayEnd,
+                                    assignment.allDay
+                                  );
+                                  const detailLabel =
+                                    timeLabel ||
+                                    (assignment.allDay
+                                      ? t("calendarAllDay")
+                                      : "");
+                                  const isCompleted =
+                                    assignment.completed === true;
+                                  const isPending = Boolean(
+                                    pendingCompletion[assignmentKey]
+                                  );
+                                  const baseShellClasses = isPastCurrentMonth
+                                    ? "border-gray-200 bg-gray-100/80"
+                                    : "border-orange-100 bg-orange-50";
+                                  const completedShellClasses = isPastCurrentMonth
+                                    ? "border-gray-300 bg-gray-200/70"
+                                    : "border-emerald-200 bg-emerald-50/80";
+                                  const baseTitleClasses = isPastCurrentMonth
+                                    ? "text-gray-600"
+                                    : "text-orange-700";
+                                  const completedTitleClasses = isPastCurrentMonth
+                                    ? "text-gray-500"
+                                    : "text-emerald-700";
+                                  const baseDetailClasses = isPastCurrentMonth
+                                    ? "text-gray-500"
+                                    : "text-orange-600";
+                                  const completedDetailClasses = isPastCurrentMonth
+                                    ? "text-gray-400"
+                                    : "text-emerald-600";
+                                  return (
+                                    <motion.button
+                                      key={assignmentKey}
+                                      type="button"
+                                      onClick={() =>
+                                        void toggleAssignmentCompletion(assignment)
+                                      }
+                                      disabled={isPending}
+                                      className={`relative rounded-xl border px-2 py-1 text-left transition focus:outline-none focus:ring-2 focus:ring-orange-400/70 focus:ring-offset-1 ${
+                                        isCompleted
+                                          ? completedShellClasses
+                                          : baseShellClasses
+                                      } ${
+                                        isPending
+                                          ? "opacity-60 cursor-not-allowed"
+                                          : "cursor-pointer"
+                                      }`}
+                                      layoutId={`calendar-${assignmentKey}`}
+                                      layout="position"
+                                      whileTap={{ scale: 0.97 }}
+                                      transition={{
+                                        layout: { duration: 0.3, ease: "easeInOut" },
+                                      }}
+                                    >
+                                      <span
+                                        className={`block text-[11px] font-semibold truncate ${
+                                          isCompleted
+                                            ? completedTitleClasses
+                                            : baseTitleClasses
+                                        }`}
+                                      >
+                                        {assignment.title}
+                                      </span>
+                                      {detailLabel ? (
+                                        <span
+                                          className={`block text-[11px] ${
+                                            isCompleted
+                                              ? completedDetailClasses
+                                              : baseDetailClasses
+                                          }`}
+                                        >
+                                          {detailLabel}
+                                        </span>
+                                      ) : null}
+                                    </motion.button>
+                                  );
+                                })
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </motion.div>
+                </motion.div>
+              ) : viewState === "ready" ? (
+                <motion.div
+                  key="empty-desktop"
+                  className="rounded-3xl border border-orange-100/70 bg-white p-12 text-center text-orange-600 shadow-sm"
+                  variants={assignmentVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                >
+                  {t("emptyFeed")}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="placeholder-desktop"
+                  className="rounded-3xl border border-dashed border-orange-200 bg-orange-50/70 p-12 text-center text-orange-500"
+                  variants={assignmentVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                >
+                  {t("placeholderMessage")}
               </motion.div>
             )}
           </AnimatePresence>
+          </div>
         </motion.section>
       )}
     </motion.div>
